@@ -1,0 +1,14 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
+.vs/
+packages/
+*.nupkg
+.DS_Store
+
+# WPF/UI
+AppData/
+*.pdb
