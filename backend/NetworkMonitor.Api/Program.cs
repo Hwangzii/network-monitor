@@ -27,7 +27,7 @@ var app = builder.Build();
 app.UseSwagger(); // Map /swagger.json
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "NetworkMonitor API v1"); // Path chuẩn với v1
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "NetworkMonitor API v1"); 
     c.RoutePrefix = string.Empty; // UI ở root / (dễ test)
 });
 
@@ -40,13 +40,8 @@ else
     // Prod: Swagger enable cho demo
 }
 
-// Thêm routing để xử lý routes từ controllers
 app.UseRouting();
 
-// Comment HTTPS redirection vì Render handle tự động
-// app.UseHttpsRedirection();
-
-// Map controllers để kích hoạt routes như /monitor/*
 app.MapControllers();
 
 var summaries = new[]
