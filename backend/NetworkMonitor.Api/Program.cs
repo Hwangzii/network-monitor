@@ -1,30 +1,43 @@
 using System.Net; // Để dùng IPAddress nếu cần sau này
+using System; // Cho Environment
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Cấu hình URLs cho Render (listen tất cả IP, port dynamic)
-builder.WebHost.UseUrls("http://0.0.0.0:${PORT}");
+// Cấu hình URLs: Localhost cho dev (tránh permission issue), 0.0.0.0 cho Render
+var isDevelopment = builder.Environment.IsDevelopment();
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5002";
+var urls = isDevelopment 
+    ? $"http://localhost:{port}"  // Chỉ localhost cho local (an toàn trên Linux)
+    : $"http://0.0.0.0:{port}";  // All interfaces cho cloud
+builder.WebHost.UseUrls(urls);
 
 // Add services to the container.
 builder.Services.AddControllers(); // Đăng ký MonitorController
 
-// Swagger/OpenAPI
+// Swagger/OpenAPI - Fix để generate /swagger.json đúng
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new() { Title = "NetworkMonitor API", Version = "v1" }); // Explicit doc cho v1
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseSwagger(); // Map /swagger.json
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "NetworkMonitor API v1"); // Path chuẩn với v1
+    c.RoutePrefix = string.Empty; // UI ở root / (dễ test)
+});
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // Dev extras nếu cần
 }
 else
 {
-    // Enable Swagger ở prod cho demo (test trên Render)
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "NetworkMonitor API v1"));
+    // Prod: Swagger enable cho demo
 }
 
 // Thêm routing để xử lý routes từ controllers
