@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.5.2.0
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11201.2 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}"
 EndProject
@@ -9,6 +9,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkMonitor.Tests", "backend\NetworkMonitor.Tests\NetworkMonitor.Tests.csproj", "{BF639C94-B3F9-0330-F6D8-97E8263694F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkMonitor.Core", "backend\NetworkMonitor.Core\NetworkMonitor.Core.csproj", "{FDA7059D-B7C5-AF4F-4BFD-CCEB6EA6513F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "frontend", "frontend", "{6AC754CE-196D-43C5-AB72-C7C13EC944D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitorApp", "MonitorApp\MonitorApp.csproj", "{0FBE5ECC-A9F2-452D-8D81-31E78C7DDA41}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,6 +32,10 @@ Global
 		{FDA7059D-B7C5-AF4F-4BFD-CCEB6EA6513F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDA7059D-B7C5-AF4F-4BFD-CCEB6EA6513F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDA7059D-B7C5-AF4F-4BFD-CCEB6EA6513F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FBE5ECC-A9F2-452D-8D81-31E78C7DDA41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FBE5ECC-A9F2-452D-8D81-31E78C7DDA41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FBE5ECC-A9F2-452D-8D81-31E78C7DDA41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FBE5ECC-A9F2-452D-8D81-31E78C7DDA41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -36,6 +44,7 @@ Global
 		{4304A95C-5551-632C-EC4E-E92ECE029132} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
 		{BF639C94-B3F9-0330-F6D8-97E8263694F8} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
 		{FDA7059D-B7C5-AF4F-4BFD-CCEB6EA6513F} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
+		{0FBE5ECC-A9F2-452D-8D81-31E78C7DDA41} = {6AC754CE-196D-43C5-AB72-C7C13EC944D8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8AD79CA4-DBF6-47B4-8E96-9776C14F523D}
