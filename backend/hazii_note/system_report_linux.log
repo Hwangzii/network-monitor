@@ -1,0 +1,220 @@
+=== SYSTEM INFO ===
+Linux hazii-ThinkPad-L15-Gen-2 6.14.0-35-generic #35~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Oct 14 13:55:17 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+
+=== OS RELEASE ===
+PRETTY_NAME="Ubuntu 24.04.3 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.3 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+
+=== CPU INFO ===
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           39 bits physical, 48 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  8
+On-line CPU(s) list:                     0-7
+Vendor ID:                               GenuineIntel
+BIOS Vendor ID:                          Intel(R) Corporation
+Model name:                              11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+BIOS Model name:                         11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz None CPU @ 2.4GHz
+BIOS CPU family:                         205
+CPU family:                              6
+Model:                                   140
+Thread(s) per core:                      2
+Core(s) per socket:                      4
+Socket(s):                               1
+Stepping:                                1
+CPU(s) scaling MHz:                      65%
+CPU max MHz:                             4200,0000
+CPU min MHz:                             400,0000
+BogoMIPS:                                4838,40
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l2 cdp_l2 ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req vnmi avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid movdiri movdir64b fsrm avx512_vp2intersect md_clear ibt flush_l1d arch_capabilities
+Virtualization:                          VT-x
+L1d cache:                               192 KiB (4 instances)
+L1i cache:                               128 KiB (4 instances)
+L2 cache:                                5 MiB (4 instances)
+L3 cache:                                8 MiB (1 instance)
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-7
+Vulnerability Gather data sampling:      Vulnerable
+Vulnerability Ghostwrite:                Not affected
+Vulnerability Indirect target selection: Mitigation; Aligned branch/return thunks
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Not affected
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Not affected
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Not affected
+
+=== MEMORY INFO ===
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       4,1Gi       8,9Gi       915Mi       3,5Gi        11Gi
+Swap:          4,0Gi          0B       4,0Gi
+
+=== DISK INFO ===
+NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0         7:0    0     0B  0 loop 
+loop1         7:1    0     0B  0 loop 
+loop2         7:2    0     0B  0 loop 
+loop3         7:3    0     0B  0 loop 
+loop4         7:4    0     0B  0 loop 
+loop5         7:5    0     0B  0 loop 
+loop6         7:6    0     0B  0 loop 
+loop7         7:7    0     0B  0 loop 
+nvme0n1     259:0    0 238,5G  0 disk 
+├─nvme0n1p1 259:1    0     1G  0 part /boot/efi
+└─nvme0n1p2 259:2    0 166,2G  0 part /var/snap/firefox/common/host-hunspell
+                                      /
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs           1,6G  2,7M  1,6G   1% /run
+/dev/nvme0n1p2  163G  104G   52G  67% /
+tmpfs           7,7G   68M  7,6G   1% /dev/shm
+tmpfs           5,0M  8,0K  5,0M   1% /run/lock
+efivarfs        246K   50K  192K  21% /sys/firmware/efi/efivars
+/dev/nvme0n1p1  1,1G  6,3M  1,1G   1% /boot/efi
+tmpfs           1,6G  156K  1,6G   1% /run/user/1000
+
+=== PCI DEVICES ===
+00:00.0 Host bridge: Intel Corporation 11th Gen Core Processor Host Bridge/DRAM Registers (rev 01)
+00:02.0 VGA compatible controller: Intel Corporation TigerLake-LP GT2 [Iris Xe Graphics] (rev 01)
+00:04.0 Signal processing controller: Intel Corporation TigerLake-LP Dynamic Tuning Processor Participant (rev 01)
+00:06.0 PCI bridge: Intel Corporation 11th Gen Core Processor PCIe Controller (rev 01)
+00:07.0 PCI bridge: Intel Corporation Tiger Lake-LP Thunderbolt 4 PCI Express Root Port #1 (rev 01)
+00:0d.0 USB controller: Intel Corporation Tiger Lake-LP Thunderbolt 4 USB Controller (rev 01)
+00:0d.2 USB controller: Intel Corporation Tiger Lake-LP Thunderbolt 4 NHI #0 (rev 01)
+00:14.0 USB controller: Intel Corporation Tiger Lake-LP USB 3.2 Gen 2x1 xHCI Host Controller (rev 20)
+00:14.2 RAM memory: Intel Corporation Tiger Lake-LP Shared SRAM (rev 20)
+00:15.0 Serial bus controller: Intel Corporation Tiger Lake-LP Serial IO I2C Controller #0 (rev 20)
+00:15.1 Serial bus controller: Intel Corporation Tiger Lake-LP Serial IO I2C Controller #1 (rev 20)
+00:16.0 Communication controller: Intel Corporation Tiger Lake-LP Management Engine Interface (rev 20)
+00:1d.0 PCI bridge: Intel Corporation Tiger Lake-LP PCI Express Root Port #9 (rev 20)
+00:1d.1 PCI bridge: Intel Corporation Tiger Lake-LP PCI Express Root Port #10 (rev 20)
+00:1d.3 PCI bridge: Intel Corporation Tiger Lake-LP PCI Express Root Port #12 (rev 20)
+00:1f.0 ISA bridge: Intel Corporation Tiger Lake-LP LPC Controller (rev 20)
+00:1f.3 Multimedia audio controller: Intel Corporation Tiger Lake-LP Smart Sound Technology Audio Controller (rev 20)
+00:1f.4 SMBus: Intel Corporation Tiger Lake-LP SMBus Controller (rev 20)
+00:1f.5 Serial bus controller: Intel Corporation Tiger Lake-LP SPI Controller (rev 20)
+00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (13) I219-V (rev 20)
+04:00.0 Non-Volatile memory controller: Toshiba Corporation XG6 NVMe SSD Controller
+09:00.0 Network controller: Intel Corporation Wi-Fi 6 AX200 (rev 1a)
+0a:00.0 SD Host controller: O2 Micro, Inc. SD/MMC Card Reader Controller (rev 01)
+
+=== USB DEVICES ===
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 003 Device 002: ID 06cb:00bd Synaptics, Inc. Prometheus MIS Touch Fingerprint Reader
+Bus 003 Device 003: ID 13d3:56ff IMC Networks Integrated Camera
+Bus 003 Device 004: ID 046d:c077 Logitech, Inc. Mouse
+Bus 003 Device 005: ID 8087:0029 Intel Corp. AX200 Bluetooth
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+
+=== NETWORK INFO ===
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute 
+       valid_lft forever preferred_lft forever
+2: enp0s31f6: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc fq_codel state DOWN group default qlen 1000
+    link/ether 90:2e:16:70:9f:91 brd ff:ff:ff:ff:ff:ff
+3: wlp9s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether e0:2b:e9:09:f9:de brd ff:ff:ff:ff:ff:ff
+    inet 192.168.137.85/24 brd 192.168.137.255 scope global dynamic noprefixroute wlp9s0
+       valid_lft 603941sec preferred_lft 603941sec
+    inet6 fe80::c16a:cdac:5510:cc68/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+
+=== HARDWARE SUMMARY ===
+H/W path        Device          Class          Description
+==========================================================
+                                system         20X4S2AU00 (LENOVO_MT_20X4_BU_Think_FM_ThinkPad L15 Gen 2)
+/0                              bus            20X4S2AU00
+/0/1                            memory         16GiB System Memory
+/0/1/0                          memory         8GiB SODIMM DDR4 Synchronous 3200 MHz (0,3 ns)
+/0/1/1                          memory         8GiB SODIMM DDR4 Synchronous 3200 MHz (0,3 ns)
+/0/c                            memory         192KiB L1 cache
+/0/d                            memory         128KiB L1 cache
+/0/e                            memory         5MiB L2 cache
+/0/f                            memory         8MiB L3 cache
+/0/10                           processor      11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+/0/11                           memory         128KiB BIOS
+/0/100                          bridge         11th Gen Core Processor Host Bridge/DRAM Registers
+/0/100/2        /dev/fb0        display        TigerLake-LP GT2 [Iris Xe Graphics]
+/0/100/4                        generic        TigerLake-LP Dynamic Tuning Processor Participant
+/0/100/6                        bridge         11th Gen Core Processor PCIe Controller
+/0/100/6/0      /dev/nvme0      storage        KXG6AZNV256G TOSHIBA
+/0/100/6/0/0    hwmon3          disk           NVMe disk
+/0/100/6/0/2    /dev/ng0n1      disk           NVMe disk
+/0/100/6/0/1    /dev/nvme0n1    disk           256GB NVMe disk
+/0/100/6/0/1/1                  volume         1074MiB Windows FAT volume
+/0/100/6/0/1/2  /dev/nvme0n1p2  volume         166GiB EXT4 volume
+/0/100/7                        bridge         Tiger Lake-LP Thunderbolt 4 PCI Express Root Port #1
+/0/100/d                        bus            Tiger Lake-LP Thunderbolt 4 USB Controller
+/0/100/d/0      usb1            bus            xHCI Host Controller
+/0/100/d/1      usb2            bus            xHCI Host Controller
+/0/100/d.2                      bus            Tiger Lake-LP Thunderbolt 4 NHI #0
+/0/100/14                       bus            Tiger Lake-LP USB 3.2 Gen 2x1 xHCI Host Controller
+/0/100/14/0     usb3            bus            xHCI Host Controller
+/0/100/14/0/4                   generic        Prometheus MIS Touch Fingerprint Reader
+/0/100/14/0/7                   multimedia     Integrated Camera
+/0/100/14/0/9   input6          input          Logitech USB Optical Mouse
+/0/100/14/0/a                   communication  AX200 Bluetooth
+/0/100/14/1     usb4            bus            xHCI Host Controller
+/0/100/14.2                     memory         RAM memory
+/0/100/15                       bus            Tiger Lake-LP Serial IO I2C Controller #0
+/0/100/15.1                     bus            Tiger Lake-LP Serial IO I2C Controller #1
+/0/100/16                       communication  Tiger Lake-LP Management Engine Interface
+/0/100/1d                       bridge         Tiger Lake-LP PCI Express Root Port #9
+/0/100/1d.1                     bridge         Tiger Lake-LP PCI Express Root Port #10
+/0/100/1d.1/0   mmc0            bus            SD/MMC Card Reader Controller
+/0/100/1d.3                     bridge         Tiger Lake-LP PCI Express Root Port #12
+/0/100/1d.3/0   wlp9s0          network        Wi-Fi 6 AX200
+/0/100/1f                       bridge         Tiger Lake-LP LPC Controller
+/0/100/1f/0                     system         PnP device PNP0c02
+/0/100/1f/1                     generic        PnP device LEN0071
+/0/100/1f/2                     generic        PnP device LEN0416
+/0/100/1f/3                     system         PnP device PNP0c02
+/0/100/1f/4                     system         PnP device PNP0c02
+/0/100/1f/5                     system         PnP device PNP0c02
+/0/100/1f/6                     system         PnP device PNP0c02
+/0/100/1f/7                     system         PnP device PNP0c02
+/0/100/1f/8                     system         PnP device PNP0c01
+/0/100/1f.3     card0           multimedia     Tiger Lake-LP Smart Sound Technology Audio Controller
+/0/100/1f.4                     bus            Tiger Lake-LP SMBus Controller
+/0/100/1f.5                     bus            Tiger Lake-LP SPI Controller
+/0/100/1f.6     enp0s31f6       network        Ethernet Connection (13) I219-V
+/1                              power          5B10W13894
+/2              input0          input          Sleep Button
+/3              input1          input          Lid Switch
+/4              input10         input          Video Bus
+/5              input11         input          sof-hda-dsp Mic
+/6              input12         input          sof-hda-dsp Headphone
+/7              input13         input          sof-hda-dsp HDMI/DP,pcm=3
+/8              input14         input          sof-hda-dsp HDMI/DP,pcm=4
+/9              input15         input          sof-hda-dsp HDMI/DP,pcm=5
+/a              input2          input          Power Button
+/b              input3          input          AT Translated Set 2 keyboard
+/c              input5          input          SynPS/2 Synaptics TouchPad
+/d              input7          input          TPPS/2 Elan TrackPoint
+/e              input8          input          Intel HID events
+/f              input9          input          ThinkPad Extra Buttons

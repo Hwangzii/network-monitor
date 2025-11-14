@@ -118,14 +118,70 @@ namespace NetworkMonitor.Api.Services
                     });
                 }
             }
+            // else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            // {
+            //     // Linux: Parse /proc/net/dev cho traffic, ip addr cho IP (thêm filter bỏ "lo")
+            //     try
+            //     {
+            //         // Traffic from /proc/net/dev
+            //         var devContent = File.ReadAllText("/proc/net/dev");
+            //         var lines = devContent.Split('\n').Skip(2); // Skip header
+
+            //         foreach (var line in lines)
+            //         {
+            //             if (string.IsNullOrWhiteSpace(line)) continue;
+            //             var parts = line.Split(new[] { ':' }, 2);
+            //             if (parts.Length != 2) continue;
+
+            //             var ifaceName = parts[0].Trim();
+            //             if (ifaceName == "lo") continue;  // THÊM: Filter loopback như Windows
+
+            //             var stats = parts[1].Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            //             if (stats.Length < 9) continue; // rx_bytes (1), tx_bytes (9)
+
+            //             var rxBytes = long.Parse(stats[1]); // download
+            //             var txBytes = long.Parse(stats[9]); // upload
+
+            //             // IP: Run "ip addr show <iface>" và parse inet
+            //             var ipProcess = new Process
+            //             {
+            //                 StartInfo = new ProcessStartInfo
+            //                 {
+            //                     FileName = "ip",
+            //                     Arguments = $"addr show {ifaceName}",
+            //                     RedirectStandardOutput = true,
+            //                     UseShellExecute = false,
+            //                     CreateNoWindow = true
+            //                 }
+            //             };
+            //             ipProcess.Start();
+            //             var ipOutput = ipProcess.StandardOutput.ReadToEnd();
+            //             ipProcess.WaitForExit();
+
+            //             var ipMatch = Regex.Match(ipOutput, @"inet (\d+\.\d+\.\d+\.\d+)/");
+            //             var ip = ipMatch.Success ? ipMatch.Groups[1].Value : "Unknown";
+
+            //             interfaces.Add(new NetworkInterfaceDto
+            //             {
+            //                 NetworkAdapter = NormalizerService.NormalizeAdapterName(ifaceName),
+            //                 Ip = ip,
+            //                 Upload = txBytes,
+            //                 Download = rxBytes
+            //             });
+            //         }
+            //     }
+            //     catch
+            //     {
+            //         // Fallback empty
+            //     }
+            // }
+
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                // Linux: Parse /proc/net/dev cho traffic, ip addr cho IP (thêm filter bỏ "lo")
                 try
                 {
-                    // Traffic from /proc/net/dev
                     var devContent = File.ReadAllText("/proc/net/dev");
-                    var lines = devContent.Split('\n').Skip(2); // Skip header
+                    var lines = devContent.Split('\n').Skip(2);
 
                     foreach (var line in lines)
                     {
@@ -134,15 +190,15 @@ namespace NetworkMonitor.Api.Services
                         if (parts.Length != 2) continue;
 
                         var ifaceName = parts[0].Trim();
-                        if (ifaceName == "lo") continue;  // THÊM: Filter loopback như Windows
+                        if (ifaceName == "lo") continue;
 
                         var stats = parts[1].Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (stats.Length < 9) continue; // rx_bytes (1), tx_bytes (9)
+                        if (stats.Length < 9) continue;
 
-                        var rxBytes = long.Parse(stats[1]); // download
-                        var txBytes = long.Parse(stats[9]); // upload
+                        var rxBytes = long.Parse(stats[1]);
+                        var txBytes = long.Parse(stats[9]);
 
-                        // IP: Run "ip addr show <iface>" và parse inet
+                        // IP: Run "ip addr show <iface>"
                         var ipProcess = new Process
                         {
                             StartInfo = new ProcessStartInfo
@@ -158,6 +214,9 @@ namespace NetworkMonitor.Api.Services
                         var ipOutput = ipProcess.StandardOutput.ReadToEnd();
                         ipProcess.WaitForExit();
 
+                        // THÊM: Filter chỉ active interfaces (giống Windows)
+                        if (!ipOutput.Contains("state UP")) continue;
+
                         var ipMatch = Regex.Match(ipOutput, @"inet (\d+\.\d+\.\d+\.\d+)/");
                         var ip = ipMatch.Success ? ipMatch.Groups[1].Value : "Unknown";
 
@@ -170,10 +229,7 @@ namespace NetworkMonitor.Api.Services
                         });
                     }
                 }
-                catch
-                {
-                    // Fallback empty
-                }
+                catch { }
             }
 
             return interfaces;
