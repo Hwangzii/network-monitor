@@ -10,24 +10,18 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace MonitorApp.Views.Pages.TrafficMonitor
+namespace MonitorApp.Views.StartWindow
 {
     /// <summary>
-    /// Interaction logic for TM_Header.xaml
+    /// Interaction logic for SW_Main.xaml
     /// </summary>
-    public partial class TM_Header : UserControl
+    public partial class SW_Main : Window
     {
-        public TM_Header()
+        public SW_Main()
         {
             InitializeComponent();
-        }
-
-        private void ToggleButton_Checked(object sender, RoutedEventArgs e)
-        {
-
         }
     }
 }
