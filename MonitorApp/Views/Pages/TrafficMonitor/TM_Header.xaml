@@ -38,22 +38,40 @@
             </StackPanel>
         </Button>
 
-        <!-- CENTER: 2-toggle group -->
+        <!-- CENTER: viên thuốc 2 nửa (Wave / Grid+Globe) -->
         <Border Grid.Column="1"
-                Style="{StaticResource ToggleContainerStyle}"
                 HorizontalAlignment="Center"
-                Width="210">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
+                Width="190"
+                Height="40"
+                CornerRadius="20"
+                Background="White"
+                BorderBrush="#E5EAF0"
+                BorderThickness="1"
+                ClipToBounds="True">
 
-                <!-- Wave -->
-                <ToggleButton Style="{StaticResource ViewToggleButtonStyle}"
-                              IsChecked="False"
-                              Margin="3,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Nửa trái: Wave (đang chọn, nền xanh) -->
+                <ToggleButton Grid.Column="0"
+                              IsChecked="True"
+                              BorderThickness="0"
+                              VerticalAlignment="Stretch" Checked="ToggleButton_Checked">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+
                     <Path Data="M3 12h4l3-6 4 12 3-6h4"
-                          Stroke="#666666"
-                          StrokeThickness="2.2"
+                          Stroke="White"
+                          StrokeThickness="2"
                           StrokeLineJoin="Round"
                           StrokeStartLineCap="Round"
                           StrokeEndLineCap="Round"
@@ -61,25 +79,67 @@
                           Stretch="Uniform"/>
                 </ToggleButton>
 
-                <!-- Grid (đang chọn) -->
-                <ToggleButton Style="{StaticResource ViewToggleButtonStyle}"
-                              IsChecked="True"
-                              Margin="3,0">
-                    <Grid Width="22" Height="22">
-                        <Rectangle Width="9" Height="9" Fill="#666666"
-                                   HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                        <Rectangle Width="9" Height="9" Fill="#666666"
-                                   HorizontalAlignment="Right" VerticalAlignment="Top"/>
-                        <Rectangle Width="9" Height="9" Fill="#666666"
-                                   HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
-                        <Rectangle Width="9" Height="9" Fill="#666666"
-                                   HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                <!-- Vạch ngăn chính giữa -->
+                <Border Grid.ColumnSpan="2"
+                        Width="1"
+                        HorizontalAlignment="Center"
+                        Margin="0,6"
+                        Background="#E0E4EA"/>
+
+                <!-- Nửa phải: Grid + Globe (nền trắng) -->
+                <ToggleButton Grid.Column="1"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Icon GRID -->
+                        <Grid Grid.Column="0"
+                              Width="22" Height="22"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center">
+                            <Rectangle Width="8" Height="8"
+                                       Fill="#6D7B8C"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Top"
+                                       RadiusX="2" RadiusY="2"/>
+                            <Rectangle Width="8" Height="8"
+                                       Fill="#6D7B8C"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Top"
+                                       RadiusX="2" RadiusY="2"/>
+                            <Rectangle Width="8" Height="8"
+                                       Fill="#6D7B8C"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Bottom"
+                                       RadiusX="2" RadiusY="2"/>
+                            <Rectangle Width="8" Height="8"
+                                       Fill="#6D7B8C"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Bottom"
+                                       RadiusX="2" RadiusY="2"/>
+                        </Grid>
+
                     </Grid>
                 </ToggleButton>
-
-
-            </StackPanel>
+            </Grid>
         </Border>
+
 
         <!-- RIGHT: expand + combo -->
         <StackPanel Grid.Column="2"

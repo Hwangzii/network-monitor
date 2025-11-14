@@ -285,4 +285,72 @@
         </Setter>
     </Style>
 
+    <!-- ========= TOGGLE 2 NỬA (WAVE / GRID+GLOBE) ========= -->
+
+    <!-- Viên thuốc chứa 2 nửa -->
+    <Style x:Key="GW_2SegmentContainerStyle" TargetType="Border">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="CornerRadius" Value="24"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="BorderBrush" Value="#E5EAF0"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <!-- Base style cho mỗi nửa (ToggleButton) -->
+    <Style x:Key="GW_SegmentToggleBaseStyle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <!-- Tag dùng để truyền CornerRadius khác nhau cho 2 nửa -->
+                    <Border x:Name="Bg"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding Tag}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <!-- Nửa được chọn: nền xanh -->
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bg"
+                                    Property="Background"
+                                    Value="#4D8CFD"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Icon Path (wave / globe) đổi màu theo IsChecked của Toggle cha -->
+    <Style x:Key="GW_SegmentIconPath" TargetType="Path">
+        <Setter Property="Stroke" Value="#6D7B8C"/>
+        <Setter Property="StrokeThickness" Value="2"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsChecked,
+                                           RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                         Value="True">
+                <Setter Property="Stroke" Value="White"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Icon Rectangle (grid) đổi màu theo IsChecked -->
+    <Style x:Key="GW_SegmentIconRect" TargetType="Rectangle">
+        <Setter Property="Fill" Value="#6D7B8C"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsChecked,
+                                           RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                         Value="True">
+                <Setter Property="Fill" Value="White"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
 </ResourceDictionary>
