@@ -9,8 +9,6 @@ packages/
 *.nupkg
 .DS_Store
 
-backend/hazii_note/
-
 # WPF/UI
 AppData/
 *.pdb
