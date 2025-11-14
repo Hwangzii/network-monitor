@@ -11,6 +11,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\NetworkMonitor.Core\NetworkMonitor.Core.csproj" />
   </ItemGroup>
