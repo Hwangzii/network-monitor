@@ -4,15 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>CA1416</NoWarn> <!-- TẮT WARNING PerformanceCounter (tùy chọn) -->
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.21" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
+    <!-- Swashbuckle 10.0.1 cho .NET 10 -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+    <!-- PerformanceCounter cho .NET 10 -->
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>

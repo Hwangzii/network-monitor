@@ -2,24 +2,27 @@ using NetworkMonitor.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to container
-builder.Services.AddControllers();  // BẮT BUỘC: Đăng ký controllers
-builder.Services.AddEndpointsApiExplorer();  // Cho Swagger nếu dùng
-builder.Services.AddSwaggerGen();  // Cho Swagger docs
-builder.Services.AddSingleton<SystemInfoProvider>();  // DI cho Provider
+// Add services
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer(); // Cho Swagger
+builder.Services.AddSwaggerGen(); // Swashbuckle cho .NET 10
+
+builder.Services.AddSingleton<SystemInfoProvider>(); // DI Provider
 
 var app = builder.Build();
 
 // Configure pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();  // Thêm để test Swagger UI tại /swagger
-    app.UseDeveloperExceptionPage();
+    app.UseSwagger(); // Tạo /swagger/v1/swagger.json
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+    });
 }
 
-// app.UseHttpsRedirection();  // COMMENT TẠM: Để tránh warning HTTPS redirect (dùng HTTP cho dev)
+app.UseHttpsRedirection();
 app.UseAuthorization();
-app.MapControllers();  // BẮT BUỘC: Map tất cả controllers
+app.MapControllers();
 
 app.Run();
