@@ -1,21 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <NoWarn>CA1416</NoWarn> <!-- TẮT WARNING PerformanceCounter (tùy chọn) -->
   </PropertyGroup>
-
   <ItemGroup>
-    <!-- Swashbuckle 10.0.1 cho .NET 10 -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
-    <!-- PerformanceCounter cho .NET 10 -->
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.0" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.0" Condition="'$(OS)' == 'Windows_NT'" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\NetworkMonitor.Core\NetworkMonitor.Core.csproj" />
-  </ItemGroup>
-
 </Project>

@@ -1,28 +1,15 @@
-using NetworkMonitor.Api.Services;
-
+using NetworkMonitor.Api.Services.System;
+using NetworkMonitor.Api.Services.Traffic;
+using NetworkMonitor.Api.Services.Scanner;
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer(); // Cho Swagger
-builder.Services.AddSwaggerGen(); // Swashbuckle cho .NET 10
-
-builder.Services.AddSingleton<SystemInfoProvider>(); // DI Provider
-
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<LocalSystemService>();
+builder.Services.AddSingleton<TrafficService>();
+builder.Services.AddSingleton<NetworkScannerService>();
 var app = builder.Build();
-
-// Configure pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger(); // Tạo /swagger/v1/swagger.json
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
-    });
-}
-
+if (app.Environment.IsDevelopment()) { app.UseSwagger(); app.UseSwaggerUI(); }
 app.UseHttpsRedirection();
-app.UseAuthorization();
 app.MapControllers();
-
 app.Run();
