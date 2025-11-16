@@ -2,7 +2,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:pages="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor"
-             Background="AliceBlue">
+             Background="AliceBlue"
+             Width="auto"
+             Height="612">
 
     <Grid>
         <!-- Hiển thị TM_Main -->

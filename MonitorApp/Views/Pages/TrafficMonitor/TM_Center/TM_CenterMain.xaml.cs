@@ -13,18 +13,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace MonitorApp.Views.Layouts
+namespace MonitorApp.Views.Pages.TrafficMonitor.TM_Center
 {
-    public partial class Header : UserControl
+    /// <summary>
+    /// Interaction logic for TM_CenterMain.xaml
+    /// </summary>
+    public partial class TM_CenterMain : UserControl
     {
-        public Header()
+        public TM_CenterMain()
         {
             InitializeComponent();
-        }
-
-        private void RadioButton_Checked(object sender, RoutedEventArgs e)
-        {
-
         }
     }
 }
