@@ -1,25 +1,15 @@
-using NetworkMonitor.Api.Services;
-
+using NetworkMonitor.Api.Services.System;
+using NetworkMonitor.Api.Services.Traffic;
+using NetworkMonitor.Api.Services.Scanner;
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to container
-builder.Services.AddControllers();  // BẮT BUỘC: Đăng ký controllers
-builder.Services.AddEndpointsApiExplorer();  // Cho Swagger nếu dùng
-builder.Services.AddSwaggerGen();  // Cho Swagger docs
-builder.Services.AddSingleton<SystemInfoProvider>();  // DI cho Provider
-
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<LocalSystemService>();
+builder.Services.AddSingleton<TrafficService>();
+builder.Services.AddSingleton<NetworkScannerService>();
 var app = builder.Build();
-
-// Configure pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();  // Thêm để test Swagger UI tại /swagger
-    app.UseDeveloperExceptionPage();
-}
-
-// app.UseHttpsRedirection();  // COMMENT TẠM: Để tránh warning HTTPS redirect (dùng HTTP cho dev)
-app.UseAuthorization();
-app.MapControllers();  // BẮT BUỘC: Map tất cả controllers
-
+if (app.Environment.IsDevelopment()) { app.UseSwagger(); app.UseSwaggerUI(); }
+app.UseHttpsRedirection();
+app.MapControllers();
 app.Run();
