@@ -25,15 +25,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LiveCharts.Core" Version="0.9.8" />
-    <PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
-    <PackageReference Include="MahApps.Metro.IconPacks" Version="6.2.1" />
-    <PackageReference Include="SkiaSharp" Version="3.119.1" />
-    <PackageReference Include="SkiaSharp.Views.WPF" Version="3.119.1" />
-    <PackageReference Include="WPF.UI" Version="3.4.2.7" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Resource Include="Resources\Styles.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>

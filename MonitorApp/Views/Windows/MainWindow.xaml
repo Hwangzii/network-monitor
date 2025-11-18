@@ -9,20 +9,20 @@
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="50*"/>
-            <ColumnDefinition Width="50*"/>
+            <ColumnDefinition Width="49*"/>
+            <ColumnDefinition Width="51*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <!-- Header chiếm 2 phần -->
             <RowDefinition Height="1*"/>
             <!-- MainContent chiếm 8 phần -->
-            <RowDefinition Height="9*"/>
+            <RowDefinition Height="10*"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
         <layouts:Header Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,584" Grid.RowSpan="2" Loaded="Header_Loaded"/>
 
         <!-- MainContent -->
-        <layouts:MainContent Grid.Row="1" Grid.ColumnSpan="2" Loaded="MainContent_Loaded"/>
+        <layouts:MainContent Grid.Row="1" Grid.ColumnSpan="2"/>
     </Grid>
 </Window>

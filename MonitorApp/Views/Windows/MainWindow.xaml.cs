@@ -13,10 +13,5 @@ namespace MonitorApp.Views.Windows
         {
 
         }
-
-        private void MainContent_Loaded(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }

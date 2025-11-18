@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
+namespace MonitorApp.Services.Api
 {
-    class GraphViewModel
+    internal class test
     {
     }
 }

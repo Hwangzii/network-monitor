@@ -1,27 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Windows;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace MonitorApp.Views.StartWindow
 {
-    /// <summary>
-    /// Interaction logic for SW_Main.xaml
-    /// </summary>
     public partial class SW_Main : Window
     {
         public SW_Main()
         {
             InitializeComponent();
+
+            // Khi màn hình welcome load xong thì gọi hàm này
+            Loaded += SW_Main_Loaded;
+        }
+
+        // Đợi 5 giây rồi tự chuyển sang màn MainWindow
+        private async void SW_Main_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Đợi 5 giây (5000 mili-giây)
+            await Task.Delay(5000);
+
+            // Mở màn hình chính (MainWindow)
+            var main = new MonitorApp.Views.Windows.MainWindow();
+            main.Show();
+
+            // Đóng màn hình welcome
+            this.Close();
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Minimized;
         }
     }
 }
