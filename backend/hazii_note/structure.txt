@@ -1,0 +1,41 @@
+.
+├── backend.sln
+├── hazii_note
+│   ├── backup
+│   │   └── file_test.backup.cs
+│   ├── result.txt
+│   ├── run.txt
+│   ├── structure.txt
+│   ├── system_report_linux.log
+│   ├── system_report_window.txt
+│   └── User_Flow.png
+├── NetworkMonitor.Api
+│   ├── Controllers
+│   │   ├── Scanner
+│   │   │   └── NetworkScannerController.cs
+│   │   ├── System
+│   │   │   └── LocalSystemController.cs
+│   │   └── Traffic
+│   │       └── TrafficController.cs
+│   ├── DTOs
+│   │   ├── LocalSystemDto.cs
+│   │   ├── NetworkDeviceDto.cs
+│   │   ├── TrafficDto.cs
+│   │   └── TrafficSummaryDto.cs
+│   ├── NetworkMonitor.Api.csproj
+│   ├── Program.cs
+│   ├── Services
+│   │   ├── Scanner
+│   │   ├── System
+│   │   └── Traffic
+│   │       └── TrafficService.cs
+│   └── Utils
+│       └── FormatHelper.cs
+├── NetworkMonitor.Core
+│   └── NetworkMonitor.Core.csproj
+└── NetworkMonitor.Tests
+    ├── GlobalUsings.cs
+    ├── NetworkMonitor.Tests.csproj
+    └── UnitTest1.cs
+
+16 directories, 23 files
