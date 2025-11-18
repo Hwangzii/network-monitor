@@ -1,50 +1,41 @@
-backend
+.
 ├── backend.sln
 ├── hazii_note
 │   ├── backup
 │   │   └── file_test.backup.cs
+│   ├── result.txt
 │   ├── run.txt
 │   ├── structure.txt
 │   ├── system_report_linux.log
-│   └── system_report_window.txt
+│   ├── system_report_window.txt
+│   └── User_Flow.png
 ├── NetworkMonitor.Api
-│   ├── appsettings.Development.json
-│   ├── appsettings.json
-│   ├── Config
 │   ├── Controllers
-│   │   ├── MonitorController.cs
-│   │   └── SystemInfoController.cs
-│   ├── Dockerfile
+│   │   ├── Scanner
+│   │   │   └── NetworkScannerController.cs
+│   │   ├── System
+│   │   │   └── LocalSystemController.cs
+│   │   └── Traffic
+│   │       └── TrafficController.cs
 │   ├── DTOs
-│   │   ├── NetworkInterfaceDto.cs
-│   │   └── SystemInfoDto.cs
-│   ├── Helpers
-│   ├── Mappers
-│   ├── Middleware
+│   │   ├── LocalSystemDto.cs
+│   │   ├── NetworkDeviceDto.cs
+│   │   ├── TrafficDto.cs
+│   │   └── TrafficSummaryDto.cs
 │   ├── NetworkMonitor.Api.csproj
-│   ├── NetworkMonitor.Api.http
 │   ├── Program.cs
-│   ├── Properties
-│   │   └── launchSettings.json
 │   ├── Services
-│   │   └── SystemInfoProvider.cs
-│   └── WebSockets
-│       └── .gitkeep
-├── NetworkMonitor.Core
-│   ├── Models
-│   │   ├── .gitkeep
-│   │   └── MachineInfo.cs
-│   ├── Monitor
-│   │   └── .gitkeep
-│   ├── NetworkMonitor.Core.csproj
-│   ├── Providers
-│   │   └── .gitkeep
+│   │   ├── Scanner
+│   │   ├── System
+│   │   └── Traffic
+│   │       └── TrafficService.cs
 │   └── Utils
-│       ├── Normalizer.cs
-│       └── NormalizerService.cs
+│       └── FormatHelper.cs
+├── NetworkMonitor.Core
+│   └── NetworkMonitor.Core.csproj
 └── NetworkMonitor.Tests
     ├── GlobalUsings.cs
     ├── NetworkMonitor.Tests.csproj
     └── UnitTest1.cs
 
-19 directories, 29 files
+16 directories, 23 files
