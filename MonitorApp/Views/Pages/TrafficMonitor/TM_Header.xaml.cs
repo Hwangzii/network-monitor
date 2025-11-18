@@ -1,23 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Windows.Controls.Primitives;
 
 namespace MonitorApp.Views.Pages.TrafficMonitor
 {
-    /// <summary>
-    /// Interaction logic for TM_Header.xaml
-    /// </summary>
     public partial class TM_Header : UserControl
     {
         public TM_Header()
@@ -25,9 +11,30 @@ namespace MonitorApp.Views.Pages.TrafficMonitor
             InitializeComponent();
         }
 
+        // Button "Graph"
         private void ToggleButton_Checked(object sender, RoutedEventArgs e)
         {
+            var parent = Window.GetWindow(this);
+            if (parent == null) return;
 
+            var frame = parent.FindName("MainContentFrame") as Frame;
+            if (frame != null)
+                frame.Content = new TM_Center.Graph();    // <-- chuyển sang Graph
+        }
+
+        // Button "Usage"
+        private void ToggleButton_Checked_1(object sender, RoutedEventArgs e)
+        {
+            var parent = Window.GetWindow(this);
+            if (parent == null) return;
+
+            var frame = parent.FindName("MainContentFrame") as Frame;
+            if (frame != null)
+                frame.Content = new TM_Center.Usage();    // <-- chuyển sang Usage
+        }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
         }
     }
 }

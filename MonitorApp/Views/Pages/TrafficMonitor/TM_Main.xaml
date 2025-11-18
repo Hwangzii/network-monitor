@@ -3,22 +3,27 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor"
              xmlns:layouts="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="1200">
+             xmlns:layouts1="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor.TM_Center"
+             xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
+             mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <vm:TM_CenterMainViewModel/>
+    </UserControl.DataContext>
+
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="2*"/>
-            <RowDefinition Height="7*"/>
-            <RowDefinition Height="2*"/>
-            <RowDefinition Height="2*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="6*"/>
+            <RowDefinition Height="3*"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <layouts:TM_Header Grid.Row="0"/>
-        
-
-
+        <layouts:TM_Header Grid.Row="0" DataContext="{Binding}"/>
+        <!-- Center -->
+        <layouts1:TM_CenterMain Grid.Row="1" DataContext="{Binding}"/>
+        <!-- Footer -->
+        <layouts:TM_Footer Grid.Row="2"/>
     </Grid>
 </UserControl>

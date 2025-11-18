@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MonitorApp.Services.Api
 {
-    class test1
+    class test2
     {
     }
 }
