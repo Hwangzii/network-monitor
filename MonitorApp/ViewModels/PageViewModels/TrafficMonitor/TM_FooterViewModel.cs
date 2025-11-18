@@ -10,29 +10,29 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
     public class TM_FooterViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-
+        private ObservableCollection<string> timeLabels;
         private readonly DispatcherTimer timer;
         private readonly List<string> allTimeLabels = new();
 
         // =============================
-        // 1) DEMO SPEED + TOTAL
+        // 1) DEMO SPEED + TOTAL (GLOBAL)
         // =============================
 
-        private double downloadSpeed;   // byte/s
+        private double downloadSpeed;   // byte/s (global)
         public double DownloadSpeed
         {
             get => downloadSpeed;
             set { downloadSpeed = value; OnPropertyChanged(); OnPropertyChanged(nameof(DownloadSpeedText)); }
         }
 
-        private double uploadSpeed;     // byte/s
+        private double uploadSpeed;     // byte/s (global)
         public double UploadSpeed
         {
             get => uploadSpeed;
             set { uploadSpeed = value; OnPropertyChanged(); OnPropertyChanged(nameof(UploadSpeedText)); }
         }
 
-        private double downloadTotal;   // byte
+        private double downloadTotal;   // byte (global)
         public double DownloadTotal
         {
             get => downloadTotal;
@@ -42,11 +42,11 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(DownloadTotalText));
                 OnPropertyChanged(nameof(TotalUsedText));
-                UpdateArcPercent();
+                UpdateArcAndBars();
             }
         }
 
-        private double uploadTotal;     // byte
+        private double uploadTotal;     // byte (global)
         public double UploadTotal
         {
             get => uploadTotal;
@@ -55,8 +55,8 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 uploadTotal = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(UploadTotalText));
-                OnPropertyChanged(nameof(TotalUsedText)); // cập nhật tổng
-                UpdateArcPercent();
+                OnPropertyChanged(nameof(TotalUsedText));
+                UpdateArcAndBars();
             }
         }
 
@@ -68,11 +68,17 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
         public string TotalUsedText => FormatBytes(DownloadTotal + UploadTotal);
 
-
-
         // =============================
-        // 2) WAN / LAN
+        // 2) WAN / LAN (mỗi cái có down + up riêng)
         // =============================
+
+        // WAN totals
+        private double wanDownloadTotal;
+        private double wanUploadTotal;
+
+        // LAN totals
+        private double lanDownloadTotal;
+        private double lanUploadTotal;
 
         private string wanSizeText;
         public string WanSizeText
@@ -94,7 +100,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             get => wanDownPercent;
             set { wanDownPercent = ClampPercent(value); OnPropertyChanged(); OnPropertyChanged(nameof(WanUpPercent)); }
         }
-
         public double WanUpPercent => 100.0 - WanDownPercent;
 
         private double lanDownPercent;
@@ -103,7 +108,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             get => lanDownPercent;
             set { lanDownPercent = ClampPercent(value); OnPropertyChanged(); OnPropertyChanged(nameof(LanUpPercent)); }
         }
-
         public double LanUpPercent => 100.0 - LanDownPercent;
 
         private double wanFillWidth;
@@ -119,6 +123,11 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             get => lanFillWidth;
             set { lanFillWidth = value; OnPropertyChanged(); }
         }
+
+        // =============================
+        // 3) ARC (donut)
+        // =============================
+
         private double arcDownloadPercent;
         public double ArcDownloadPercent
         {
@@ -143,10 +152,14 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         private static double ClampPercent(double v) => v < 0 ? 0 : (v > 100 ? 100 : v);
 
         // =============================
-        // 3) TIMELINE
+        // 4) TIMELINE
         // =============================
 
-        public ObservableCollection<string> TimeLabels { get; private set; } = new();
+        public ObservableCollection<string> TimeLabels
+        {
+            get => timeLabels;
+            private set { timeLabels = value; OnPropertyChanged(); }
+        }
 
         private double smoothScrollOffset;
         public double SmoothScrollOffset
@@ -158,27 +171,38 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         private DateTime lastLabelTime;
         private const double LabelIntervalSeconds = 4.0;
         private const double LabelWidth = 150.0;
+        private const int VisibleLabelCount = 18;   // đồng bộ với GraphViewModel
+
+        // bar max width (khớp XAML)
+        private const double MaxWanWidth = 820;
+        private const double MaxLanWidth = 820;
+
+        private DateTime lastTotalTime = DateTime.Now;
+        private readonly Random rnd = new Random();
 
         // =============================
         // Constructor
         // =============================
         public TM_FooterViewModel()
         {
-            // DEMO tốc độ bạn yêu cầu
-            DownloadSpeed = 100 * 1024;   // 100 KB/s
-            UploadSpeed = 120 * 1024;     // 120 KB/s
+            // khởi tạo totals = 0
+            DownloadTotal = 0;
+            UploadTotal = 0;
 
-            WanSizeText = "1.3 MB";
-            WanDownPercent = 97;
-            WanFillWidth = 820;
+            wanDownloadTotal = 0;
+            wanUploadTotal = 0;
+            lanDownloadTotal = 0;
+            lanUploadTotal = 0;
 
-            LanSizeText = "22.7 KB";
-            LanDownPercent = 85;
-            LanFillWidth = 22;
+            WanSizeText = "0 B";
+            LanSizeText = "0 B";
+
+            WanFillWidth = 0;
+            LanFillWidth = 0;
 
             InitializeTimeline();
 
-            timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+            timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             timer.Tick += OnTimerTick;
             timer.Start();
         }
@@ -189,6 +213,10 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
         private void InitializeTimeline()
         {
+            // giống GraphViewModel: luôn đảm bảo TimeLabels không bị null
+            if (TimeLabels == null)
+                TimeLabels = new ObservableCollection<string>();
+
             TimeLabels.Clear();
             allTimeLabels.Clear();
 
@@ -206,24 +234,46 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             UpdateVisibleTimeLabels();
         }
 
-        private DateTime lastTotalTime = DateTime.Now;
-
         private void OnTimerTick(object sender, EventArgs e)
         {
+            // 1) Random global speed mỗi tick
+            DownloadSpeed = rnd.Next(500_000, 50_000_000);   // ~0.5MB/s → 50MB/s
+            UploadSpeed = rnd.Next(200_000, 20_000_000);     // ~0.2MB/s → 20MB/s
+
             var now = DateTime.Now;
 
-            // ====== 1) CẬP NHẬT TOTAL DỰA TRÊN THỜI GIAN THỰC ======
+            // 2) Cập nhật total dựa trên thời gian thực
             double elapsedTotal = (now - lastTotalTime).TotalSeconds;
             if (elapsedTotal > 0)
             {
-                DownloadTotal += DownloadSpeed * elapsedTotal;
-                UploadTotal += UploadSpeed * elapsedTotal;
+                double dDown = DownloadSpeed * elapsedTotal;
+                double dUp = UploadSpeed * elapsedTotal;
+
+                // Chia increment cho WAN / LAN (mỗi interface có down/up riêng)
+                double wanDownShare = rnd.NextDouble(); // 0..1
+                double wanUpShare = rnd.NextDouble();
+
+                double wanDownInc = dDown * wanDownShare;
+                double lanDownInc = dDown - wanDownInc;
+
+                double wanUpInc = dUp * wanUpShare;
+                double lanUpInc = dUp - wanUpInc;
+
+                // Cộng vào totals interface
+                wanDownloadTotal += wanDownInc;
+                lanDownloadTotal += lanDownInc;
+                wanUploadTotal += wanUpInc;
+                lanUploadTotal += lanUpInc;
+
+                // Tổng global = WAN + LAN (đảm bảo TotalUsed = WAN+LAN)
+                DownloadTotal = wanDownloadTotal + lanDownloadTotal;
+                UploadTotal = wanUploadTotal + lanUploadTotal;
+
                 lastTotalTime = now;
             }
 
-            // ====== 2) TIMELINE ======
+            // 3) TIMELINE
             double elapsedLabel = (now - lastLabelTime).TotalSeconds;
-
             var progress = elapsedLabel / LabelIntervalSeconds;
             SmoothScrollOffset = -(progress * LabelWidth);
 
@@ -240,13 +290,14 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             }
         }
 
-
         private void UpdateVisibleTimeLabels()
         {
-            TimeLabels.Clear();
-            const int visible = 18;
+            if (TimeLabels == null)
+                TimeLabels = new ObservableCollection<string>();
 
-            int start = Math.Max(0, allTimeLabels.Count - visible);
+            TimeLabels.Clear();
+
+            int start = Math.Max(0, allTimeLabels.Count - VisibleLabelCount);
             for (int i = start; i < allTimeLabels.Count; i++)
                 TimeLabels.Add(allTimeLabels[i]);
         }
@@ -264,7 +315,11 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             return $"{v:0.#} {u[i]}";
         }
 
-        private void UpdateArcPercent()
+        /// <summary>
+        /// Cập nhật donut + WAN/LAN bar dựa trên totals hiện tại.
+        /// GỌI từ setter DownloadTotal/UploadTotal.
+        /// </summary>
+        private void UpdateArcAndBars()
         {
             double total = DownloadTotal + UploadTotal;
 
@@ -273,14 +328,53 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 ArcDownloadPercent = 0;
                 ArcUploadPercent = 0;
                 ArcTotalPercent = 0;
+
+                WanSizeText = "0 B";
+                LanSizeText = "0 B";
+
+                WanDownPercent = 0;
+                LanDownPercent = 0;
+
+                WanFillWidth = 0;
+                LanFillWidth = 0;
                 return;
             }
 
+            // ===== 1) VÒNG CUNG (global) =====
             ArcDownloadPercent = (DownloadTotal / total) * 100.0;
             ArcUploadPercent = (UploadTotal / total) * 100.0;
-            ArcTotalPercent = 100.0; // luôn 100%
-        }
+            ArcTotalPercent = 100.0;
 
+            // ===== 2) WAN BAR =====
+            double wanTotal = wanDownloadTotal + wanUploadTotal;
+            if (wanTotal > 0)
+            {
+                WanSizeText = FormatBytes(wanTotal);
+                WanDownPercent = (wanDownloadTotal / wanTotal) * 100.0;
+                WanFillWidth = MaxWanWidth * (wanTotal / total); // dài tỉ lệ với tổng
+            }
+            else
+            {
+                WanSizeText = "0 B";
+                WanDownPercent = 0;
+                WanFillWidth = 0;
+            }
+
+            // ===== 3) LAN BAR =====
+            double lanTotal = lanDownloadTotal + lanUploadTotal;
+            if (lanTotal > 0)
+            {
+                LanSizeText = FormatBytes(lanTotal);
+                LanDownPercent = (lanDownloadTotal / lanTotal) * 100.0;
+                LanFillWidth = MaxLanWidth * (lanTotal / total);
+            }
+            else
+            {
+                LanSizeText = "0 B";
+                LanDownPercent = 0;
+                LanFillWidth = 0;
+            }
+        }
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
