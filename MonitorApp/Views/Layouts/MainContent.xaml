@@ -1,0 +1,12 @@
+﻿<UserControl x:Class="MonitorApp.Views.Layouts.MainContent"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:pages="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor"
+             Background="AliceBlue">
+
+    <Grid>
+        <!-- Hiển thị TM_Main -->
+        <pages:TM_Main />
+    </Grid>
+</UserControl>
+
