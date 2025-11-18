@@ -1,0 +1,50 @@
+backend
+├── backend.sln
+├── hazii_note
+│   ├── backup
+│   │   └── file_test.backup.cs
+│   ├── run.txt
+│   ├── structure.txt
+│   ├── system_report_linux.log
+│   └── system_report_window.txt
+├── NetworkMonitor.Api
+│   ├── appsettings.Development.json
+│   ├── appsettings.json
+│   ├── Config
+│   ├── Controllers
+│   │   ├── MonitorController.cs
+│   │   └── SystemInfoController.cs
+│   ├── Dockerfile
+│   ├── DTOs
+│   │   ├── NetworkInterfaceDto.cs
+│   │   └── SystemInfoDto.cs
+│   ├── Helpers
+│   ├── Mappers
+│   ├── Middleware
+│   ├── NetworkMonitor.Api.csproj
+│   ├── NetworkMonitor.Api.http
+│   ├── Program.cs
+│   ├── Properties
+│   │   └── launchSettings.json
+│   ├── Services
+│   │   └── SystemInfoProvider.cs
+│   └── WebSockets
+│       └── .gitkeep
+├── NetworkMonitor.Core
+│   ├── Models
+│   │   ├── .gitkeep
+│   │   └── MachineInfo.cs
+│   ├── Monitor
+│   │   └── .gitkeep
+│   ├── NetworkMonitor.Core.csproj
+│   ├── Providers
+│   │   └── .gitkeep
+│   └── Utils
+│       ├── Normalizer.cs
+│       └── NormalizerService.cs
+└── NetworkMonitor.Tests
+    ├── GlobalUsings.cs
+    ├── NetworkMonitor.Tests.csproj
+    └── UnitTest1.cs
+
+19 directories, 29 files
