@@ -4,9 +4,93 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor.TM_Center"
+             xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
+             xmlns:conv="clr-namespace:MonitorApp.Converters"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             Background="Transparent"
+             d:DesignHeight="367.2" d:DesignWidth="1200">
+    <UserControl.DataContext>
+        <vm:GraphViewModel/>
+    </UserControl.DataContext>
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!-- Converter đặt ở đây -->
+            <conv:SeriesToGeometryConverter x:Key="SeriesToGeometryConverter"/>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/MonitorApp;component/Resources/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <Grid>
-            
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Phần biểu đồ -->
+        <Border Grid.Row="0" Style="{StaticResource ChartBorderStyle}">
+            <Grid>
+                <!-- Lưới nền -->
+                <ItemsControl x:Name="GridLines" Style="{StaticResource GridLinesStyle}"/>
+
+                <!-- Canvas cho biểu đồ -->
+                <Canvas x:Name="ChartCanvas" ClipToBounds="True">
+                    <!-- Download (tím) -->
+                    <Path Stroke="#FBBF24" StrokeThickness="2.5" Fill="Transparent" SnapsToDevicePixels="True">
+                        <Path.Data>
+                            <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}" ConverterParameter="60|200|False">
+                                <Binding Path="DownloadData"/>
+                                <Binding ElementName="ChartCanvas" Path="ActualWidth"/>
+                                <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
+                           
+                                <!-- forcing refresh on collection change -->
+                                <Binding Path="DownloadData.Count"/>
+                            </MultiBinding>
+                        </Path.Data>
+                    </Path>
+
+                    <!-- Upload (cam) -->
+                    <Path Stroke="#F9A8D4" StrokeThickness="2.5" Fill="Transparent" SnapsToDevicePixels="True">
+                        <Path.Data>
+                            <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}" ConverterParameter="60|200 |False">
+                                <Binding Path="UploadData"/>
+                                <Binding ElementName="ChartCanvas" Path="ActualWidth"/>
+                                <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
+                                <!-- forcing refresh on collection change -->
+                                <Binding Path="UploadData.Count"/>
+                            </MultiBinding>
+                        </Path.Data>
+                    </Path>
+                </Canvas>
+
+                <!-- Nhãn giá trị -->
+                <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" 
+                           Margin="20,20,0,0" Style="{StaticResource LegendPanelStyle}">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <Ellipse Width="12" Height="12" Fill="#FBBF24" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding DownloadSpeed, StringFormat={}{0:F1} KB/s}" 
+                                   Style="{StaticResource ValueTextStyle}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="12" Height="12" Fill="#F9A8D4" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding UploadSpeed, StringFormat={}{0:F1} KB/s}" 
+                                   Style="{StaticResource ValueTextStyle}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Phần trục thời gian -->
+        <Border Grid.Row="1" Style="{StaticResource TimelineBorderStyle}">
+            <Grid ClipToBounds="True">
+                <ItemsControl ItemsSource="{Binding TimeLabels}" Style="{StaticResource TimeLabelsStyle}">
+                    <ItemsControl.RenderTransform>
+                        <TranslateTransform X="{Binding SmoothScrollOffset}"/>
+                    </ItemsControl.RenderTransform>
+                </ItemsControl>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>
