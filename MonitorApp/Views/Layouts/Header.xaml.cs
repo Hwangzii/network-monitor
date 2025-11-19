@@ -22,9 +22,5 @@ namespace MonitorApp.Views.Layouts
             InitializeComponent();
         }
 
-        private void RadioButton_Checked(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }

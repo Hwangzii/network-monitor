@@ -7,8 +7,8 @@
              xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
              xmlns:conv="clr-namespace:MonitorApp.Converters"
              mc:Ignorable="d" 
-             Background="Transparent"
-             d:DesignHeight="367.2" d:DesignWidth="1200">
+             Background="Transparent" Loaded="UserControl_Loaded"
+            >
     <UserControl.DataContext>
         <vm:GraphViewModel/>
     </UserControl.DataContext>
@@ -25,12 +25,14 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="10*"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
 
         <!-- Phần biểu đồ -->
-        <Border Grid.Row="0" Style="{StaticResource ChartBorderStyle}">
+        <Border Grid.Row="0" 
+                Style="{StaticResource ChartBorderStyle}"
+                VerticalAlignment="Stretch">
             <Grid>
                 <!-- Lưới nền -->
                 <ItemsControl x:Name="GridLines" Style="{StaticResource GridLinesStyle}"/>
@@ -83,9 +85,18 @@
         </Border>
 
         <!-- Phần trục thời gian -->
-        <Border Grid.Row="1" Style="{StaticResource TimelineBorderStyle}">
-            <Grid ClipToBounds="True">
-                <ItemsControl ItemsSource="{Binding TimeLabels}" Style="{StaticResource TimeLabelsStyle}">
+        <!-- Phần trục thời gian -->
+        <Border Grid.Row="1"
+        Height="30"
+        Style="{StaticResource TimelineBorderStyle}"
+        Margin="0"
+        HorizontalAlignment="Stretch">
+            <Grid x:Name="TopTimelineHost"
+          ClipToBounds="True">
+                <ItemsControl ItemsSource="{Binding TimeLabels}"
+                      Style="{StaticResource TimeLabelsStyle}"
+                      HorizontalAlignment="Stretch"
+                      Width="{Binding ActualWidth, ElementName=TopTimelineHost}">
                     <ItemsControl.RenderTransform>
                         <TranslateTransform X="{Binding SmoothScrollOffset}"/>
                     </ItemsControl.RenderTransform>
