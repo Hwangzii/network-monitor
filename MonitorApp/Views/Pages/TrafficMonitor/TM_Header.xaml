@@ -2,9 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
              Height="62"
-             xmlns:center="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor.TM_Center"
-
              Width="auto"
              Background="Transparent">
 
@@ -16,7 +15,6 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <!-- dải header mỏng -->
     <Grid Height="60" Margin="15,0,15,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -25,103 +23,69 @@
         </Grid.ColumnDefinitions>
 
         <!-- LEFT: Filter pill -->
-        <Button Grid.Column="0"
-                Style="{StaticResource HeaderButtonStyle}"
-                HorizontalAlignment="Center" Margin="0,0,0,0">
+        <Button Grid.Column="0" Style="{StaticResource HeaderButtonStyle}" HorizontalAlignment="Center">
             <StackPanel Orientation="Horizontal">
-                <Path Data="M3 6h18M9 12h12M3 18h18"
-                      Stroke="#666666"
-                      StrokeThickness="1.8"
-                      Width="14" Height="14"
-                      Stretch="Uniform"
-                      Margin="0,0,15,0"/>
-                <TextBlock Text="Filter"
-                           FontSize="14"
-                           FontWeight="Medium"
-                           Margin="0,0,0,0"
-                           Foreground="#374151"
-                           VerticalAlignment="Center"/>
+                <Path Data="M3 6h18M9 12h12M3 18h18" Stroke="#666666" StrokeThickness="1.8"
+                      Width="14" Height="14" Stretch="Uniform" Margin="0,0,15,0"/>
+                <TextBlock Text="Filter" FontSize="14" FontWeight="Medium" Foreground="#374151" VerticalAlignment="Center"/>
             </StackPanel>
         </Button>
 
         <!-- CENTER: viên thuốc 2 nửa (Wave / Grid) -->
-        <Border Grid.Column="1"
-            HorizontalAlignment="Center"
-            Width="190"
-            Height="35"
-            CornerRadius="20"
-            Background="White"
-            BorderBrush="#E5EAF0"
-             >
+        <Border Grid.Column="1" HorizontalAlignment="Center" Width="190" Height="35"
+                CornerRadius="20" Background="White" BorderBrush="#E5EAF0">
             <Border.Effect>
-                <DropShadowEffect Color="#666666"
-                          BlurRadius="8"
-                          ShadowDepth="2"
-                          Opacity="0.2"/>
+                <DropShadowEffect Color="#666666" BlurRadius="8" ShadowDepth="2" Opacity="0.2"/>
             </Border.Effect>
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="5*"/>
-                    <RowDefinition Height="5*"/>
-                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <!-- NỬA TRÁI: WAVE (đang chọn, nền xanh, bo góc trái) -->
-                <ToggleButton Grid.Column="0"
-                      BorderThickness="0"
-                      Command="{Binding ShowGraphCommand}" Margin="0,0,0,0" Grid.RowSpan="2">
+
+                <ToggleButton Grid.Column="0" BorderThickness="0" Command="{Binding ShowGraphCommand}">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
-                            <Border Background="White"
-                    CornerRadius="20,0,0,20">
-                                <!-- bo góc bên trái -->
-                                <ContentPresenter HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"/>
+                            <Border Background="White" CornerRadius="20,0,0,20">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </ControlTemplate>
                     </ToggleButton.Template>
-
                     <iconPacks:PackIconFeatherIcons Kind="TrendingUp" Width="24" Height="24" Foreground="#666666"/>
                 </ToggleButton>
 
-                <!-- NỬA PHẢI: GRID (nền trắng, bo góc phải) -->
-                <ToggleButton Grid.Column="1"
-              BorderThickness="0"
-              Grid.RowSpan="2"
-              Command="{Binding ShowUsageCommand}">
+                <ToggleButton Grid.Column="1" BorderThickness="0" Command="{Binding ShowUsageCommand}">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
-                            <Border Background="White"
-                    CornerRadius="0,20,20,0">
-                                <!-- bo góc bên phải -->
-                                <ContentPresenter HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"/>
+                            <Border Background="White" CornerRadius="0,20,20,0">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </ControlTemplate>
                     </ToggleButton.Template>
-
                     <iconPacks:PackIconFeatherIcons Kind="MinusSquare" Width="24" Height="24" Foreground="#666666"/>
                 </ToggleButton>
-
             </Grid>
         </Border>
 
-        <!-- RIGHT: expand + combo -->
-        <StackPanel Grid.Column="2"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Margin="0,0,12,0">
+        <!-- RIGHT: ComboBox thời gian – ĐÃ SỬA HOÀN CHỈNH, CLICK MƯỢT -->
+        <StackPanel Grid.Column="2" 
+            Orientation="Horizontal" 
+            HorizontalAlignment="Right" 
+            VerticalAlignment="Center" 
+            Margin="0,0,12,0">
 
-            <!-- ComboBox thời gian -->
-            <ComboBox Style="{StaticResource RoundedComboBoxStyle}" SelectionChanged="ComboBox_SelectionChanged">
-                <ComboBoxItem Content="5 Minutes" IsSelected="True"/>
-                <ComboBoxItem Content="15 Minutes"/>
-                <ComboBoxItem Content="30 Minutes"/>
-                <ComboBoxItem Content="1 Hour"/>
-                <ComboBoxItem Content="24 Hours"/>
+            <ComboBox Style="{StaticResource RoundedComboBoxStyle}"
+              Width="130"
+              Margin="10,0,0,0"
+              SelectedValue="{Binding SelectedRange, Mode=TwoWay}"
+              SelectedValuePath="Tag"
+              DisplayMemberPath="Content">
+
+                    <ComboBoxItem Content="5m"  IsSelected="True" Tag="5m"/>
+                    <ComboBoxItem Content="15m" Tag="15m"/>
+                    <ComboBoxItem Content="30m" Tag="30m"/>
+                    <ComboBoxItem Content="1h"  Tag="1h"/>
+                <ComboBoxItem Content="24h" Tag="24h"/>
             </ComboBox>
         </StackPanel>
     </Grid>

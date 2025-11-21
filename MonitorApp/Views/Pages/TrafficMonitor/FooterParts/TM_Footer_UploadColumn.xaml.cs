@@ -13,21 +13,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace MonitorApp.Views.Pages.TrafficMonitor
+namespace MonitorApp.Views.Pages.TrafficMonitor.FooterParts
 {
     /// <summary>
-    /// Interaction logic for TM_Main.xaml
+    /// Interaction logic for TM_Footer_UploadColumn.xaml
     /// </summary>
-    public partial class TM_Main : UserControl
+    public partial class TM_Footer_UploadColumn : UserControl
     {
-        public TM_Main()
+        public TM_Footer_UploadColumn()
         {
             InitializeComponent();
-        }
-
-        private void TM_Header_Loaded(object sender, RoutedEventArgs e)
-        {
-
         }
     }
 }

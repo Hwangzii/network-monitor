@@ -1,50 +1,38 @@
-﻿using System;
+﻿// ViewModels/PageViewModels/TrafficMonitor/TM_HeaderViewModel.cs
+using MonitorApp.Helpers;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
-namespace MonitorApp.ViewModels
+namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 {
     public class TM_HeaderViewModel : INotifyPropertyChanged
     {
-        private string _selectedTime = "5 Minutes";
-        public string SelectedTime
-        {
-            get => _selectedTime;
-            set
-            {
-                if (_selectedTime != value)
-                {
-                    _selectedTime = value;
-                    OnPropertyChanged();
-                    TimeChangedCommand?.Execute(value);
-                }
-            }
-        }
-
-        private bool _isActivityView = true;
-        public bool IsActivityView
-        {
-            get => _isActivityView;
-            set
-            {
-                if (_isActivityView != value)
-                {
-                    _isActivityView = value;
-                    OnPropertyChanged();
-                    OnViewModeChanged?.Invoke(_isActivityView ? "Activity" : "Grid");
-                }
-            }
-        }
-
-        // Event để MainViewModel hoặc TM_Main nhận sự thay đổi
-        public Action<string>? OnViewModeChanged { get; set; }
-
-        // Optional: RelayCommand nếu muốn
-        public ICommand? TimeChangedCommand { get; set; }
-
         public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
+
+        public TrafficMonitorViewModel? ParentViewModel { get; set; }
+
+        // Dùng string thay vì enum → không lỗi
+        public string SelectedRange
+        {
+            get => ParentViewModel?.SelectedRange ?? "5m";
+            set
+            {
+                if (ParentViewModel != null && ParentViewModel.SelectedRange != value)
+                    ParentViewModel.SelectedRange = value;
+            }
+        }
+
+        public ICommand ShowGraphCommand { get; }
+        public ICommand ShowUsageCommand { get; }
+
+        public TM_HeaderViewModel()
+        {
+            ShowGraphCommand = new RelayCommand(_ => { });
+            ShowUsageCommand = new RelayCommand(_ => { });
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }
