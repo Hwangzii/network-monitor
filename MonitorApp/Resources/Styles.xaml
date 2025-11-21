@@ -101,55 +101,63 @@
 
     <!-- Navigation Button Style -->
     <Style x:Key="NavButtonStyle" TargetType="RadioButton">
+        <!-- Màu mặc định (chưa chọn) -->
+        <Setter Property="Foreground" Value="#666666" />
+
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="border" 
-                            Background="Transparent" 
-                            Padding="20,10"
-                            CornerRadius="8"
-                            Margin="5,0">
+                    <Border x:Name="border"
+                          Background="Transparent"
+                          Padding="20,10"
+                          CornerRadius="8"
+                          Margin="5,0">
 
-                        <StackPanel Orientation="Horizontal" 
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Height="25">
+                        <StackPanel Orientation="Horizontal"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Height="30">
 
-                            <ContentPresenter Content="{TemplateBinding Tag}" 
-                                              Margin="0,0,8,0"/>
+                            <ContentPresenter Content="{TemplateBinding Tag}"
+                                            Margin="0,0,0,0" />
 
                             <TextBlock x:Name="titleText"
-                                       Text="{TemplateBinding Content}"
-                                       FontSize="10"
-                                       FontWeight="Medium"
-                                       Foreground="#666666"/>
+                                     Text="{TemplateBinding Content}"
+                                     FontSize="10"
+                                     FontWeight="Medium"
+                                     Foreground="{TemplateBinding Foreground}" />
                         </StackPanel>
                     </Border>
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#F5F5F5"/>
+                            <Setter TargetName="border"
+                                  Property="Background"
+                                  Value="#F5F5F5" />
                         </Trigger>
 
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#E8F4FD"/>
-                            <Setter TargetName="titleText" Property="Foreground" Value="#6A9DF9"/>
-                            <Setter TargetName="titleText" Property="Foreground" Value="#6A9DF9"/>
-                            <Setter TargetName="titleText" Property="FontWeight" Value="SemiBold"/>
+                            <Setter TargetName="border"
+                                  Property="Background"
+                                  Value="#E8F4FD" />
+                            <!-- Đổi màu chung cho RadioButton (text + icon bind theo) -->
+                            <Setter Property="Foreground" Value="#3D6FEA" />
+                            <Setter TargetName="titleText"
+                                  Property="FontWeight"
+                                  Value="SemiBold" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-
-
+    
     <!-- Badge -->
     <Style x:Key="BadgeStyle" TargetType="Border">
         <Setter Property="Background" Value="#F44336"/>
         <Setter Property="CornerRadius" Value="10"/>
-        <Setter Property="MinWidth" Value="20"/>
-        <Setter Property="Height" Value="20"/>
+        <Setter Property="Width" Value="15"/>
+        <Setter Property="Height" Value="15"/>
         <Setter Property="Padding" Value="5,0"/>
         <Setter Property="Margin" Value="-8,-10,0,0"/>
     </Style>
@@ -392,12 +400,16 @@
     <!-- Style cho Border timeline -->
     <Style x:Key="TimelineBorderStyle" TargetType="Border">
         <Setter Property="Background" Value="White"/>
-        <Setter Property="Margin" Value="0,0,0,0"/>
+        <Setter Property="Margin" Value="0"/>
         <Setter Property="CornerRadius" Value="0"/>
         <Setter Property="BorderBrush" Value="#E0E0E0"/>
         <Setter Property="BorderThickness" Value="0,1,0,0"/>
-        <Setter Property="Width" Value="1500"/>
+        <!-- BỎ Width cố định đi -->
+        <!-- <Setter Property="Width" Value="1500"/> -->
+        <!-- Thêm stretch để luôn full ngang -->
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
     </Style>
+
 
     <!-- Style cho các đường biểu đồ -->
     <Style x:Key="ChartLineStyle" TargetType="Polyline">
@@ -737,6 +749,114 @@
     <Style x:Key="TagBlocked" TargetType="Border" BasedOn="{StaticResource TagBase}">
         <Setter Property="Background" Value="#FEE2E2"/>
         <Setter Property="BorderBrush" Value="#FCA5A5"/>
+    </Style>
+
+
+    <!-- ============= GLOBAL BRUSHES ============= -->
+
+    <SolidColorBrush x:Key="ColorBorderLight" Color="#D2D7E4"/>
+    <SolidColorBrush x:Key="ColorBorderTable" Color="#E1E5F0"/>
+    <SolidColorBrush x:Key="ColorRowAlt" Color="#FAFBFE"/>
+    <SolidColorBrush x:Key="ColorRowSelected" Color="#E3F2FD"/>
+    <SolidColorBrush x:Key="ColorHeaderBg" Color="#F5F7FB"/>
+
+    <!-- ============= OPTIONAL TEXT STYLE ============= -->
+
+    <Style x:Key="TableHeaderText"
+           TargetType="TextBlock">
+        <Setter Property="Foreground" Value="#777"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ============= DATA GRID HEADER ============= -->
+
+    <Style x:Key="TableColumnHeaderStyle"
+           TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="{StaticResource ColorHeaderBg}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ColorBorderTable}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#777"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Padding" Value="8,6"/>
+    </Style>
+
+    <!-- ============= DATA GRID ROW (FIX LỖI) ============= -->
+    <!-- KHÔNG dùng Setter cho AlternationIndex nữa,
+         chỉ dùng Trigger trên ItemsControl.AlternationIndex -->
+
+    <Style x:Key="TableRowStyle"
+           TargetType="DataGridRow">
+        <Setter Property="Background" Value="White"/>
+        <Style.Triggers>
+            <!-- Hàng xen kẽ -->
+            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                <Setter Property="Background"
+                        Value="{StaticResource ColorRowAlt}"/>
+            </Trigger>
+
+            <!-- Hàng được chọn -->
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background"
+                        Value="{StaticResource ColorRowSelected}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ============= SEARCH BOX BORDER ============= -->
+
+    <Style x:Key="SearchBoxBorder"
+           TargetType="Border">
+        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ColorBorderLight}"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Height" Value="32"/>
+    </Style>
+
+    <!-- ============= DROPDOWN BORDER ============= -->
+
+    <Style x:Key="DropdownBorder"
+           TargetType="Border">
+        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ColorBorderLight}"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="MinWidth" Value="220"/>
+    </Style>
+
+    <!-- ============= TOGGLE BUTTON ============= -->
+
+    <Style x:Key="ToggleSwitchStyle"
+           TargetType="ToggleButton">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="SwitchBackground"
+                            CornerRadius="9"
+                            Background="#D3D8E5">
+                        <Grid Margin="1">
+                            <Ellipse x:Name="Knob"
+                                     Width="16" Height="16"
+                                     Fill="White"
+                                     HorizontalAlignment="Left"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="SwitchBackground"
+                                    Property="Background"
+                                    Value="#4CAF50"/>
+                            <Setter TargetName="Knob"
+                                    Property="HorizontalAlignment"
+                                    Value="Right"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
 </ResourceDictionary>

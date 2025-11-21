@@ -7,8 +7,8 @@
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
              xmlns:conv="clr-namespace:MonitorApp.Converters"
-             mc:Ignorable="d"
-             Height="186.3">
+             mc:Ignorable="d">
+
 
     <!-- ViewModel -->
     <UserControl.DataContext>
@@ -38,8 +38,8 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="10*" />
-            <RowDefinition Height="5*" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
         <!-- ==================== TOP ==================== -->
@@ -201,118 +201,128 @@
                            Margin="12,10,12,8" />
 
                 <!-- ===== Right: WAN / LAN ===== -->
-                <Grid Grid.Column="2" Margin="12,6,40,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="34" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="34" />
-                    </Grid.RowDefinitions>
+                <Grid Grid.Column="2"
+                      Margin="12,0,40,0"
+                      VerticalAlignment="Center">       
 
-                    <!-- WAN row -->
-                    <TextBlock Grid.Row="0"
+                    <!-- 2 hàng chia đều, 3 cột dùng chung -->
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <!-- WAN / LAN -->
+                        <ColumnDefinition Width="120"/>
+                        <!-- 183.1 MB / 132 MB -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- thanh bar -->
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ===== WAN (hàng 1) ===== -->
+                    <TextBlock Grid.Row="0" Grid.Column="0"
                                Text="WAN"
                                Foreground="{StaticResource TextMuted}"
-                               FontWeight="SemiBold" />
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,12,0"/>
 
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="1"
+                               Text="{Binding WanSizeText}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="#2B3440"
+                               VerticalAlignment="Center"/>
 
-                        <!-- WAN size -->
-                        <TextBlock Grid.Column="0"
-                                   Text="{Binding WanSizeText}"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   Foreground="#2B3440"
-                                   VerticalAlignment="Center" />
+                    <Border Grid.Row="0" Grid.Column="2"
+                            Height="8"
+                            Background="{StaticResource ColorBg}"
+                            CornerRadius="4"
+                            VerticalAlignment="Center">
+                        <Grid Width="{Binding WanFillWidth}"
+                              HorizontalAlignment="Left"
+                              Height="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{Binding WanDownPercent,
+                               Converter={StaticResource PercentToStarGridLengthConverter}}"/>
+                                <ColumnDefinition Width="{Binding WanUpPercent,
+                               Converter={StaticResource PercentToStarGridLengthConverter}}"/>
+                            </Grid.ColumnDefinitions>
 
-                        <!-- WAN bar -->
-                        <Border Grid.Column="1"
-                                Height="8"
-                                Background="{StaticResource ColorBg}"
-                                CornerRadius="4"
-                                VerticalAlignment="Center">
-                            <Grid Width="{Binding WanFillWidth}"
-                                  HorizontalAlignment="Left"
-                                  Height="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{Binding WanDownPercent,
-                                               Converter={StaticResource PercentToStarGridLengthConverter}}" />
-                                    <ColumnDefinition Width="{Binding WanUpPercent,
-                                               Converter={StaticResource PercentToStarGridLengthConverter}}" />
-                                </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0"
+                                    Background="{StaticResource ColorDown}"
+                                    CornerRadius="4,0,0,4"/>
+                                            <Border Grid.Column="1"
+                                    Background="{StaticResource ColorUp}"
+                                    CornerRadius="0,4,4,0"/>
+                        </Grid>
+                    </Border>
 
-                                <Border Grid.Column="0"
-                                        Background="{StaticResource ColorDown}"
-                                        CornerRadius="4,0,0,4" />
-                                <Border Grid.Column="1"
-                                        Background="{StaticResource ColorUp}"
-                                        CornerRadius="0,4,4,0" />
-                            </Grid>
-                        </Border>
-                    </Grid>
-
-                    <!-- LAN row -->
-                    <TextBlock Grid.Row="2"
+                    <!-- ===== LAN (hàng 2) ===== -->
+                    <TextBlock Grid.Row="1" Grid.Column="0"
+                               
                                Text="LAN"
                                Foreground="{StaticResource TextMuted}"
                                FontWeight="SemiBold"
-                               Margin="0,8,0,0" />
+                               VerticalAlignment="Center"
+                               Margin="0,12,12,0"/>
 
-                    <Grid Grid.Row="3">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="1" Grid.Column="1"
+                               Text="{Binding LanSizeText}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="#2B3440"
+                               VerticalAlignment="Center"
+                               Margin="0,12,12,0"/>
 
-                        <TextBlock Grid.Column="0"
-                                   Text="{Binding LanSizeText}"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   Foreground="#2B3440"
-                                   VerticalAlignment="Center" />
+                    <Border Grid.Row="1" Grid.Column="2"
+                            Height="8"
+                            Margin="0,12,12,0"
+                            Background="{StaticResource ColorBg}"
+                            CornerRadius="4"
+                            VerticalAlignment="Center">
+                        <Grid Width="{Binding LanFillWidth}"
+                              HorizontalAlignment="Left"
+                              Height="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{Binding LanDownPercent,
+                               Converter={StaticResource PercentToStarGridLengthConverter}}"/>
+                                <ColumnDefinition Width="{Binding LanUpPercent,
+                               Converter={StaticResource PercentToStarGridLengthConverter}}"/>
+                            </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="1"
-                                Height="8"
-                                Background="{StaticResource ColorBg}"
-                                CornerRadius="4"
-                                VerticalAlignment="Center">
-                            <Grid Width="{Binding LanFillWidth}"
-                                  HorizontalAlignment="Left"
-                                  Height="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{Binding LanDownPercent,
-                                               Converter={StaticResource PercentToStarGridLengthConverter}}" />
-                                    <ColumnDefinition Width="{Binding LanUpPercent,
-                                               Converter={StaticResource PercentToStarGridLengthConverter}}" />
-                                </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0"
+                    Background="{StaticResource ColorDown}"
+                    CornerRadius="4,0,0,4"/>
+                            <Border Grid.Column="1"
+                    Background="{StaticResource ColorUp}"
+                    CornerRadius="0,4,4,0"/>
+                        </Grid>
+                    </Border>
 
-                                <Border Grid.Column="0"
-                                        Background="{StaticResource ColorDown}"
-                                        CornerRadius="4,0,0,4" />
-                                <Border Grid.Column="1"
-                                        Background="{StaticResource ColorUp}"
-                                        CornerRadius="0,4,4,0" />
-                            </Grid>
-                        </Border>
-                    </Grid>
                 </Grid>
+
             </Grid>
         </Border>
 
         <!-- ==================== TIMELINE ==================== -->
-        <Border Grid.Row="1" Style="{StaticResource TimelineBorderStyle}">
-            <Grid ClipToBounds="True">
+        <Border Grid.Row="1"
+        Height="30"
+        Style="{StaticResource TimelineBorderStyle}"
+        Margin="0"
+        HorizontalAlignment="Stretch">
+            <Grid x:Name="BottomTimelineHost"
+          ClipToBounds="True">
                 <ItemsControl ItemsSource="{Binding TimeLabels}"
-                              Style="{StaticResource TimeLabelsStyle}">
+                      Style="{StaticResource TimeLabelsStyle}"
+                      HorizontalAlignment="Stretch"
+                      Width="{Binding ActualWidth, ElementName=BottomTimelineHost}">
                     <ItemsControl.RenderTransform>
                         <TranslateTransform X="{Binding SmoothScrollOffset}" />
                     </ItemsControl.RenderTransform>
                 </ItemsControl>
             </Grid>
         </Border>
+
     </Grid>
 </UserControl>

@@ -202,7 +202,7 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
             InitializeTimeline();
 
-            timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
             timer.Tick += OnTimerTick;
             timer.Start();
         }
@@ -234,22 +234,30 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             UpdateVisibleTimeLabels();
         }
 
+        private DateTime lastSpeedUpdateTime = DateTime.Now;
+        private const double SpeedUpdateIntervalSeconds = 1.0; // 1s đổi speed 1 lần
+
         private void OnTimerTick(object sender, EventArgs e)
         {
-            // 1) Random global speed mỗi tick
-            DownloadSpeed = rnd.Next(500_000, 50_000_000);   // ~0.5MB/s → 50MB/s
-            UploadSpeed = rnd.Next(200_000, 20_000_000);     // ~0.2MB/s → 20MB/s
-
             var now = DateTime.Now;
 
-            // 2) Cập nhật total dựa trên thời gian thực
+            // 1) Cập nhật speed mỗi 1 giây cho đỡ nhấp nháy
+            if ((now - lastSpeedUpdateTime).TotalSeconds >= SpeedUpdateIntervalSeconds)
+            {
+                DownloadSpeed = rnd.Next(500_000, 50_000_000);   // ~0.5MB/s → 50MB/s
+                UploadSpeed = rnd.Next(200_000, 20_000_000);     // ~0.2MB/s → 20MB/s
+
+                lastSpeedUpdateTime = now;
+            }
+
+            // 2) Cập nhật total theo thời gian thực (mỗi frame 16ms)
             double elapsedTotal = (now - lastTotalTime).TotalSeconds;
             if (elapsedTotal > 0)
             {
                 double dDown = DownloadSpeed * elapsedTotal;
                 double dUp = UploadSpeed * elapsedTotal;
 
-                // Chia increment cho WAN / LAN (mỗi interface có down/up riêng)
+                // Chia increment cho WAN / LAN
                 double wanDownShare = rnd.NextDouble(); // 0..1
                 double wanUpShare = rnd.NextDouble();
 
@@ -265,20 +273,21 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 wanUploadTotal += wanUpInc;
                 lanUploadTotal += lanUpInc;
 
-                // Tổng global = WAN + LAN (đảm bảo TotalUsed = WAN+LAN)
+                // Tổng global = WAN + LAN
                 DownloadTotal = wanDownloadTotal + lanDownloadTotal;
                 UploadTotal = wanUploadTotal + lanUploadTotal;
 
                 lastTotalTime = now;
             }
 
-            // 3) TIMELINE
+            // 3) TIMELINE – giống GraphViewModel
             double elapsedLabel = (now - lastLabelTime).TotalSeconds;
             var progress = elapsedLabel / LabelIntervalSeconds;
             SmoothScrollOffset = -(progress * LabelWidth);
 
             if (elapsedLabel >= LabelIntervalSeconds)
             {
+                // Dời anchor theo đúng bước 4s (tránh drift)
                 lastLabelTime = lastLabelTime.AddSeconds(LabelIntervalSeconds);
 
                 allTimeLabels.Add(lastLabelTime.ToString("h:mm:ss tt"));

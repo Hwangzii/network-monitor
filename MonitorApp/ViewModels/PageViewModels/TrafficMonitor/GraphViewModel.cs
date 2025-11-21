@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using MonitorApp.ViewModels.Stores;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
@@ -16,7 +16,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         // Constants
         // ===========================
         private const int MaxDataPoints = 60;
-        private const double MaxValue = 100.0;
         private const int VisibleLabelCount = 18;   // Thống nhất với Footer
         private const double LabelIntervalSeconds = 4.0;
         private const double LabelWidth = 150.0;
@@ -24,20 +23,41 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         // ===========================
         // Fields
         // ===========================
-        private readonly DispatcherTimer timer;
-        private readonly Random random = new Random();
+        private readonly DispatcherTimer _timer;
+        private readonly NetworkMonitorStore _store;
 
         private ObservableCollection<double> downloadData;
         private ObservableCollection<double> uploadData;
         private ObservableCollection<string> timeLabels;
-        private readonly List<string> allTimeLabels = new List<string>();
+        private readonly List<string> allTimeLabels = new();
 
         private double downloadSpeed;
         private double uploadSpeed;
         private double smoothScrollOffset;
-
         private DateTime lastLabelTime;
-        private int updateCounter = 0;
+
+        // ===========================
+        // Ctor
+        // ===========================
+        public GraphViewModel() : this(NetworkMonitorStore.Instance) { }
+
+        public GraphViewModel(NetworkMonitorStore store)
+        {
+            _store = store;
+
+            InitializeData();
+
+            // Timer chỉ dùng cho timeline + autoscale
+            _timer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS
+            };
+            _timer.Tick += OnTimerTick;
+            _timer.Start();
+
+            // nghe dữ liệu từ store
+            _store.PropertyChanged += StoreOnPropertyChanged;
+        }
 
         // ===========================
         // Events
@@ -83,40 +103,15 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             private set { smoothScrollOffset = value; OnPropertyChanged(); }
         }
 
-        public string DownloadLabel
+        public string DownloadLabel => FormatDataRate(DownloadSpeed);
+        public string UploadLabel => FormatDataRate(UploadSpeed);
+
+        // Max động để scale Y
+        private double dynamicMaxValue = 100.0;
+        public double DynamicMaxValue
         {
-            get => FormatDataRate(DownloadSpeed);
-        }
-
-        public string UploadLabel
-        {
-            get => FormatDataRate(UploadSpeed);
-        }
-
-        private string FormatDataRate(double value)
-        {
-            if (value < 1024)
-                return $"{value:F1} KB/s";
-            if (value < 1024 * 1024)
-                return $"{value / 1024:F1} MB/s";
-            return $"{value / 1024 / 1024:F1} GB/s";
-        }
-
-
-        // ===========================
-        // Ctor
-        // ===========================
-        public GraphViewModel()
-        {
-            InitializeData();
-
-            timer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS
-            };
-            timer.Tick += OnTimerTick;
-            timer.Start();
-
+            get => dynamicMaxValue;
+            private set { dynamicMaxValue = value; OnPropertyChanged(); }
         }
 
         // ===========================
@@ -153,30 +148,25 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         }
 
         // ===========================
-        // Tick
+        // Nhận dữ liệu từ NetworkMonitorStore
         // ===========================
-        private double demoT = 0;
-
-        private void OnTimerTick(object sender, EventArgs e)
+        private void StoreOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            updateCounter++;
-
-            // Cập nhật dữ liệu đồ thị mỗi 250ms
-            if (updateCounter % 16 == 0)
+            if (e.PropertyName == nameof(NetworkMonitorStore.DownloadKBps) ||
+                e.PropertyName == nameof(NetworkMonitorStore.UploadKBps))
             {
-                demoT += 0.15;
+                var down = _store.DownloadKBps; // KB/s
+                var up = _store.UploadKBps;   // KB/s
 
-                // ====== DEMO DATA (không random) ======
-                double newDownload = 50 + Math.Sin(demoT) * 40;   // sóng lớn
-                double newUpload = 20 + Math.Cos(demoT * 1.7) * 15;  // sóng nhỏ
+                // cập nhật text
+                DownloadSpeed = down;
+                UploadSpeed = up;
+                OnPropertyChanged(nameof(DownloadLabel));
+                OnPropertyChanged(nameof(UploadLabel));
 
-                // Giới hạn không âm
-                newDownload = Math.Max(0, newDownload);
-                newUpload = Math.Max(0, newUpload);
-
-                // Thêm vào list
-                DownloadData.Add(newDownload);
-                UploadData.Add(newUpload);
+                // thêm điểm cho đồ thị
+                DownloadData.Add(down);
+                UploadData.Add(up);
 
                 if (DownloadData.Count > MaxDataPoints)
                 {
@@ -184,20 +174,17 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                     UploadData.RemoveAt(0);
                 }
 
-                // Update UI
                 OnPropertyChanged(nameof(DownloadData));
                 OnPropertyChanged(nameof(UploadData));
-
-                // Speed hiển thị
-                DownloadSpeed = newDownload;
-                UploadSpeed = newUpload;
-
-                OnPropertyChanged(nameof(DownloadLabel));
-                OnPropertyChanged(nameof(UploadLabel));
-                // =======================================
             }
+        }
 
-            // Tính smooth scroll theo thời gian
+        // ===========================
+        // Tick – chỉ xử lý timeline + autoscale
+        // ===========================
+        private void OnTimerTick(object? sender, EventArgs e)
+        {
+            // 1) Timeline mượt
             var now = DateTime.Now;
             var timeSinceLast = (now - lastLabelTime).TotalSeconds;
             double scrollProgress = timeSinceLast / LabelIntervalSeconds;
@@ -215,13 +202,12 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 UpdateVisibleTimeLabels();
             }
 
-            // Auto-scale giống GlassWire
-            double maxY = Math.Max(
-                DownloadData[^1],
-                UploadData[^1]
-            );
-
-            DynamicMaxValue = Math.Max(20, maxY * 1.3);
+            // 2) Auto-scale Y dựa trên điểm cuối
+            if (DownloadData.Count > 0 && UploadData.Count > 0)
+            {
+                double maxY = Math.Max(DownloadData[^1], UploadData[^1]);
+                DynamicMaxValue = Math.Max(20, maxY * 1.3);
+            }
         }
 
         // Chỉ cập nhật phần hiển thị, không thêm/xoá nhãn ở đây
@@ -231,13 +217,11 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
             int startIndex = Math.Max(0, allTimeLabels.Count - VisibleLabelCount);
             for (int i = startIndex; i < allTimeLabels.Count; i++)
-            {
                 TimeLabels.Add(allTimeLabels[i]);
-            }
         }
 
         // ===========================
-        // Public API cho Polyline binding
+        // Public API cho Path binding
         // ===========================
         public PointCollection GetDownloadPoints(double width, double height)
             => GetPointsFromData(DownloadData, width, height);
@@ -249,19 +233,20 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         {
             var points = new PointCollection();
 
-            if (data == null || data.Count == 0 || width <= 0 || height <= 0)
+            if (data == null || data.Count == 0 || width <= 0 || height <= 0 || DynamicMaxValue <= 0)
                 return points;
 
             double step = width / (MaxDataPoints - 1);
+            double max = DynamicMaxValue;
 
-            // Điểm bắt đầu ở dưới cùng (nếu dùng cho Polygon/Area)
+            // Điểm bắt đầu ở dưới cùng (cho Polygon/area)
             points.Add(new Point(0, height));
 
             // Điểm dữ liệu
             for (int i = 0; i < data.Count; i++)
             {
                 double x = i * step;
-                double y = height - (data[i] / MaxValue * height);
+                double y = height - (data[i] / max * height);
                 points.Add(new Point(x, y));
             }
 
@@ -273,20 +258,24 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
         public void StopMonitoring()
         {
-            timer?.Stop();
+            _timer?.Stop();
+            _store.PropertyChanged -= StoreOnPropertyChanged;
         }
-        private double dynamicMaxValue;
-        public double DynamicMaxValue
+
+        // ===========================
+        // Helpers
+        // ===========================
+        private string FormatDataRate(double valueKbPerSec)
         {
-            get => dynamicMaxValue;
-            private set { dynamicMaxValue = value; OnPropertyChanged(); }
+            // value đang là KB/s
+            if (valueKbPerSec < 1024)
+                return $"{valueKbPerSec:F1} KB/s";
+            if (valueKbPerSec < 1024 * 1024)
+                return $"{valueKbPerSec / 1024:F1} MB/s";
+            return $"{valueKbPerSec / 1024 / 1024:F1} GB/s";
         }
 
-
-        // ===========================
-        // INotifyPropertyChanged
-        // ===========================
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null!)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
