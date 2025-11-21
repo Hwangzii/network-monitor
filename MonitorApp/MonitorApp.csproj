@@ -9,6 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Icons\Glasswire Protect.png" />
+    <None Remove="Resources\Icons\Log Analysis.png" />
+    <None Remove="Resources\Icons\Logo2.png" />
+    <None Remove="Resources\Icons\Network Scaner.png" />
+    <None Remove="Resources\Icons\Traffic Monitor.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Page Remove="Resources\Styles.xaml" />
     <Page Remove="Resources\Templates.xaml" />
   </ItemGroup>
@@ -25,6 +33,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\Icons\Log Analysis.png" />
+    <Resource Include="Resources\Icons\Logo2.png" />
+    <Resource Include="Resources\Icons\Network Scaner.png" />
+    <Resource Include="Resources\Icons\Traffic Monitor.png" />
     <Resource Include="Resources\Styles.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>

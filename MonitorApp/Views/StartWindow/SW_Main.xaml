@@ -18,11 +18,12 @@
                     TextOptions.TextRenderingMode="Grayscale"
                     TextOptions.TextHintingMode="Fixed">
 
-            <!-- Logo -->
             <Image Source="/Resources/Icons/Logo2.png"
-                   Width="90" Height="90"
-                   Stretch="Uniform"
-                   Margin="0,0,0,18"/>
+                       Width="90"
+                       Height="90"
+                       Stretch="Uniform"
+                       Margin="0,0,0,18" />
+
 
             <!-- NHÓM 5 - LỚP 22CN1 -->
             <TextBlock Text="NHÓM 5 - LỚP 22CN1"
