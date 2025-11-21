@@ -24,5 +24,10 @@ namespace MonitorApp.Views.Pages.TrafficMonitor.TM_Center
         {
             InitializeComponent();
         }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

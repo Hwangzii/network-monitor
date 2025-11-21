@@ -74,5 +74,7 @@ namespace NetworkMonitor.Api.Controllers
                 Thread.Sleep(2000);
             }
         }
+
+
     }
 }

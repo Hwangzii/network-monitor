@@ -5,20 +5,29 @@ namespace MonitorApp.ViewModels.Layouts
 {
     public class HeaderViewModel
     {
+        // Event instance (nếu sau này muốn dùng MVVM thuần)
         public event Action<string>? PageChanged;
+
+        // Event static để MainContent đăng ký dễ dàng
+        public static event Action<string>? GlobalPageChanged;
 
         public ICommand ShowTrafficMonitorCommand { get; }
         public ICommand ShowGlassWireProtectCommand { get; }
+        public ICommand ShowLogAnalysisCommand { get; }
+        public ICommand ShowNetworkScannerCommand { get; }
 
         public HeaderViewModel()
         {
             ShowTrafficMonitorCommand = new RelayCommand(_ => OnPageChanged("Traffic"));
-            ShowGlassWireProtectCommand = new RelayCommand(_ => OnPageChanged("GlassWire"));
+            ShowGlassWireProtectCommand = new RelayCommand(_ => OnPageChanged("Protect"));
+            ShowLogAnalysisCommand = new RelayCommand(_ => OnPageChanged("Log"));
+            ShowNetworkScannerCommand = new RelayCommand(_ => OnPageChanged("Scanner"));
         }
 
         private void OnPageChanged(string pageName)
         {
             PageChanged?.Invoke(pageName);
+            GlobalPageChanged?.Invoke(pageName);   // MainContent sẽ nghe event này
         }
     }
 

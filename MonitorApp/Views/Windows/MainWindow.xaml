@@ -4,14 +4,10 @@
         xmlns:layouts="clr-namespace:MonitorApp.Views.Layouts"
         xmlns:vm="clr-namespace:MonitorApp.ViewModels"
         Title="Network Monitor" 
-        Height="680" Width="1200"
+        MinHeight="700" MinWidth="1000"
         Background="White"
         WindowStartupLocation="CenterScreen">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="50*"/>
-            <ColumnDefinition Width="50*"/>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <!-- Header chiếm 2 phần -->
             <RowDefinition Height="1*"/>
@@ -20,9 +16,9 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <layouts:Header Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,584" Grid.RowSpan="2" Loaded="Header_Loaded"/>
+        <layouts:Header Grid.Row="0" Loaded="Header_Loaded"/>
 
         <!-- MainContent -->
-        <layouts:MainContent Grid.Row="1" Grid.ColumnSpan="2" Loaded="MainContent_Loaded"/>
+        <layouts:MainContent Grid.Row="1" Loaded="MainContent_Loaded"/>
     </Grid>
 </Window>
