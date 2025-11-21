@@ -3,8 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              
-             xmlns:center="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor.TM_Center"
-                Height="auto"
+                xmlns:center="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor.TM_Center"
+                xmlns:viewmodels="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
+                xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             Height="auto"
              Background="Transparent">
 
     <UserControl.Resources>
@@ -28,12 +30,43 @@
                 Style="{StaticResource HeaderButtonStyle}"
                 HorizontalAlignment="Center" Margin="0,5,0,5">
             <StackPanel Orientation="Horizontal">
-                <Path Data="M3 6h18M9 12h12M3 18h18"
-                      Stroke="#666666"
-                      StrokeThickness="1.8"
-                      Width="14" Height="14"
-                      Stretch="Uniform"
-                      Margin="0,0,15,0"/>
+                <Viewbox Width="24" Height="24"
+                         Margin="0,0,5,0">
+                    <Canvas Width="24" Height="24">
+
+                        <!-- Đường 1 -->
+                        <Path
+                            Data="M4 6H20"
+                            Stroke="#666666"
+                            StrokeThickness="2"
+                            StrokeStartLineCap="Round"
+                            StrokeEndLineCap="Round"
+                            StrokeLineJoin="Round"
+                            Fill="Transparent" />
+
+                        <!-- Đường 2 -->
+                        <Path
+                            Data="M6 12H18"
+                            Stroke="#666666"
+                            StrokeThickness="2"
+                            StrokeStartLineCap="Round"
+                            StrokeEndLineCap="Round"
+                            StrokeLineJoin="Round"
+                            Fill="Transparent" />       
+
+                        <!-- Đường 3 -->
+                        <Path
+                            Data="M9 18H15"
+                            Stroke="#666666"
+                            StrokeThickness="2"
+                            StrokeStartLineCap="Round"
+                            StrokeEndLineCap="Round"
+                            StrokeLineJoin="Round"
+                            Fill="Transparent" />
+
+                    </Canvas>
+                </Viewbox>
+
                 <TextBlock Text="Filter"
                            FontSize="14"
                            FontWeight="Medium"
@@ -67,42 +100,115 @@
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <!-- NỬA TRÁI: WAVE (đang chọn, nền xanh, bo góc trái) -->
+
+                <!-- NỬA TRÁI: WAVE (mặc định chọn, nền xanh) -->
+                <!-- WAVE BUTTON (LEFT) -->
                 <ToggleButton Grid.Column="0"
-                      BorderThickness="0"
-                      Command="{Binding ShowGraphCommand}" Margin="0,0,0,0" Grid.RowSpan="2">
+                              Grid.RowSpan="2"
+                              BorderThickness="0"
+                              Command="{Binding ShowGraphCommand}"
+                              IsChecked="{Binding IsGraphSelected, Mode=OneWay}">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
-                            <Border Background="White"
-                    CornerRadius="20,0,0,20">
-                                <!-- bo góc bên trái -->
+                            <Border x:Name="RootBorder"
+                                    Background="White"
+                                    CornerRadius="20,0,0,20">
                                 <ContentPresenter HorizontalAlignment="Center"
                                   VerticalAlignment="Center"/>
                             </Border>
+
+                            <ControlTemplate.Triggers>
+                                <!-- SELECTED -->
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="RootBorder" Property="Background" Value="#60A5FA"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <!-- Icon xanh -->
+                                </Trigger>
+
+                                <!-- NOT SELECTED -->
+                                <Trigger Property="IsChecked" Value="False">
+                                    <Setter TargetName="RootBorder" Property="Background" Value="White"/>
+                                    <Setter Property="Foreground" Value="#6B7280"/>
+                                    <!-- Icon xám -->
+                                </Trigger>
+                            </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </ToggleButton.Template>
 
-                    <iconPacks:PackIconFeatherIcons Kind="TrendingUp" Width="24" Height="24" Foreground="#666666"/>
+                    <Viewbox Width="26" Height="26">
+                        <Canvas Width="26" Height="26">
+                            <Path
+                                Data="M3 12h4.5l1.5 -6l4 12l2 -9l1.5 3h4.5"
+                                Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                                StrokeThickness="2"
+                                StrokeStartLineCap="Round"
+                                StrokeEndLineCap="Round"
+                                StrokeLineJoin="Round"
+                                Fill="Transparent"/>
+                        </Canvas>
+                    </Viewbox>
                 </ToggleButton>
 
-                <!-- NỬA PHẢI: GRID (nền trắng, bo góc phải) -->
+                <!-- NỬA PHẢI: GRID -->
+                <!-- GRID BUTTON (RIGHT) -->
                 <ToggleButton Grid.Column="1"
-              BorderThickness="0"
-              Grid.RowSpan="2"
-              Command="{Binding ShowUsageCommand}">
+                              Grid.RowSpan="2"
+                              BorderThickness="0"
+                              Command="{Binding ShowUsageCommand}"
+                              IsChecked="{Binding IsUsageSelected, Mode=OneWay}">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
-                            <Border Background="White"
-                    CornerRadius="0,20,20,0">
-                                <!-- bo góc bên phải -->
+                            <Border x:Name="RootBorder"
+                                    Background="White"
+                                    CornerRadius="0,20,20,0">
                                 <ContentPresenter HorizontalAlignment="Center"
                                   VerticalAlignment="Center"/>
                             </Border>
+
+                            <ControlTemplate.Triggers>
+                                <!-- SELECTED -->
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="RootBorder" Property="Background" Value="#60A5FA"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <!-- icon xanh -->
+                                </Trigger>
+
+                                <!-- NOT SELECTED -->
+                                <Trigger Property="IsChecked" Value="False">
+                                    <Setter TargetName="RootBorder" Property="Background" Value="White"/>
+                                    <Setter Property="Foreground" Value="#6B7280"/>
+                                    <!-- icon xám -->
+                                </Trigger>
+                            </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </ToggleButton.Template>
 
-                    <iconPacks:PackIconFeatherIcons Kind="MinusSquare" Width="24" Height="24" Foreground="#666666"/>
+                    <Viewbox Width="26" Height="26">
+                        <Canvas Width="26" Height="26">
+
+                            <!-- Frame -->
+                            <Path
+                                Data="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"
+                                Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                                StrokeThickness="2"
+                                StrokeStartLineCap="Round"
+                                StrokeEndLineCap="Round"
+                                StrokeLineJoin="Round"
+                                Fill="Transparent"/>
+
+                            <!-- Divider -->
+                            <Path
+                                Data="M12 4L12 20"
+                                Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                                StrokeThickness="2"
+                                StrokeStartLineCap="Round"
+                                StrokeEndLineCap="Round"
+                                StrokeLineJoin="Round"
+                                Fill="Transparent"/>
+                        </Canvas>
+                    </Viewbox>
                 </ToggleButton>
+
 
             </Grid>
         </Border>

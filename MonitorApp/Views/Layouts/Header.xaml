@@ -1,12 +1,16 @@
-﻿<UserControl x:Class="MonitorApp.Views.Layouts.Header" 
+﻿<UserControl x:Class="MonitorApp.Views.Layouts.Header"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-
-             
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:layouts="clr-namespace:MonitorApp.ViewModels.LayoutsViewModel"
+             mc:Ignorable="d"
              Background="White"
              Height="auto">
+
+
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -66,10 +70,12 @@
                          GroupName="MainTabs"
                          IsChecked="True"
                          Margin="0,10,0,10"
-                         Command="{Binding ShowTrafficMonitorCommand}">
+                         Command="{Binding ShowTrafficMonitorCommand}" >
                 <RadioButton.Tag>
-                    <Viewbox Width="24" Height="24">
-                        <Grid Width="24" Height="24">
+                    <Viewbox Width="35" Height="24"
+                             Margin="0,0,0,0">
+                        <Grid Width="24" Height="24"
+                              Margin="0,0,5,0">
                             <!-- Path 1 từ SVG -->
                             <Path Data="M15.22 9.375a1 1 0 0 1 1.393 -.165l.094 .083l4 4a1 1 0 0 1 .284 .576l.009 .131v5a1 1 0 0 1 -.883 .993l-.117 .007h-16.022l-.11 -.009l-.11 -.02l-.107 -.034l-.105 -.046l-.1 -.059l-.094 -.07l-.06 -.055l-.072 -.082l-.064 -.089l-.054 -.096l-.016 -.035l-.04 -.103l-.027 -.106l-.015 -.108l-.004 -.11l.009 -.11l.019 -.105c.01 -.04 .022 -.077 .035 -.112l.046 -.105l.059 -.1l4 -6a1 1 0 0 1 1.165 -.39l.114 .05l3.277 1.638l3.495 -4.369z"
                                   Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
@@ -88,8 +94,9 @@
                          Margin="0,10,0,10"
                          Command="{Binding ShowGlassWireProtectCommand}">
                 <RadioButton.Tag>
-                    <Viewbox Width="24" Height="24">
-                        <Grid Width="24" Height="24">
+                    <Viewbox Width="35" Height="24">
+                        <Grid Width="24" Height="24"
+                              Margin="0,0,5,0">
                             <!-- shield-check (filled) -->
                             <Path Data="M11.998 2l.118 .007l.059 .008l.061 .013l.111 .034a.993 .993 0 0 1 .217 .112l.104 .082l.255 .218a11 11 0 0 0 7.189 2.537l.342 -.01a1 1 0 0 1 1.005 .717a13 13 0 0 1 -9.208 16.25a1 1 0 0 1 -.502 0a13 13 0 0 1 -9.209 -16.25a1 1 0 0 1 1.005 -.717a11 11 0 0 0 7.531 -2.527l.263 -.225l.096 -.075a.993 .993 0 0 1 .217 -.112l.112 -.034a.97 .97 0 0 1 .119 -.021l.115 -.007zm3.71 7.293a1 1 0 0 0 -1.415 0l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.32 1.497l2 2l.094 .083a1 1 0 0 0 1.32 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z"
                       Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
@@ -107,8 +114,9 @@
                          Command="{Binding ShowLogAnalysisCommand}">
                 <RadioButton.Tag>
                     <Grid>
-                        <Viewbox Width="24" Height="24">
-                            <Grid Width="24" Height="24">
+                        <Viewbox Width="35" Height="24">
+                            <Grid Width="24" Height="24"
+                                  Margin="0,0,5,0">
                                 <!-- map-pin (filled) -->
                                 <Path Data="M18.364 4.636a9 9 0 0 1 .203 12.519l-.203 .21l-4.243 4.242a3 3 0 0 1 -4.097 .135l-.144 -.135l-4.244 -4.243a9 9 0 0 1 12.728 -12.728zm-6.364 3.364a3 3 0 1 0 0 6a3 3 0 0 0 0 -6z"
                                         Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
@@ -137,8 +145,9 @@
                          Margin="0,10,0,10"
                          Command="{Binding ShowNetworkScannerCommand}">
                 <RadioButton.Tag>
-                    <Viewbox Width="24" Height="24">
-                        <Grid Width="24" Height="24">
+                    <Viewbox Width="35" Height="24">
+                        <Grid Width="24" Height="24"
+                              Margin="0,0,5,0">
                             <!-- share (outline, stroke) -->
                             <!-- 3 circle nodes -->
                             <Path Data="M6 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"
@@ -147,7 +156,7 @@
                                   StrokeStartLineCap="Round"
                                   StrokeEndLineCap="Round"
                                   StrokeLineJoin="Round"
-                                  Fill="Transparent"/>      
+                                  Fill="Transparent"/>
                             <Path Data="M18 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"
                                   Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                   StrokeThickness="2"

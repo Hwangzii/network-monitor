@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace MonitorApp.ViewModels.Layouts
+namespace MonitorApp.ViewModels.LayoutsViewModel
 {
     public class HeaderViewModel
     {

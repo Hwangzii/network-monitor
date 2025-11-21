@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Controls;
-using MonitorApp.ViewModels.Layouts;
 using MonitorApp.Views.Pages.TrafficMonitor;
 using MonitorApp.Views.Pages;
 
