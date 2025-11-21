@@ -65,7 +65,8 @@
                          Content="Traffic&#x0a;Monitor"
                          GroupName="MainTabs"
                          IsChecked="True"
-                         Margin="0,10,0,10">
+                         Margin="0,10,0,10"
+                         Command="{Binding ShowTrafficMonitorCommand}">
                 <RadioButton.Tag>
                     <Viewbox Width="24" Height="24">
                         <Grid Width="24" Height="24">
@@ -84,7 +85,8 @@
             <RadioButton Style="{StaticResource NavButtonStyle}"
                          Content="GlassWire&#x0a;Protect"
                          GroupName="MainTabs"
-                         Margin="0,10,0,10">
+                         Margin="0,10,0,10"
+                         Command="{Binding ShowGlassWireProtectCommand}">
                 <RadioButton.Tag>
                     <Viewbox Width="24" Height="24">
                         <Grid Width="24" Height="24">
@@ -101,7 +103,8 @@
             <RadioButton Style="{StaticResource NavButtonStyle}"
                          Content="Log&#x0a;Analysis"
                          GroupName="MainTabs"
-                         Margin="0,10,0,10">
+                         Margin="0,10,0,10"
+                         Command="{Binding ShowLogAnalysisCommand}">
                 <RadioButton.Tag>
                     <Grid>
                         <Viewbox Width="24" Height="24">
@@ -131,7 +134,8 @@
             <RadioButton Style="{StaticResource NavButtonStyle}"
                          Content="Network&#x0a;Scanner"
                          GroupName="MainTabs"
-                         Margin="0,10,0,10">
+                         Margin="0,10,0,10"
+                         Command="{Binding ShowNetworkScannerCommand}">
                 <RadioButton.Tag>
                     <Viewbox Width="24" Height="24">
                         <Grid Width="24" Height="24">

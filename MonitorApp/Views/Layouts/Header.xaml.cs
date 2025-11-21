@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MonitorApp.ViewModels.Layouts;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +21,7 @@ namespace MonitorApp.Views.Layouts
         public Header()
         {
             InitializeComponent();
+            DataContext = new HeaderViewModel();
         }
-
     }
 }

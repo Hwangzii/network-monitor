@@ -1,6 +1,8 @@
-﻿using System.Windows.Controls;
-using MonitorApp.Views.Pages.TrafficMonitor;
+﻿using MonitorApp.ViewModels.Layouts;
+using MonitorApp.ViewModels.LayoutsViewModel;
 using MonitorApp.Views.Pages;
+using MonitorApp.Views.Pages.TrafficMonitor;
+using System.Windows.Controls;
 
 namespace MonitorApp.Views.Layouts
 {
@@ -9,6 +11,7 @@ namespace MonitorApp.Views.Layouts
         public MainContent()
         {
             InitializeComponent();
+            DataContext = new MainContentViewModel();  // <-- MVVM chuẩn
         }
     }
 }

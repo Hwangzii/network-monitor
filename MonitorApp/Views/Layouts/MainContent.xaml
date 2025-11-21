@@ -7,8 +7,9 @@
              Height="auto">
 
     <Grid>
-        <!-- Hiển thị TM_Main -->
-        <pages:TM_Main />
+        <!-- Binding UI content vào ViewModel -->
+        <ContentControl Content="{Binding CurrentPage}"
+                        x:Name="PageHost"/>
     </Grid>
 </UserControl>
 
