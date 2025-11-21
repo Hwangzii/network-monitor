@@ -35,6 +35,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\backend\NetworkMonitor.Core\NetworkMonitor.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\Styles.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>

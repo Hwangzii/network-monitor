@@ -4,7 +4,7 @@
         xmlns:layouts="clr-namespace:MonitorApp.Views.Layouts"
         xmlns:vm="clr-namespace:MonitorApp.ViewModels"
         Title="Network Monitor" 
-        MinHeight="600" MinWidth="1000"
+        MinHeight="700" MinWidth="1000"
         Background="White"
         WindowStartupLocation="CenterScreen">
     <Grid>
