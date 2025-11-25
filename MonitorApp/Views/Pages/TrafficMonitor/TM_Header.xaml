@@ -86,16 +86,9 @@
             BorderBrush="#E5EAF0"
              Margin="0,5,0,5">
             <Border.Effect>
-                <DropShadowEffect Color="#666666"
-                          BlurRadius="8"
-                          ShadowDepth="2"
-                          Opacity="0.2"/>
+                <DropShadowEffect Color="#666666" BlurRadius="8" ShadowDepth="2" Opacity="0.2"/>
             </Border.Effect>
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="5*"/>
-                    <RowDefinition Height="5*"/>
-                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
@@ -220,13 +213,11 @@
                     VerticalAlignment="Center"
                     Margin="0,5,0,5">
 
-            <!-- ComboBox thời gian -->
-            <ComboBox Style="{StaticResource RoundedComboBoxStyle}" SelectionChanged="ComboBox_SelectionChanged">
-                <ComboBoxItem Content="5 Minutes" IsSelected="True"/>
-                <ComboBoxItem Content="15 Minutes"/>
-                <ComboBoxItem Content="30 Minutes"/>
-                <ComboBoxItem Content="1 Hour"/>
-                <ComboBoxItem Content="24 Hours"/>
+                    <ComboBoxItem Content="5m"  IsSelected="True" Tag="5m"/>
+                    <ComboBoxItem Content="15m" Tag="15m"/>
+                    <ComboBoxItem Content="30m" Tag="30m"/>
+                    <ComboBoxItem Content="1h"  Tag="1h"/>
+                <ComboBoxItem Content="24h" Tag="24h"/>
             </ComboBox>
         </StackPanel>
     </Grid>

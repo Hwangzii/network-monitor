@@ -10,26 +10,18 @@
              mc:Ignorable="d">
 
 
-    <!-- ViewModel -->
     <UserControl.DataContext>
         <vm:TM_FooterViewModel />
     </UserControl.DataContext>
 
-    <!-- Resources -->
     <UserControl.Resources>
         <ResourceDictionary>
-
-            <!-- Converters -->
             <conv:PercentToArcEndPointConverter x:Key="PercentToArcEndPointConverter" />
             <conv:PercentToStarGridLengthConverter x:Key="PercentToStarGridLengthConverter" />
-
-            <!-- Brushes -->
             <SolidColorBrush x:Key="ColorDown" Color="#FBBF24" />
-            <SolidColorBrush x:Key="ColorUp"   Color="#F9A8D4" />
-            <SolidColorBrush x:Key="ColorBg"   Color="Transparent" />
+            <SolidColorBrush x:Key="ColorUp" Color="#F9A8D4" />
+            <SolidColorBrush x:Key="ColorBg" Color="Transparent" />
             <SolidColorBrush x:Key="TextMuted" Color="#7C8591" />
-
-            <!-- Styles riêng -->
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/MonitorApp;component/Resources/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -46,9 +38,9 @@
         <Border Grid.Row="0" Style="{StaticResource FooterBorderStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="4*" />
+                    <ColumnDefinition Width="440" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="6*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- ===== Left: số liệu + semi-donut ===== -->
@@ -229,11 +221,8 @@
                     </Grid>
                 </Grid>
 
-                <!-- Divider -->
-                <Rectangle Grid.Column="1"
-                           Width="1"
-                           Fill="#E7EBF0"
-                           Margin="12,10,12,8" />
+                <!-- Dấu phân cách -->
+                <Rectangle Grid.Column="1" Width="1" Fill="#E7EBF0" Margin="12,10,12,8" />
 
                 <!-- ===== Right: WAN / LAN ===== -->
                 <Grid Grid.Column="2"

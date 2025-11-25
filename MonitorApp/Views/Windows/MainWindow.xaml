@@ -9,10 +9,10 @@
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
-            <!-- Header chiếm 2 phần -->
-            <RowDefinition Height="1*"/>
-            <!-- MainContent chiếm 8 phần -->
-            <RowDefinition Height="9*"/>
+            <!-- Header: chiều cao tự động theo nội dung -->
+            <RowDefinition Height="Auto"/>
+            <!-- MainContent: chiếm hết phần còn lại -->
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
