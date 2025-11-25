@@ -2,12 +2,14 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:pages="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor"
-             Background="#0A1A2F">
-    <!-- hoặc màu gì bạn thích -->
+             Background="AliceBlue"
+             
+             Height="auto">
 
     <Grid>
-        <!-- TM_Main sẽ tự fill toàn bộ UserControl -->
-        <pages:TM_Main />
+        <!-- Binding UI content vào ViewModel -->
+        <ContentControl Content="{Binding CurrentPage}"
+                        x:Name="PageHost"/>
     </Grid>
 </UserControl>
 

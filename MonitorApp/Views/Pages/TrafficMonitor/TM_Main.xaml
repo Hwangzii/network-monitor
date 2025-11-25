@@ -16,15 +16,9 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <!-- TM_Header: chiều cao cố định hợp lý (thường 80-100px) -->
-            <RowDefinition Height="90"/>
-            <!-- cố định -->
-            <!-- Center: chiếm hết phần giữa, quan trọng nhất -->
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
-            <!-- stretch hết -->
-            <!-- Footer: cố định chiều cao (thường 180-220px) -->
-            <RowDefinition Height="200"/>
-            <!-- cố định -->
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
         <!-- TM Header -->

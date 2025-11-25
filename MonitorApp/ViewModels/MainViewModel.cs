@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using MonitorApp.ViewModels.Layouts;
+using MonitorApp.ViewModels.LayoutsViewModel;
 using MonitorApp.Views.Pages;
 using MonitorApp.Views.Pages.TrafficMonitor;
 

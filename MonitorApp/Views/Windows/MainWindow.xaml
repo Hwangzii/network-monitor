@@ -2,11 +2,11 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:layouts="clr-namespace:MonitorApp.Views.Layouts"
-        Title="Network Monitor"
-        Height="680" Width="1200"
-        WindowStartupLocation="CenterScreen"
-        Background="White">
-
+        xmlns:vm="clr-namespace:MonitorApp.ViewModels"
+        Title="Network Monitor" 
+        MinHeight="700" MinWidth="1000"
+        Background="White"
+        WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <!-- Header: chiều cao tự động theo nội dung -->
@@ -16,11 +16,9 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <layouts:Header Grid.Row="0" 
-                        Loaded="Header_Loaded"/>
+        <layouts:Header Grid.Row="0" Loaded="Header_Loaded"/>
 
-        <!-- MainContent: dính sát dưới Header và fill hết -->
-        <layouts:MainContent Grid.Row="1" 
-                             Loaded="MainContent_Loaded"/>
+        <!-- MainContent -->
+        <layouts:MainContent Grid.Row="1" Loaded="MainContent_Loaded"/>
     </Grid>
 </Window>
