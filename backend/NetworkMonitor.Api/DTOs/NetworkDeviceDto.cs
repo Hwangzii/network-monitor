@@ -1,3 +1,4 @@
+// File: NetworkMonitor.Api/DTOs/NetworkDeviceDto.cs (thay toàn bộ)
 namespace NetworkMonitor.Api.DTOs;
 
 public class NetworkDeviceDto
@@ -11,4 +12,8 @@ public class NetworkDeviceDto
     public string Mac { get; set; } = "";
     public DateTime FirstSeen { get; set; }
     public DateTime LastSeen { get; set; }
+    
+    // MỚI: Trạng thái hiện tại
+    public bool IsOnline { get; set; }
+    public string LastSeenText { get; set; } = ""; // "5 phút trước", "hôm qua", "1 tuần trước"...
 }
