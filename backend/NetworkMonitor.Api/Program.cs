@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<IWifiService, WifiService>();
 // builder.Services.AddSingleton<LocalSystemService>();
 builder.Services.AddSingleton<TrafficService>();
 builder.Services.AddSingleton<INetworkScannerService, NetworkScannerService>();
