@@ -77,7 +77,30 @@ public class NetworkScannerService : INetworkScannerService
             }
         }
 
-        return result.OrderBy(d => IPAddress.Parse(d.ip == "N/A" ? "255.255.255.255" : d.ip));
+        // FIX lỗi sort khi có IP = "N/A"
+        try
+        {
+            var sorted = result
+                .OrderBy(d =>
+                {
+                    if (string.IsNullOrWhiteSpace(d.ip) || d.ip == "N/A")
+                        return IPAddress.Parse("255.255.255.255");
+                    
+                    if (IPAddress.TryParse(d.ip, out var addr))
+                        return addr;
+                    
+                    return IPAddress.Parse("255.255.255.254"); // fallback an toàn
+                })
+                .ThenBy(d => d.name, StringComparer.OrdinalIgnoreCase)
+                .ToList(); // ← QUAN TRỌNG NHẤT: ép thành List để không gọi lại OrderBy
+
+            return sorted;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sorting devices – returning unsorted");
+            return result; // fallback: trả nguyên bản nếu có lỗi gì
+        }
     }
 
     private async Task<DeviceResponseDto> UpdateOrCreateDevice(string ip, string mac, IPAddress? localIp, IPAddress gatewayIp, DateTime now)
