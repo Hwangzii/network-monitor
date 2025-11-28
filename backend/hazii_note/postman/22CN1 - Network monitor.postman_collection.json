@@ -1,0 +1,115 @@
+{
+	"info": {
+		"_postman_id": "03c13c90-feea-4601-9562-d721ea058417",
+		"name": "22CN1 - Network monitor",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40003846",
+		"_collection_link": "https://www.postman.com/universal-comet-169044/workspace/hazii/collection/40003846-03c13c90-feea-4601-9562-d721ea058417?action=share&source=collection_link&creator=40003846"
+	},
+	"item": [
+		{
+			"name": "Traffic Monitor",
+			"item": [
+				{
+					"name": "summary traffic monitor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/traffic/summary?range=15m",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"traffic",
+								"summary"
+							],
+							"query": [
+								{
+									"key": "range",
+									"value": "15m"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Protect & Firewall",
+			"item": []
+		},
+		{
+			"name": "Network Scanner",
+			"item": [
+				{
+					"name": "taber network scanner",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/scanner/devices",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"scanner",
+								"devices"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Wifi",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/scanner/wifi",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"scanner",
+								"wifi"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Logs Analysis",
+			"item": []
+		},
+		{
+			"name": "System & Settings",
+			"item": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
