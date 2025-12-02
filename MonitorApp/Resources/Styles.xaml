@@ -38,6 +38,49 @@
         </Style.Triggers>
     </Style>
 
+    <Style x:Key="ScanButtonStyle" TargetType="Button">
+        <Setter Property="Padding" Value="30"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#222"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderBrush" Value="#DADDE5"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Cursor" Value="Hand"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="16"
+                        SnapsToDevicePixels="True">
+
+                        <ContentPresenter VerticalAlignment="Center"
+                                      HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root"
+                                Property="Background"
+                                Value="#F1F3F7"/>
+                        </Trigger>
+
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root"
+                                Property="Background"
+                                Value="#E8EAF0"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 
     <!-- Toggle Button Style -->
     <Style x:Key="ViewToggleButtonStyle" TargetType="ToggleButton">
@@ -789,6 +832,9 @@
     <Style x:Key="TableRowStyle"
            TargetType="DataGridRow">
         <Setter Property="Background" Value="White"/>
+        <Setter Property="Height" Value="42"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="6"/>
         <Style.Triggers>
             <!-- Hàng xen kẽ -->
             <Trigger Property="ItemsControl.AlternationIndex" Value="1">
@@ -802,7 +848,14 @@
                         Value="{StaticResource ColorRowSelected}"/>
             </Trigger>
         </Style.Triggers>
+
     </Style>
+
+    <Style x:Key="CenterCellTextStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
 
     <!-- ============= SEARCH BOX BORDER ============= -->
 
@@ -829,29 +882,57 @@
 
     <!-- ============= TOGGLE BUTTON ============= -->
 
-    <Style x:Key="ToggleSwitchStyle"
-           TargetType="ToggleButton">
+    <!-- Toggle switch kiểu GlassWire -->
+    <Style x:Key="ToggleSwitchStyle" TargetType="ToggleButton">
+        <Setter Property="Width"  Value="36"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Border x:Name="SwitchBackground"
-                            CornerRadius="9"
-                            Background="#D3D8E5">
-                        <Grid Margin="1">
-                            <Ellipse x:Name="Knob"
-                                     Width="16" Height="16"
-                                     Fill="White"
-                                     HorizontalAlignment="Left"/>
-                        </Grid>
-                    </Border>
+                    <Grid>
+                        <!-- track -->
+                        <Border x:Name="SwitchTrack"
+                            CornerRadius="10"
+                            Background="#D7DEE8"
+                            BorderBrush="#CBD3E1"
+                            BorderThickness="1"/>
+
+                        <!-- knob -->
+                        <Ellipse x:Name="Knob"
+                             Width="16"
+                             Height="16"
+                             Fill="White"
+                             Margin="2"
+                             HorizontalAlignment="Left"
+                             VerticalAlignment="Center"/>
+                    </Grid>
+
                     <ControlTemplate.Triggers>
+                        <!-- ON -->
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="SwitchBackground"
-                                    Property="Background"
-                                    Value="#4CAF50"/>
+                            <Setter TargetName="SwitchTrack"
+                                Property="Background"
+                                Value="#89A3D8"/>
+                            <Setter TargetName="SwitchTrack"
+                                Property="BorderBrush"
+                                Value="#89A3D8"/>
                             <Setter TargetName="Knob"
-                                    Property="HorizontalAlignment"
-                                    Value="Right"/>
+                                Property="HorizontalAlignment"
+                                Value="Right"/>
+                        </Trigger>
+
+                        <!-- Disabled -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="SwitchTrack"
+                                Property="Opacity"
+                                Value="0.5"/>
+                            <Setter TargetName="Knob"
+                                Property="Opacity"
+                                Value="0.5"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

@@ -1,12 +1,15 @@
-﻿using MonitorApp.ViewModels.Stores;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
+using MonitorApp.Models;
+using MonitorApp.Services;
 
 namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 {
@@ -23,8 +26,9 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         // ===========================
         // Fields
         // ===========================
-        private readonly DispatcherTimer _timer;
-        private readonly NetworkMonitorStore _store;
+        private readonly DispatcherTimer _timer;      // timeline + autoscale (16ms)
+        private readonly DispatcherTimer _apiTimer;   // gọi API summary (1s)
+        private readonly MonitorApiClient _api = new();   // client gọi backend
 
         private ObservableCollection<double> downloadData;
         private ObservableCollection<double> uploadData;
@@ -36,15 +40,14 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         private double smoothScrollOffset;
         private DateTime lastLabelTime;
 
+        // Max động để scale Y
+        private double dynamicMaxValue = 100.0;
+
         // ===========================
         // Ctor
         // ===========================
-        public GraphViewModel() : this(NetworkMonitorStore.Instance) { }
-
-        public GraphViewModel(NetworkMonitorStore store)
+        public GraphViewModel()
         {
-            _store = store;
-
             InitializeData();
 
             // Timer chỉ dùng cho timeline + autoscale
@@ -55,8 +58,13 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             _timer.Tick += OnTimerTick;
             _timer.Start();
 
-            // nghe dữ liệu từ store
-            _store.PropertyChanged += StoreOnPropertyChanged;
+            // Timer gọi API traffic/summary mỗi 1s
+            _apiTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _apiTimer.Tick += ApiTimer_Tick;
+            _apiTimer.Start();
         }
 
         // ===========================
@@ -88,13 +96,23 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         public double DownloadSpeed
         {
             get => downloadSpeed;
-            private set { downloadSpeed = value; OnPropertyChanged(); }
+            private set
+            {
+                downloadSpeed = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(DownloadLabel));
+            }
         }
 
         public double UploadSpeed
         {
             get => uploadSpeed;
-            private set { uploadSpeed = value; OnPropertyChanged(); }
+            private set
+            {
+                uploadSpeed = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(UploadLabel));
+            }
         }
 
         public double SmoothScrollOffset
@@ -106,8 +124,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         public string DownloadLabel => FormatDataRate(DownloadSpeed);
         public string UploadLabel => FormatDataRate(UploadSpeed);
 
-        // Max động để scale Y
-        private double dynamicMaxValue = 100.0;
         public double DynamicMaxValue
         {
             get => dynamicMaxValue;
@@ -148,35 +164,41 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         }
 
         // ===========================
-        // Nhận dữ liệu từ NetworkMonitorStore
+        // GỌI API /traffic/summary mỗi 1s
         // ===========================
-        private void StoreOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private async void ApiTimer_Tick(object? sender, EventArgs e)
         {
-            if (e.PropertyName == nameof(NetworkMonitorStore.DownloadKBps) ||
-                e.PropertyName == nameof(NetworkMonitorStore.UploadKBps))
+            TrafficSummary? summary = null;
+
+            try
             {
-                var down = _store.DownloadKBps; // KB/s
-                var up = _store.UploadKBps;   // KB/s
-
-                // cập nhật text
-                DownloadSpeed = down;
-                UploadSpeed = up;
-                OnPropertyChanged(nameof(DownloadLabel));
-                OnPropertyChanged(nameof(UploadLabel));
-
-                // thêm điểm cho đồ thị
-                DownloadData.Add(down);
-                UploadData.Add(up);
-
-                if (DownloadData.Count > MaxDataPoints)
-                {
-                    DownloadData.RemoveAt(0);
-                    UploadData.RemoveAt(0);
-                }
-
-                OnPropertyChanged(nameof(DownloadData));
-                OnPropertyChanged(nameof(UploadData));
+                summary = await _api.GetTrafficSummaryAsync();
             }
+            catch
+            {
+                // Có lỗi kết nối thì bỏ qua tick này, tránh crash
+                return;
+            }
+
+            if (summary == null)
+                return;
+
+            // Parse chuỗi "1.23 MB/s" -> KB/s (double)
+            DownloadSpeed = ParseSpeed(summary.DownloadSpeed);
+            UploadSpeed = ParseSpeed(summary.UploadSpeed);
+
+            // thêm điểm cho đồ thị
+            DownloadData.Add(DownloadSpeed);
+            UploadData.Add(UploadSpeed);
+
+            if (DownloadData.Count > MaxDataPoints)
+            {
+                DownloadData.RemoveAt(0);
+                UploadData.RemoveAt(0);
+            }
+
+            OnPropertyChanged(nameof(DownloadData));
+            OnPropertyChanged(nameof(UploadData));
         }
 
         // ===========================
@@ -259,15 +281,51 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         public void StopMonitoring()
         {
             _timer?.Stop();
-            _store.PropertyChanged -= StoreOnPropertyChanged;
+            _apiTimer?.Stop();
         }
 
         // ===========================
         // Helpers
         // ===========================
+        // Parse "1.23 MB/s", "512 KB/s", "123 B/s", "1,23 MB/s", ...
+        private double ParseSpeed(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return 0;
+
+            text = text.Replace("/s", "", StringComparison.OrdinalIgnoreCase).Trim();
+
+            // Lấy phần số (cho dù backend trả format hơi kỳ)
+            var match = Regex.Match(text, @"[\d\.,]+");
+            if (!match.Success)
+                return 0;
+
+            var numberPart = match.Value.Trim();
+            numberPart = numberPart.Replace(',', '.');
+
+            if (!double.TryParse(numberPart,
+                                 NumberStyles.Float,
+                                 CultureInfo.InvariantCulture,
+                                 out var value))
+                return 0;
+
+            var upper = text.ToUpperInvariant();
+
+            if (upper.Contains("GB"))
+                return value * 1024 * 1024;   // KB/s
+            if (upper.Contains("MB"))
+                return value * 1024;          // KB/s
+            if (upper.Contains("KB"))
+                return value;                 // KB/s
+            if (upper.Contains("B"))
+                return value / 1024;          // B/s -> KB/s
+
+            // không có đơn vị -> coi như KB/s
+            return value;
+        }
+
         private string FormatDataRate(double valueKbPerSec)
         {
-            // value đang là KB/s
             if (valueKbPerSec < 1024)
                 return $"{valueKbPerSec:F1} KB/s";
             if (valueKbPerSec < 1024 * 1024)

@@ -7,7 +7,8 @@
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
              xmlns:conv="clr-namespace:MonitorApp.Converters"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             >
 
 
     <!-- ViewModel -->
@@ -44,11 +45,11 @@
 
         <!-- ==================== TOP ==================== -->
         <Border Grid.Row="0" Style="{StaticResource FooterBorderStyle}">
-            <Grid>
+            <Grid Margin="0,0,0,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="4*" />
+                    <ColumnDefinition Width="460" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="6*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- ===== Left: số liệu + semi-donut ===== -->
@@ -169,7 +170,7 @@
                                                                 Width="24"
                                                                 Height="24"
                                                                 Foreground="#9AA3AE"
-                                                                Margin="0,20,0,0" />
+                                                                Margin="20,20,0,0" />
                             </StackPanel>
                         </Grid>
 
@@ -181,7 +182,7 @@
                                    Foreground="#2B3440"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"
-                                   Margin="0,70,0,0" />
+                                   Margin="20,70,0,0" />
                     </Grid>
 
                     <!-- Upload (phải) -->
@@ -274,9 +275,9 @@
                             Background="{StaticResource ColorBg}"
                             CornerRadius="4"
                             VerticalAlignment="Center">
-                        <Grid Width="{Binding WanFillWidth}"
+                        <Grid  Height="8" Width="600"
                               HorizontalAlignment="Left"
-                              Height="8">
+                              >
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="{Binding WanDownPercent,
                                Converter={StaticResource PercentToStarGridLengthConverter}}"/>

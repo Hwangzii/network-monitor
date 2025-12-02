@@ -1,28 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using MonitorApp.ViewModels.PageViewModels;
 
 namespace MonitorApp.Views.Pages
 {
-    /// <summary>
-    /// Interaction logic for NetworkScanner.xaml
-    /// </summary>
     public partial class NetworkScanner : UserControl
     {
         public NetworkScanner()
         {
             InitializeComponent();
+        }
+
+        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is NetworkScannerViewModel vm)
+            {
+                await vm.InitializeAsync();
+            }
         }
     }
 }

@@ -2,22 +2,31 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows.Threading;
+using MonitorApp.Models;
+using MonitorApp.Services;
 
 namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 {
     public class TM_FooterViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
         private ObservableCollection<string> timeLabels;
-        private readonly DispatcherTimer timer;
+        private readonly DispatcherTimer timer;        // timeline
+        private readonly DispatcherTimer apiTimer;     // gọi API
+        private readonly MonitorApiClient apiClient = new();
+
         private readonly List<string> allTimeLabels = new();
 
         // =============================
-        // 1) DEMO SPEED + TOTAL (GLOBAL)
+        // 1) SPEED + TOTAL (GLOBAL)
         // =============================
 
+        // DownloadSpeed / UploadSpeed lưu theo BYTE/S (để FormatBytes() ra đúng đơn vị)
         private double downloadSpeed;   // byte/s (global)
         public double DownloadSpeed
         {
@@ -72,11 +81,11 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         // 2) WAN / LAN (mỗi cái có down + up riêng)
         // =============================
 
-        // WAN totals
+        // WAN totals (bytes)
         private double wanDownloadTotal;
         private double wanUploadTotal;
 
-        // LAN totals
+        // LAN totals (bytes)
         private double lanDownloadTotal;
         private double lanUploadTotal;
 
@@ -177,9 +186,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         private const double MaxWanWidth = 820;
         private const double MaxLanWidth = 820;
 
-        private DateTime lastTotalTime = DateTime.Now;
-        private readonly Random rnd = new Random();
-
         // =============================
         // Constructor
         // =============================
@@ -196,15 +202,88 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
             WanSizeText = "0 B";
             LanSizeText = "0 B";
-
             WanFillWidth = 0;
             LanFillWidth = 0;
 
             InitializeTimeline();
 
+            // timer cho timeline (16ms)
             timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
             timer.Tick += OnTimerTick;
             timer.Start();
+
+            // timer gọi API summary (1s)
+            apiTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            apiTimer.Tick += ApiTimer_Tick;
+            apiTimer.Start();
+        }
+
+        // =============================
+        // GỌI API /traffic/summary
+        // =============================
+        private async void ApiTimer_Tick(object? sender, EventArgs e)
+        {
+            TrafficSummary? summary = null;
+
+            try
+            {
+                summary = await apiClient.GetTrafficSummaryAsync();
+            }
+            catch
+            {
+                // lỗi mạng thì bỏ qua tick này, tránh crash
+                return;
+            }
+
+            if (summary == null)
+                return;
+
+            // 1) SPEED: Graph dùng KB/s, footer dùng BYTES/s nhưng text phải giống nhau
+            //    => parse ra KB/s rồi *1024 để ra BYTES/s, FormatBytes sẽ ra cùng số KB.
+            double downKb = ParseSpeedToKB(summary.DownloadSpeed);
+            double upKb = ParseSpeedToKB(summary.UploadSpeed);
+
+            DownloadSpeed = downKb * 1024.0; // byte/s
+            UploadSpeed = upKb * 1024.0; // byte/s
+
+            // 2) GLOBAL TOTAL (bytes)
+            DownloadTotal = ParseSizeToBytes(summary.DownloadTotal);
+            UploadTotal = ParseSizeToBytes(summary.UploadTotal);
+
+            // 3) WAN / LAN TOTAL (bytes)
+            double wanBytes = ParseSizeToBytes(summary.WanUsage);
+            double lanBytes = ParseSizeToBytes(summary.LanUsage);
+
+            double totalBytes = DownloadTotal + UploadTotal;
+            double wanLanSum = wanBytes + lanBytes;
+
+            if (wanLanSum <= 0 || totalBytes <= 0)
+            {
+                wanDownloadTotal = wanUploadTotal = lanDownloadTotal = lanUploadTotal = 0;
+            }
+            else
+            {
+                // Tỉ lệ WAN vs LAN trên tổng
+                double wanShare = wanBytes / wanLanSum;
+                double lanShare = 1.0 - wanShare;
+
+                // Tỉ lệ download vs upload
+                double ratioSum = summary.DownloadRatio + summary.UploadRatio;
+                if (ratioSum <= 0) ratioSum = 1;
+                double downShare = summary.DownloadRatio / ratioSum;
+                double upShare = 1.0 - downShare;
+
+                double totalDownBytes = totalBytes * downShare;
+                double totalUpBytes = totalBytes * upShare;
+
+                wanDownloadTotal = totalDownBytes * wanShare;
+                lanDownloadTotal = totalDownBytes * lanShare;
+                wanUploadTotal = totalUpBytes * wanShare;
+                lanUploadTotal = totalUpBytes * lanShare;
+            }
+
+            // Cập nhật donut + bars
+            UpdateArcAndBars();
         }
 
         // =============================
@@ -213,7 +292,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
         private void InitializeTimeline()
         {
-            // giống GraphViewModel: luôn đảm bảo TimeLabels không bị null
             if (TimeLabels == null)
                 TimeLabels = new ObservableCollection<string>();
 
@@ -234,60 +312,17 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             UpdateVisibleTimeLabels();
         }
 
-        private DateTime lastSpeedUpdateTime = DateTime.Now;
-        private const double SpeedUpdateIntervalSeconds = 1.0; // 1s đổi speed 1 lần
-
         private void OnTimerTick(object sender, EventArgs e)
         {
             var now = DateTime.Now;
 
-            // 1) Cập nhật speed mỗi 1 giây cho đỡ nhấp nháy
-            if ((now - lastSpeedUpdateTime).TotalSeconds >= SpeedUpdateIntervalSeconds)
-            {
-                DownloadSpeed = rnd.Next(500_000, 50_000_000);   // ~0.5MB/s → 50MB/s
-                UploadSpeed = rnd.Next(200_000, 20_000_000);     // ~0.2MB/s → 20MB/s
-
-                lastSpeedUpdateTime = now;
-            }
-
-            // 2) Cập nhật total theo thời gian thực (mỗi frame 16ms)
-            double elapsedTotal = (now - lastTotalTime).TotalSeconds;
-            if (elapsedTotal > 0)
-            {
-                double dDown = DownloadSpeed * elapsedTotal;
-                double dUp = UploadSpeed * elapsedTotal;
-
-                // Chia increment cho WAN / LAN
-                double wanDownShare = rnd.NextDouble(); // 0..1
-                double wanUpShare = rnd.NextDouble();
-
-                double wanDownInc = dDown * wanDownShare;
-                double lanDownInc = dDown - wanDownInc;
-
-                double wanUpInc = dUp * wanUpShare;
-                double lanUpInc = dUp - wanUpInc;
-
-                // Cộng vào totals interface
-                wanDownloadTotal += wanDownInc;
-                lanDownloadTotal += lanDownInc;
-                wanUploadTotal += wanUpInc;
-                lanUploadTotal += lanUpInc;
-
-                // Tổng global = WAN + LAN
-                DownloadTotal = wanDownloadTotal + lanDownloadTotal;
-                UploadTotal = wanUploadTotal + lanUploadTotal;
-
-                lastTotalTime = now;
-            }
-
-            // 3) TIMELINE – giống GraphViewModel
+            // TIMELINE – giống GraphViewModel
             double elapsedLabel = (now - lastLabelTime).TotalSeconds;
             var progress = elapsedLabel / LabelIntervalSeconds;
             SmoothScrollOffset = -(progress * LabelWidth);
 
             if (elapsedLabel >= LabelIntervalSeconds)
             {
-                // Dời anchor theo đúng bước 4s (tránh drift)
                 lastLabelTime = lastLabelTime.AddSeconds(LabelIntervalSeconds);
 
                 allTimeLabels.Add(lastLabelTime.ToString("h:mm:ss tt"));
@@ -312,21 +347,83 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         }
 
         // =============================
-        // Utils
+        // Utils parse/format
         // =============================
+
+        // parse "1.43 GB" / "622.02 MB" -> BYTES
+        private static double ParseSizeToBytes(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return 0;
+
+            text = text.Trim();
+            var match = Regex.Match(text, @"[\d\.,]+");
+            if (!match.Success)
+                return 0;
+
+            var numberPart = match.Value.Replace(',', '.');
+
+            if (!double.TryParse(numberPart,
+                                 NumberStyles.Float,
+                                 CultureInfo.InvariantCulture,
+                                 out var value))
+                return 0;
+
+            var upper = text.ToUpperInvariant();
+
+            if (upper.Contains("GB")) return value * 1024 * 1024 * 1024;
+            if (upper.Contains("MB")) return value * 1024 * 1024;
+            if (upper.Contains("KB")) return value * 1024;
+            // B hoặc không có đơn vị
+            return value;
+        }
+
+        // parse "947.2 KB/s", "1.2 MB/s" -> KB/s (để dùng chung với Graph logic)
+        private static double ParseSpeedToKB(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return 0;
+
+            text = text.Replace("/s", "", StringComparison.OrdinalIgnoreCase).Trim();
+
+            var match = Regex.Match(text, @"[\d\.,]+");
+            if (!match.Success)
+                return 0;
+
+            var numberPart = match.Value.Replace(',', '.');
+
+            if (!double.TryParse(numberPart,
+                                 NumberStyles.Float,
+                                 CultureInfo.InvariantCulture,
+                                 out var value))
+                return 0;
+
+            var upper = text.ToUpperInvariant();
+
+            if (upper.Contains("GB")) return value * 1024 * 1024;
+            if (upper.Contains("MB")) return value * 1024;
+            if (upper.Contains("KB")) return value;
+            if (upper.Contains("B")) return value / 1024;
+
+            return value;
+        }
 
         private static string FormatBytes(double b)
         {
             string[] u = { "B", "KB", "MB", "GB" };
             int i = 0;
             double v = b;
-            while (v >= 1024 && i < u.Length - 1) { v /= 1024; i++; }
+            while (v >= 1024 && i < u.Length - 1)
+            {
+                v /= 1024;
+                i++;
+            }
             return $"{v:0.#} {u[i]}";
         }
 
         /// <summary>
         /// Cập nhật donut + WAN/LAN bar dựa trên totals hiện tại.
-        /// GỌI từ setter DownloadTotal/UploadTotal.
+        /// GỌI từ setter DownloadTotal/UploadTotal và ApiTimer_Tick.
         /// </summary>
         private void UpdateArcAndBars()
         {
@@ -334,16 +431,20 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
             if (total <= 0)
             {
+                // Donut
                 ArcDownloadPercent = 0;
                 ArcUploadPercent = 0;
                 ArcTotalPercent = 0;
 
+                // Text
                 WanSizeText = "0 B";
                 LanSizeText = "0 B";
 
+                // Màu bar
                 WanDownPercent = 0;
                 LanDownPercent = 0;
 
+                // Độ dài bar
                 WanFillWidth = 0;
                 LanFillWidth = 0;
                 return;
@@ -354,37 +455,26 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             ArcUploadPercent = (UploadTotal / total) * 100.0;
             ArcTotalPercent = 100.0;
 
-            // ===== 2) WAN BAR =====
+            // ===== 2) TỔNG THEO WAN / LAN =====
             double wanTotal = wanDownloadTotal + wanUploadTotal;
-            if (wanTotal > 0)
-            {
-                WanSizeText = FormatBytes(wanTotal);
-                WanDownPercent = (wanDownloadTotal / wanTotal) * 100.0;
-                WanFillWidth = MaxWanWidth * (wanTotal / total); // dài tỉ lệ với tổng
-            }
-            else
-            {
-                WanSizeText = "0 B";
-                WanDownPercent = 0;
-                WanFillWidth = 0;
-            }
-
-            // ===== 3) LAN BAR =====
             double lanTotal = lanDownloadTotal + lanUploadTotal;
-            if (lanTotal > 0)
-            {
-                LanSizeText = FormatBytes(lanTotal);
-                LanDownPercent = (lanDownloadTotal / lanTotal) * 100.0;
-                LanFillWidth = MaxLanWidth * (lanTotal / total);
-            }
-            else
-            {
-                LanSizeText = "0 B";
-                LanDownPercent = 0;
-                LanFillWidth = 0;
-            }
-        }
 
+            WanSizeText = wanTotal > 0 ? FormatBytes(wanTotal) : "0 B";
+            LanSizeText = lanTotal > 0 ? FormatBytes(lanTotal) : "0 B";
+
+            // Độ dài thanh: tỉ lệ WAN/LAN so với toàn bộ traffic
+            WanFillWidth = wanTotal > 0 ? MaxWanWidth * (wanTotal / total) : 0;
+            LanFillWidth = lanTotal > 0 ? MaxLanWidth * (lanTotal / total) : 0;
+
+            // ===== 3) TỈ LỆ MÀU VÀNG/HỒNG (DOWN/UP) =====
+            // Dùng tỉ lệ download / upload GLOBAL cho cả WAN và LAN,
+            // giúp pattern màu giống hệt nhau (như hình mẫu).
+            double globalDownPercent = ClampPercent((DownloadTotal / total) * 100.0);
+
+            WanDownPercent = globalDownPercent;
+            LanDownPercent = globalDownPercent;
+            // WanUpPercent & LanUpPercent tự tính = 100 - DownPercent
+        }
         protected void OnPropertyChanged([CallerMemberName] string name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
