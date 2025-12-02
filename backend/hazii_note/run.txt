@@ -13,3 +13,8 @@ NetworkMonitor.Api$: dotnet build -c Release
 NetworkMonitor.Api$: dotnet run -c Release 
 
 bash -lc 'tree -a -I "bin|obj|node_modules|.git" > hazii_note/structure.txt'
+
+tree /a /f > hazii_note\structure.txt
+liệt kê nhưng ẩn một vài thư mục như bin, obj, node_modules, .git đi để đỡ bị liệt kê nhiều
+
+
