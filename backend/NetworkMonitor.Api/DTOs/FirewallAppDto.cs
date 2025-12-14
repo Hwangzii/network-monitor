@@ -2,6 +2,7 @@ namespace NetworkMonitor.Api.DTOs;
 
 public class FirewallAppDto
 {
+    public string AppId { get; set; } = string.Empty; 
     public string AppName { get; set; } = string.Empty;
     public string IconBase64 { get; set; } = "";
     public string InConnections { get; set; } = "Allowed";
@@ -12,5 +13,6 @@ public class FirewallAppDto
     public string DownloadSpeed { get; set; } = "0 B/s";
     public string UploadSpeed { get; set; } = "0 B/s";
     public string VirusTotal { get; set; } = "";
-    public List<FirewallProcessDto> Processes { get; set; } = new();
+    
+    // ĐÃ XÓA: HasProcesses, AlertLevel, và List<FirewallProcessDto> Processes
 }
