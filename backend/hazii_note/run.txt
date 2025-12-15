@@ -17,4 +17,5 @@ bash -lc 'tree -a -I "bin|obj|node_modules|.git" > hazii_note/structure.txt'
 tree /a /f > hazii_note\structure.txt
 liệt kê nhưng ẩn một vài thư mục như bin, obj, node_modules, .git đi để đỡ bị liệt kê nhiều
 
-
+--------------------------------------------
+Get-ChildItem -Path . -Recurse | Where-Object { $_.PSPath -notmatch '\\bin|\\obj|\\node_modules|\\.git' } | Select-Object FullName | Format-Table -Wrap | Out-File -FilePath hazii_note/structure_win.txt

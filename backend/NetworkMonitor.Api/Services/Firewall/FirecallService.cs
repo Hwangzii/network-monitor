@@ -1,6 +1,8 @@
-// file: NetworkMonitor.Api/Services/Firewall/FirecallService.cs
+// file: NetworkMonitor.Api/Services/Firewall/FirewallService.cs (đã sửa)
 using NetworkMonitor.Api.DTOs;
 using NetworkMonitor.Api.Utils;
+using NetworkMonitor.Api.Services.NetworkMonitor;
+using NetworkMonitor.Api.Services.NetworkMonitor.Models;
 using System.Diagnostics;
 using System.Runtime.Versioning;
 
@@ -9,6 +11,18 @@ namespace NetworkMonitor.Api.Services.Firewall;
 [SupportedOSPlatform("windows")]
 public class FirewallService : IFirewallService
 {
+    private readonly INetworkStatusChecker _statusChecker;
+    private readonly INetworkTrafficMonitor _trafficMonitor;  // <--- MỚI
+
+    public FirewallService(INetworkStatusChecker statusChecker, INetworkTrafficMonitor trafficMonitor)
+    {
+        _statusChecker = statusChecker;
+        _trafficMonitor = trafficMonitor;
+
+        if (_statusChecker is NetworkStatusChecker checker)
+            checker.LoadOnce();
+    }
+
     // ====================================================================
     // API 1: Lấy danh sách Ứng dụng (Apps)
     // ====================================================================
@@ -51,7 +65,6 @@ public class FirewallService : IFirewallService
     public async Task<List<FirewallProcessDto>> GetAppProcessesAsync(string appId)
     {
         var processesList = new List<FirewallProcessDto>();
-        // Lấy AppName từ AppId (ví dụ: "svchost_10.0.19041.1 (WinBuild.160101.0800)" -> "svchost")
         var appName = appId.Split('_').FirstOrDefault() ?? string.Empty;
 
         foreach (var process in Process.GetProcesses())
@@ -59,24 +72,34 @@ public class FirewallService : IFirewallService
             try
             {
                 if (process.MainModule == null) continue;
-                string currentAppName = Path.GetFileNameWithoutExtension(process.MainModule.FileName);
+                string exePath = process.MainModule.FileName;
+                string currentAppName = Path.GetFileNameWithoutExtension(exePath);
 
                 if (currentAppName.Equals(appName, StringComparison.OrdinalIgnoreCase))
                 {
-                    // Chuyển đổi Process thành DTO
+                    string inStatus = _statusChecker.CheckInboundStatus(exePath);
+                    string outStatus = _statusChecker.CheckOutboundStatus(exePath);
+
+                    var usage = _trafficMonitor.GetUsageByPid(process.Id);                // <--- MỚI
+                    var hosts = _trafficMonitor.GetHostsByPid(process.Id);                // <--- MỚI
+
+                    string? iconBase64 = IconExtractor.GetBase64IconFromExe(exePath);
+
                     processesList.Add(new FirewallProcessDto
                     {
                         ProcessName = $"{process.ProcessName}.exe",
                         ProcessID = process.Id,
-                        // TODO: Lấy IconBase64 từ ứng dụng cha (FirewallAppDto) để nhất quán
-                        IconBase64 = "", 
-                        InConnections = "Allowed",
-                        OutConnections = "Allowed",
-                        // TODO: Logic lấy Hosts, Download/Upload Speed
+                        IconBase64 = iconBase64 ?? "",
+                        InConnections = inStatus,
+                        OutConnections = outStatus,
+                        Hosts = string.Join(", ", hosts.Select(h => h.Domain ?? h.RemoteIp)),
+                        DownloadSpeed = FormatHelper.FormatSpeed(usage.DownloadBytesPerSecond),
+                        UploadSpeed = FormatHelper.FormatSpeed(usage.UploadBytesPerSecond),
+                        // TODO: các field khác nếu cần
                     });
                 }
             }
-            catch (Exception) { /* Bỏ qua lỗi truy cập */ }
+            catch (Exception) { /* Bỏ qua */ }
             finally { process.Dispose(); }
         }
 
@@ -88,7 +111,7 @@ public class FirewallService : IFirewallService
     // ====================================================================
     private List<FirewallAppDto> GetActiveApplications()
     {
-        var appDict = new Dictionary<string, FirewallAppDto>();
+        var appDict = new Dictionary<string, FirewallAppDto>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var process in Process.GetProcesses())
         {
@@ -98,25 +121,37 @@ public class FirewallService : IFirewallService
 
                 string exePath = process.MainModule.FileName;
                 string appName = Path.GetFileNameWithoutExtension(exePath);
-                
+
                 if (!appDict.ContainsKey(appName))
                 {
                     string version = GetVersion(exePath);
+                    string appId = $"{appName.Replace(" ", "_").ToLower()}_{version}";
+
+                    string inStatus = _statusChecker.CheckInboundStatus(exePath);
+                    string outStatus = _statusChecker.CheckOutboundStatus(exePath);
+
+                    var usage = _trafficMonitor.GetUsageByPid(process.Id);           // <--- MỚI
+                    var hosts = _trafficMonitor.GetHostsByPid(process.Id);           // <--- MỚI
+
                     string? iconBase64 = IconExtractor.GetBase64IconFromExe(exePath);
-                    
+
                     appDict[appName] = new FirewallAppDto
                     {
-                        AppId = $"{appName.Replace(" ", "_").ToLower()}_{version}", 
+                        AppId = appId,
                         AppName = appName,
                         IconBase64 = iconBase64 ?? "",
                         Version = version,
-                        InConnections = "Allowed", 
-                        OutConnections = "Allowed",
-                        // Các thuộc tính khác (Hosts, Speed, etc.) được giữ mặc định "" hoặc "0 B/s"
+                        InConnections = inStatus,
+                        OutConnections = outStatus,
+                        Hosts = string.Join(", ", hosts.Select(h => h.Domain ?? h.RemoteIp)),
+                        DownloadSpeed = FormatHelper.FormatSpeed(usage.DownloadBytesPerSecond),
+                        UploadSpeed = FormatHelper.FormatSpeed(usage.UploadBytesPerSecond),
+                        VisualTotal = "",
+                        VirusTotal = ""
                     };
                 }
             }
-            catch (Exception) { /* Bỏ qua lỗi truy cập hoặc process đã tắt */ }
+            catch (Exception) { /* Bỏ qua */ }
             finally { process.Dispose(); }
         }
 

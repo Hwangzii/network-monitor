@@ -1,3 +1,4 @@
+// file: NetworkMonitor.Api/Services/Firewall/INetworkStatusChecker.cs
 namespace NetworkMonitor.Api.Services.Firewall;
 
 public interface INetworkStatusChecker

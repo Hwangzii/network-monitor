@@ -1,4 +1,4 @@
-// NetworkMonitor.Api/DTOs/TrafficSummaryDto.cs
+// file: NetworkMonitor.Api/DTOs/TrafficSummaryDto.cs
 namespace NetworkMonitor.Api.DTOs;
 
 public class TrafficSummaryDto
