@@ -142,7 +142,8 @@ public class NetworkScannerService : INetworkScannerService
             _devices.Upsert(known);
         }
 
-        return ToDto(
+        // Tạo DTO
+        var dto = ToDto(
             known ?? new KnownDevice { Mac = mac, Vendor = "Unknown", DeviceType = "Generic", FirstSeen = now, LastSeen = now },
             isOnline: true,
             now: now,
@@ -150,6 +151,18 @@ public class NetworkScannerService : INetworkScannerService
             isLocalPc: localIp?.ToString() == ip,
             isGateway: gatewayIp.ToString() == ip
         );
+
+        // THÊM: Scan ports chỉ khi online và có IP hợp lệ
+        if (!string.IsNullOrWhiteSpace(ip) && ip != "N/A")
+        {
+            dto.ports = await ScanOpenPortsAsync(ip);
+        }
+        else
+        {
+            dto.ports = "";
+        }
+
+        return dto;
     }
 
     private DeviceResponseDto ToDto(KnownDevice device, bool isOnline, DateTime now, string currentIp,
@@ -322,5 +335,75 @@ public class NetworkScannerService : INetworkScannerService
         };
 
         return map.TryGetValue(oui, out var v) ? v : ("Unknown", "Generic");
+    }
+
+        // Danh sách các port phổ biến cần scan (phù hợp với router, camera, printer, server, IoT...)
+    private static readonly int[] CommonPorts = new[]
+    {
+        21,    // FTP
+        22,    // SSH
+        23,    // Telnet
+        80,    // HTTP
+        81,    // Alt HTTP
+        443,   // HTTPS
+        8080,  // Alt HTTP
+        8443,  // Alt HTTPS
+        554,   // RTSP (camera)
+        8554,  // RTSP alt
+        37777, // DVR / IP Camera
+        5000,  // UPnP / Docker
+        1900,  // SSDP / UPnP
+        9100   // Printer
+    };
+
+    // Hàm scan port nhanh (timeout 800ms/port)
+        // Hàm scan port nhanh với timeout đúng cách
+    private async Task<string> ScanOpenPortsAsync(string ipStr)
+    {
+        if (string.IsNullOrWhiteSpace(ipStr) || ipStr == "N/A" || !IPAddress.TryParse(ipStr, out var ip))
+            return "";
+
+        var openPorts = new List<int>();
+        var timeoutMs = 800; // timeout mỗi port
+
+        var tasks = CommonPorts.Select(port => Task.Run(async () =>
+        {
+            using var client = new TcpClient();
+            try
+            {
+                // Tạo task connect không timeout
+                var connectTask = client.ConnectAsync(ip, port);
+
+                // Đua giữa connect và delay
+                var completedTask = await Task.WhenAny(connectTask, Task.Delay(timeoutMs));
+
+                if (completedTask == connectTask)
+                {
+                    // Nếu connect thành công trước timeout
+                    if (client.Connected)
+                    {
+                        lock (openPorts)
+                        {
+                            openPorts.Add(port);
+                        }
+                    }
+                }
+                // Nếu timeout → không làm gì, bỏ qua port này
+            }
+            catch
+            {
+                // Bắt lỗi kết nối (refused, unreachable, v.v.)
+            }
+            finally
+            {
+                client.Close();
+            }
+        }));
+
+        await Task.WhenAll(tasks);
+
+        if (openPorts.Count == 0) return "";
+        openPorts.Sort();
+        return string.Join(",", openPorts);
     }
 }

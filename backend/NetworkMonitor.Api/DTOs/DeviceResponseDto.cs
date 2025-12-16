@@ -11,6 +11,7 @@ public class DeviceResponseDto
     public string location { get; set; } = "";
     public string system { get; set; } = "";
     public string ip { get; set; } = "";
+    public string ports { get; set; } = "";
     public string mac_address { get; set; } = "";
     public string last_seen { get; set; } = "";
     public string first_seen { get; set; } = "";

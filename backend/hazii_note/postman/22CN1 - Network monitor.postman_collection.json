@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "03c13c90-feea-4601-9562-d721ea058417",
 		"name": "22CN1 - Network monitor",
-		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "40003846",
 		"_collection_link": "https://www.postman.com/universal-comet-169044/workspace/hazii/collection/40003846-03c13c90-feea-4601-9562-d721ea058417?action=share&source=collection_link&creator=40003846"
 	},
@@ -38,7 +38,41 @@
 		},
 		{
 			"name": "Protect & Firewall",
-			"item": []
+			"item": [
+				{
+					"name": "Apps",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/firewall/apps?status=active&page=1&limit=70",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"firewall",
+								"apps"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "active",
+									"description": "active/uninstalled"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "70"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "Network Scanner",
@@ -48,7 +82,16 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"url": "{{base_url}}/scanner/devices"
+						"url": {
+							"raw": "{{base_url}}/scanner/devices",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"scanner",
+								"devices"
+							]
+						}
 					},
 					"response": []
 				},
@@ -57,7 +100,16 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"url": "{{base_url}}/scanner/wifi"
+						"url": {
+							"raw": "{{base_url}}/scanner/wifi",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"scanner",
+								"wifi"
+							]
+						}
 					},
 					"response": []
 				}
