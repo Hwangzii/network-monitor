@@ -1,3 +1,4 @@
+// file: Services/NetworkMonitor/EtwNetworkTrafficMonitor.cs
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Kernel;
@@ -15,23 +16,10 @@ using System.Threading;
 using System.Runtime.Versioning;
 
 [SupportedOSPlatform("windows")]
-public class EtwNetworkTrafficMonitor : INetworkTrafficMonitor, IDisposable
+public class EtwNetworkTrafficMonitor : INetworkTrafficMonitor
 {
-    private readonly TraceEventSession _session;
     private readonly ConcurrentDictionary<int, PidTrafficStats> _stats = new();
 
-    public EtwNetworkTrafficMonitor()
-    {
-        _session = new TraceEventSession("NetworkMonitorEtwSession");
-        _session.EnableKernelProvider(KernelTraceEventParser.Keywords.NetworkTCPIP);
-
-        _session.Source.Kernel.TcpIpSend += OnTcpIpSend;
-        _session.Source.Kernel.TcpIpRecv += OnTcpIpRecv;
-        _session.Source.Kernel.UdpIpSend += OnUdpIpSend;
-        _session.Source.Kernel.UdpIpRecv += OnUdpIpRecv;
-
-        ThreadPool.QueueUserWorkItem(_ => _session.Source.Process());
-    }
 
     private void OnTcpIpSend(TcpIpSendTraceData data)
         => UpdateStats(data.ProcessID, data.size, false, data.daddr.ToString());
@@ -52,7 +40,15 @@ public class EtwNetworkTrafficMonitor : INetworkTrafficMonitor, IDisposable
         Interlocked.Add(ref stat.CurrentWindowBytes[isReceive ? 0 : 1], size);
 
         if (!string.IsNullOrEmpty(remoteIp))
-            stat.CurrentHosts.Add(remoteIp);
+        {
+            // Kiểm tra xem IP này đã có trong danh sách Host hiện tại chưa
+            if (stat.CurrentHosts.Add(remoteIp))
+            {
+                // Nếu là IP mới phát hiện cho Process này, hãy đẩy vào Log Analysis
+                string processName = GetProcessName(pid);
+                
+            }
+        }
 
         if (DateTime.UtcNow.Second != stat.LastSecond)
         {
@@ -68,6 +64,17 @@ public class EtwNetworkTrafficMonitor : INetworkTrafficMonitor, IDisposable
         }
     }
 
+    // Hàm phụ trợ để lấy tên ứng dụng từ PID
+    private string GetProcessName(int pid)
+    {
+        try
+        {
+            using var proc = Process.GetProcessById(pid);
+            return proc.ProcessName;
+        }
+        catch { return "Unknown System Process"; }
+    }
+
     public NetworkUsage GetUsageByPid(int pid)
         => _stats.TryGetValue(pid, out var stat)
             ? new NetworkUsage { DownloadBytesPerSecond = stat.DownloadBps, UploadBytesPerSecond = stat.UploadBps }
@@ -78,7 +85,6 @@ public class EtwNetworkTrafficMonitor : INetworkTrafficMonitor, IDisposable
             ? stat.Hosts
             : Array.Empty<NetworkHost>();
 
-    public void Dispose() => _session.Dispose();
 
     private class PidTrafficStats
     {

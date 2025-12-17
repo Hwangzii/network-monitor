@@ -20,7 +20,7 @@ public class NetworkScannerController : ControllerBase
     }
 
     [HttpGet("devices")]
-    public async Task<ActionResult<IEnumerable<NetworkDeviceResponseDto>>> GetDevices()
+    public async Task<ActionResult<IEnumerable<DeviceResponseDto>>> GetDevices()
     {
         // Gọi hàm ScanNetworkAsync từ Service
         var devices = await _scannerService.ScanNetworkAsync();
