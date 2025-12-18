@@ -7,15 +7,13 @@
              xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
              xmlns:conv="clr-namespace:MonitorApp.Converters"
              mc:Ignorable="d" 
-             Background="Transparent" Loaded="UserControl_Loaded"
-            >
+             Background="Transparent">
     <UserControl.DataContext>
         <vm:GraphViewModel/>
     </UserControl.DataContext>
 
     <UserControl.Resources>
         <ResourceDictionary>
-            <!-- Converter đặt ở đây -->
             <conv:SeriesToGeometryConverter x:Key="SeriesToGeometryConverter"/>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/MonitorApp;component/Resources/Styles.xaml"/>
@@ -29,45 +27,51 @@
             <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
 
-        <!-- Phần biểu đồ -->
+        <!-- Chart Area -->
         <Border Grid.Row="0" 
                 Style="{StaticResource ChartBorderStyle}"
                 VerticalAlignment="Stretch">
             <Grid>
-                <!-- Lưới nền -->
+                <!-- Grid Lines -->
                 <ItemsControl x:Name="GridLines" Style="{StaticResource GridLinesStyle}"/>
 
-                <!-- Canvas cho biểu đồ -->
-                <Canvas x:Name="ChartCanvas" ClipToBounds="True">
-                    <!-- Download (tím) -->
-                    <Path Stroke="#FBBF24" StrokeThickness="2.5" Fill="Transparent" SnapsToDevicePixels="True">
-                        <Path.Data>
-                            <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}" ConverterParameter="60|200|False">
-                                <Binding Path="DownloadData"/>
-                                <Binding ElementName="ChartCanvas" Path="ActualWidth"/>
-                                <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
-                           
-                                <!-- forcing refresh on collection change -->
-                                <Binding Path="DownloadData.Count"/>
-                            </MultiBinding>
-                        </Path.Data>
-                    </Path>
+                <!-- ✅ ScrollViewer cho infinite scrolling chart -->
+                <ScrollViewer x:Name="ChartScroller" 
+                              HorizontalScrollBarVisibility="Hidden" 
+                              VerticalScrollBarVisibility="Hidden"
+                              ClipToBounds="True">
+                    <!-- Canvas với width động -->
+                    <Canvas x:Name="ChartCanvas" 
+                            Width="{Binding ChartWidth}"
+                            Background="Transparent">
+                        
+                        <!-- Download Line -->
+                        <Path Stroke="#FBBF24" StrokeThickness="2.5" Fill="Transparent" SnapsToDevicePixels="True">
+                            <Path.Data>
+                                <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}">
+                                    <Binding Path="DownloadData"/>
+                                    <Binding ElementName="ChartCanvas" Path="ActualWidth"/>
+                                    <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
+                                    <Binding Path="DynamicMaxValue"/>
+                                </MultiBinding>
+                            </Path.Data>
+                        </Path>
 
-                    <!-- Upload (cam) -->
-                    <Path Stroke="#F9A8D4" StrokeThickness="2.5" Fill="Transparent" SnapsToDevicePixels="True">
-                        <Path.Data>
-                            <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}" ConverterParameter="60|200 |False">
-                                <Binding Path="UploadData"/>
-                                <Binding ElementName="ChartCanvas" Path="ActualWidth"/>
-                                <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
-                                <!-- forcing refresh on collection change -->
-                                <Binding Path="UploadData.Count"/>
-                            </MultiBinding>
-                        </Path.Data>
-                    </Path>
-                </Canvas>
+                        <!-- Upload Line -->
+                        <Path Stroke="#F9A8D4" StrokeThickness="2.5" Fill="Transparent" SnapsToDevicePixels="True">
+                            <Path.Data>
+                                <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}">
+                                    <Binding Path="UploadData"/>
+                                    <Binding ElementName="ChartCanvas" Path="ActualWidth"/>
+                                    <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
+                                    <Binding Path="DynamicMaxValue"/>
+                                </MultiBinding>
+                            </Path.Data>
+                        </Path>
+                    </Canvas>
+                </ScrollViewer>
 
-                <!-- Nhãn giá trị -->
+                <!-- Legend Panel -->
                 <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" 
                            Margin="20,20,0,0" Style="{StaticResource LegendPanelStyle}">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
@@ -81,22 +85,38 @@
                                    Style="{StaticResource ValueTextStyle}"/>
                     </StackPanel>
                 </StackPanel>
+
+                <!-- Max Value Label -->
+                <Border HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="0,12,18,0"
+                        Padding="10,2"
+                        CornerRadius="12"
+                        Background="#F5F7FB"
+                        BorderBrush="#E0E4EC"
+                        BorderThickness="1">
+                    <TextBlock Text="{Binding MaxLabel}"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="#64748B"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                </Border>
             </Grid>
         </Border>
 
-        <!-- Phần trục thời gian -->
-        <!-- Phần trục thời gian -->
+        <!-- ✅ Timeline tịnh tiến mượt mà - dùng RenderTransform -->
         <Border Grid.Row="1"
-        Height="30"
-        Style="{StaticResource TimelineBorderStyle}"
-        Margin="0"
-        HorizontalAlignment="Stretch">
-            <Grid x:Name="TopTimelineHost"
-          ClipToBounds="True">
+                Height="30"
+                Style="{StaticResource TimelineBorderStyle}"
+                Margin="0"
+                HorizontalAlignment="Stretch">
+            <Grid x:Name="TopTimelineHost" ClipToBounds="True">
                 <ItemsControl ItemsSource="{Binding TimeLabels}"
-                      Style="{StaticResource TimeLabelsStyle}"
-                      HorizontalAlignment="Stretch"
-                      Width="{Binding ActualWidth, ElementName=TopTimelineHost}">
+                              Style="{StaticResource TimeLabelsStyle}"
+                              HorizontalAlignment="Stretch"
+                              Width="{Binding ActualWidth, ElementName=TopTimelineHost}">
+                    <!-- ✅ Tịnh tiến mượt mà như ban đầu -->
                     <ItemsControl.RenderTransform>
                         <TranslateTransform X="{Binding SmoothScrollOffset}"/>
                     </ItemsControl.RenderTransform>

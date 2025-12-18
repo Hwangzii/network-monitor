@@ -3,14 +3,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels"
+             xmlns:conv="clr-namespace:MonitorApp.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="900">
 
-    <!-- Chỉ merge style từ file ngoài vào -->
+    <UserControl.DataContext>
+        <vm:GrassWireProtectViewModel/>
+    </UserControl.DataContext>
+
     <UserControl.Resources>
         <ResourceDictionary>
+            <conv:Base64ToBitmapImageConverter x:Key="Base64ToBitmapImageConverter"/>
             <ResourceDictionary.MergedDictionaries>
-                <!-- nếu bạn đặt tên khác / thư mục khác thì sửa lại đường dẫn này -->
                 <ResourceDictionary Source="/MonitorApp;component/Resources/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -23,56 +28,69 @@
         </Grid.RowDefinitions>
 
         <!-- ===== TOP TOOLBAR ===== -->
-        <Border Background="#FFFFFF" Padding="20" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="#FFFFFF" Padding="16,12,16,12" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="220"/>
-                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Firewall -->
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="Firewall" FontSize="14" Foreground="#475569" Margin="0,0,0,4"/>
-                    <ToggleButton Width="60" Height="28" Background="#CBD5E1" BorderBrush="#CBD5E1">
-                        <TextBlock Text="OFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </ToggleButton>
+                <!-- Firewall Toggle -->
+                <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Top">
+                    <TextBlock Text="Firewall" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4" FontWeight="Normal"/>
+                    <Border Style="{StaticResource GW_ToggleContainerStyle}" Width="54" Height="24" Padding="2">
+                        <ToggleButton Style="{StaticResource GW_ToggleButtonStyle}" Width="50" Height="20">
+                            <TextBlock Text="OFF" Foreground="#64748B" FontSize="9" FontWeight="SemiBold"/>
+                        </ToggleButton>
+                    </Border>
                 </StackPanel>
 
                 <!-- Firewall Profile -->
-                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Left">
-                    <TextBlock Text="Firewall Profile" FontSize="14" Foreground="#475569" Margin="0,0,0,4"/>
-                    <Border Background="#F1F5F9" CornerRadius="6" Padding="10,6">
-                        <TextBlock Text="Create New Profile" Foreground="#1E293B"/>
+                <StackPanel Grid.Column="1" Orientation="Vertical" Margin="60,0,0,0" VerticalAlignment="Top">
+                    <TextBlock Text="Firewall Profile" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4" FontWeight="Normal"/>
+                    <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="16" Padding="12,6" Height="24" Width="200">
+                        <TextBlock Text="Create New Profile" Foreground="#64748B" FontSize="11" VerticalAlignment="Center"/>
                     </Border>
                 </StackPanel>
 
                 <!-- Firewall Mode -->
-                <StackPanel Grid.Column="2" Orientation="Vertical" HorizontalAlignment="Left">
-                    <TextBlock Text="Firewall Mode" FontSize="14" Foreground="#475569" Margin="0,0,0,4"/>
-                    <Border Background="#F1F5F9" CornerRadius="6" Padding="10,6">
-                        <TextBlock Text="Click To Block" Foreground="#1E293B"/>
+                <StackPanel Grid.Column="2" Orientation="Vertical" Margin="60,0,0,0" VerticalAlignment="Top">
+                    <TextBlock Text="Firewall Mode" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4" FontWeight="Normal"/>
+                    <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="16" Padding="12,6" Height="24" Width="180">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="🔔" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Grid.Column="1" Text="Click To Block" Foreground="#64748B" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="▼" Foreground="#9CA3AF" FontSize="9" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                        </Grid>
                     </Border>
                 </StackPanel>
 
                 <!-- Search -->
-                <StackPanel Grid.Column="3" Orientation="Vertical">
-                    <TextBlock Text="Search" FontSize="14" Foreground="#475569" Margin="0,0,0,4"/>
-                    <Border Background="#F1F5F9" CornerRadius="8" Padding="10,6">
+                <StackPanel Grid.Column="3" Orientation="Vertical" Margin="60,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="220">
+                    <TextBlock Text="Search" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4" FontWeight="Normal"/>
+                    <Border Background="#F3F4F6" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="16" Padding="10,6" Height="24">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="🔍" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
 
                             <TextBox Grid.Column="1"
+                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent"
                                      BorderThickness="0"
                                      Foreground="#1E293B"
-                                     FontSize="14"
+                                     FontSize="11"
                                      VerticalContentAlignment="Center"/>
                         </Grid>
                     </Border>
@@ -80,125 +98,159 @@
             </Grid>
         </Border>
 
-        <!-- ===== TABLE HEADER ===== -->
-        <Border Grid.Row="1" Background="{StaticResource HeaderBg}" Padding="16,10"
-                BorderBrush="{StaticResource BorderGray}" BorderThickness="0,0,0,1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="120"/>
-                    <ColumnDefinition Width="120"/>
-                    <ColumnDefinition Width="80"/>
-                </Grid.ColumnDefinitions>
+        <!-- ===== TABLE CONTENT (DataGrid with Resizable Columns) ===== -->
+        <DataGrid Grid.Row="1" 
+                  x:Name="AppsDataGrid"
+                  ItemsSource="{Binding FilteredAppList}"
+                  Background="#FFFFFF"
+                  RowBackground="#FFFFFF"
+                  AlternatingRowBackground="#F9FAFB"
+                  ColumnHeaderHeight="40"
+                  RowHeight="40"
+                  BorderThickness="0"
+                  HeadersVisibility="Column"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserReorderColumns="True"
+                  CanUserResizeColumns="True"
+                  CanUserSortColumns="True"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="#E5E7EB"
+                  VerticalGridLinesBrush="Transparent"
+                  AutoGenerateColumns="False"
+                  HorizontalAlignment="Stretch"
+                  ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"
+                  >
 
-                <TextBlock Text="Active Apps" Grid.Column="0" FontWeight="Bold"
-                           Foreground="{StaticResource TextDark}"/>
-                <TextBlock Text="In Connections" Grid.Column="1"
-                           Foreground="{StaticResource TextLight}"/>
-                <TextBlock Text="Out Connections" Grid.Column="2"
-                           Foreground="{StaticResource TextLight}"/>
-                <TextBlock Text="Version" Grid.Column="3"
-                           Foreground="{StaticResource TextLight}"/>
-                <TextBlock Text="Hosts" Grid.Column="4"
-                           Foreground="{StaticResource TextLight}"/>
-                <TextBlock Text="VirusTotal" Grid.Column="5"
-                           Foreground="{StaticResource TextLight}"/>
-            </Grid>
-        </Border>
+            <!-- ===== Column Styles ===== -->
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#F3F4F6"/>
+                    <Setter Property="Foreground" Value="#9CA3AF"/>
+                    <Setter Property="FontSize" Value="12"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Padding" Value="12,8"/>
+                    <Setter Property="BorderBrush" Value="#E5E7EB"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
 
-        <!-- ===== TABLE ROWS (demo 3 dòng) ===== -->
-        <StackPanel Grid.Row="1" Margin="0,50,0,0">
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Foreground" Value="#1E293B"/>
+                    <Setter Property="FontSize" Value="11"/>
+                    <Setter Property="Padding" Value="12,8"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridCell">
+                                <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.CellStyle>
 
-            <!-- Row 1 -->
-            <Border Background="{StaticResource RowBg}" Padding="16,10"
-                    BorderBrush="{StaticResource BorderGray}" BorderThickness="0,0,0,1">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="250"/>
-                        <ColumnDefinition Width="140"/>
-                        <ColumnDefinition Width="140"/>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="80"/>
-                    </Grid.ColumnDefinitions>
+            <!-- ===== Columns ===== -->
+            <DataGrid.Columns>
+                <!-- App Icon + Name -->
+                <DataGridTemplateColumn Header="Apps" Width="280" MinWidth="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Icon from Base64 -->
+                                <Border Width="18" Height="18" CornerRadius="3" Margin="0,0,8,0" Background="#E2E8F0">
+                                    <Image Source="{Binding IconBase64, Converter={StaticResource Base64ToBitmapImageConverter}}" 
+                                           Stretch="UniformToFill" 
+                                           StretchDirection="DownOnly"/>
+                                </Border>
+                                <!-- App Name -->
+                                <TextBlock Text="{Binding AppName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
-                    <TextBlock Text="Microsoft Software Protection Platform"
-                               Grid.Column="0" Foreground="{StaticResource TextDark}"/>
+                <!-- In Connections -->
+                <DataGridTemplateColumn Header="In Connections" Width="110" MinWidth="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Border Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="4" Padding="6,3">
+                                    <TextBlock Text="{Binding InConnections}" Foreground="#16A34A" FontSize="10" FontWeight="SemiBold"/>
+                                </Border>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
-                    <Border Grid.Column="1" Style="{StaticResource TagAllowed}">
-                        <TextBlock Text="Allowed" Foreground="#15803D" FontSize="12"/>
-                    </Border>
-                    <Border Grid.Column="2" Style="{StaticResource TagAllowed}">
-                        <TextBlock Text="Allowed" Foreground="#15803D" FontSize="12"/>
-                    </Border>
+                <!-- Out Connections -->
+                <DataGridTemplateColumn Header="Out Connections" Width="110" MinWidth="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Border Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="4" Padding="6,3">
+                                    <TextBlock Text="{Binding OutConnections}" Foreground="#16A34A" FontSize="10" FontWeight="SemiBold"/>
+                                </Border>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
-                    <TextBlock Grid.Column="3" Text="10.0.26100.71"
-                               Foreground="{StaticResource TextDark}"/>
-                    <TextBlock Grid.Column="4" Text="-" Foreground="{StaticResource TextLight}"/>
-                </Grid>
-            </Border>
+                <!-- Version -->
+                <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="*" MinWidth="80">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="TextAlignment" Value="Left"/>
+                            <Setter Property="Padding" Value="12,0,0,0"/>
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
-            <!-- Row 2 -->
-            <Border Background="{StaticResource RowAltBg}" Padding="16,10"
-                    BorderBrush="{StaticResource BorderGray}" BorderThickness="0,0,0,1">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="250"/>
-                        <ColumnDefinition Width="140"/>
-                        <ColumnDefinition Width="140"/>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="80"/>
-                    </Grid.ColumnDefinitions>
+                <!-- Hosts -->
+                <DataGridTextColumn Header="Hosts" Binding="{Binding Hosts}" Width="90" MinWidth="70">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="TextAlignment" Value="Left"/>
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
-                    <TextBlock Text="Node.js JavaScript Runtime"
-                               Grid.Column="0" Foreground="{StaticResource TextDark}"/>
+                <!-- Download Speed -->
+                <DataGridTextColumn Header="Download" Binding="{Binding DownloadSpeed}" Width="90" MinWidth="70">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="TextAlignment" Value="Center"/>
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
-                    <Border Grid.Column="1" Style="{StaticResource TagBlocked}">
-                        <TextBlock Text="Blocked" Foreground="#B91C1C" FontSize="12"/>
-                    </Border>
-                    <Border Grid.Column="2" Style="{StaticResource TagAllowed}">
-                        <TextBlock Text="Allowed" Foreground="#15803D" FontSize="12"/>
-                    </Border>
+                <!-- Upload Speed -->
+                <DataGridTextColumn Header="Upload" Binding="{Binding UploadSpeed}" Width="90" MinWidth="70">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="TextAlignment" Value="Center"/>
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
-                    <TextBlock Grid.Column="3" Text="22.17.1"
-                               Foreground="{StaticResource TextDark}"/>
-                    <TextBlock Grid.Column="4" Text="-" Foreground="{StaticResource TextLight}"/>
-                    <TextBlock Grid.Column="5" Text="⚠" Foreground="#F59E0B"/>
-                </Grid>
-            </Border>
-
-            <!-- Row 3 -->
-            <Border Background="{StaticResource RowBg}" Padding="16,10">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="250"/>
-                        <ColumnDefinition Width="140"/>
-                        <ColumnDefinition Width="140"/>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="80"/>
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Text="PDF Reader"
-                               Grid.Column="0" Foreground="{StaticResource TextDark}"/>
-
-                    <Border Grid.Column="1" Style="{StaticResource TagAllowed}">
-                        <TextBlock Text="Allowed" Foreground="#15803D" FontSize="12"/>
-                    </Border>
-                    <Border Grid.Column="2" Style="{StaticResource TagAllowed}">
-                        <TextBlock Text="Allowed" Foreground="#15803D" FontSize="12"/>
-                    </Border>
-
-                    <TextBlock Grid.Column="3" Text="2025.7.25"
-                               Foreground="{StaticResource TextDark}"/>
-                </Grid>
-            </Border>
-
-        </StackPanel>
-
+                <!-- VirusTotal -->
+                <DataGridTextColumn Header="VirusTotal" Binding="{Binding VirusTotal}" Width="80" MinWidth="60">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="TextAlignment" Value="Center"/>
+                            <Setter Property="Foreground" Value="#F59E0B"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
-
 </UserControl>

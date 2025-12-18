@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -19,6 +20,12 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         private readonly DispatcherTimer timer;        // timeline
         private readonly DispatcherTimer apiTimer;     // gọi API
         private readonly MonitorApiClient apiClient = new();
+
+        // ✅ Thêm Stopwatch để sync với GraphViewModel
+        private readonly Stopwatch _labelStopwatch = Stopwatch.StartNew();
+        
+        // ✅ Flag để kiểm soát cập nhật nhãn chỉ 1 lần/4s
+        private int _lastLabelUpdateIndex = -1;
 
         private readonly List<string> allTimeLabels = new();
 
@@ -314,22 +321,26 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
         private void OnTimerTick(object sender, EventArgs e)
         {
-            var now = DateTime.Now;
+            // ✅ TIMELINE: Tịnh tiến mượt mà - từ phải sang trái (dữ liệu cũ được đẩy sang trái)
+            double elapsedSeconds = _labelStopwatch.Elapsed.TotalSeconds;
+            double progress = (elapsedSeconds % LabelIntervalSeconds) / LabelIntervalSeconds;
+            
+            // ✅ Scroll offset: từ 0 → -150px (phải sang trái)
+            // progress = 0: offset = 0 (timeline ở vị trí ban đầu)
+            // progress = 1: offset = -150 (timeline đẩy sang trái để nhãn mới xuất hiện)
+            double scrollOffset = -progress * LabelWidth;
+            SmoothScrollOffset = scrollOffset;
 
-            // TIMELINE – giống GraphViewModel
-            double elapsedLabel = (now - lastLabelTime).TotalSeconds;
-            var progress = elapsedLabel / LabelIntervalSeconds;
-            SmoothScrollOffset = -(progress * LabelWidth);
-
-            if (elapsedLabel >= LabelIntervalSeconds)
+            // ✅ CHỈ UPDATE 1 LẦN/4S (dùng index, không dùng time range)
+            int currentUpdateIndex = (int)(elapsedSeconds / LabelIntervalSeconds);
+            
+            if (currentUpdateIndex > _lastLabelUpdateIndex)
             {
+                _lastLabelUpdateIndex = currentUpdateIndex;
                 lastLabelTime = lastLabelTime.AddSeconds(LabelIntervalSeconds);
-
                 allTimeLabels.Add(lastLabelTime.ToString("h:mm:ss tt"));
                 if (allTimeLabels.Count > 200)
                     allTimeLabels.RemoveAt(0);
-
-                SmoothScrollOffset = 0;
                 UpdateVisibleTimeLabels();
             }
         }
@@ -341,7 +352,12 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
             TimeLabels.Clear();
 
-            int start = Math.Max(0, allTimeLabels.Count - VisibleLabelCount);
+            // ✅ Hiển thị với buffer phía trước - thêm 3 nhãn dự phòng
+            // Để khi scroll sang trái không bị lặp lại
+            int bufferLabels = 3;
+            int totalLabelsToShow = VisibleLabelCount + bufferLabels;
+
+            int start = Math.Max(0, allTimeLabels.Count - totalLabelsToShow);
             for (int i = start; i < allTimeLabels.Count; i++)
                 TimeLabels.Add(allTimeLabels[i]);
         }

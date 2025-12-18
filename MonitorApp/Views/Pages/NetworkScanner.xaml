@@ -188,7 +188,12 @@
                       VerticalGridLinesBrush="#F0F2F7"
                       FontSize="12"
                       Padding="0"
-                      BorderThickness="0">
+                      BorderThickness="0"
+                      EnableRowVirtualization="True"
+                      EnableColumnVirtualization="True"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      ScrollViewer.CanContentScroll="True">
 
                 <!-- *** QUAN TRỌNG: mọi column phải nằm trong DataGrid.Columns *** -->
                 <DataGrid.Columns>
@@ -199,15 +204,28 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal"
                                 VerticalAlignment="Center">
-                                    <!-- Dot trạng thái online -->
-                                    <Ellipse Width="8" Height="8"
-                                 Fill="#4CAF50"
-                                 VerticalAlignment="Center"
-                                 Margin="0,0,6,0"/>
+                                    <!-- Dot trạng thái online/offline -->
+                                    <!-- Dot trạng thái online/offline -->
+                                    <Ellipse Width="8"
+                                             Height="8"
+                                             VerticalAlignment="Center"
+                                             Margin="6,0,6,0">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="Transparent"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsOnline}" Value="True">
+                                                        <Setter Property="Fill" Value="#4CAF50"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+
                                     <!-- Icon máy / mobile giả lập -->
                                     <Ellipse Width="20" Height="20"
-                                 Stroke="#B0B6C6"
-                                 StrokeThickness="1"/>
+                                             Stroke="#B0B6C6"
+                                             StrokeThickness="1"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -243,6 +261,13 @@
                             Width="120"
                             ElementStyle="{StaticResource CenterCellTextStyle}"
                             EditingElementStyle="{StaticResource CenterCellTextStyle}"                                        />
+
+                    <DataGridTextColumn Header="Ports"
+                            Binding="{Binding Ports}"
+                            Width="120"
+                            ElementStyle="{StaticResource CenterCellTextStyle}"
+                            EditingElementStyle="{StaticResource CenterCellTextStyle}" />
+
 
                     <DataGridTextColumn Header="MAC Address"
                             Binding="{Binding MacAddress}"

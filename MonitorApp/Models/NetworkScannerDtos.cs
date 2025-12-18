@@ -25,6 +25,9 @@ namespace MonitorApp.Models
         [JsonPropertyName("ip")]
         public string Ip { get; set; }
 
+        [JsonPropertyName("ports")]
+        public string Ports { get; set; }
+
         [JsonPropertyName("mac_address")]
         public string Mac_Address { get; set; }
 

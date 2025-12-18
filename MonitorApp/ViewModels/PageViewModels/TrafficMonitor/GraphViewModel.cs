@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Threading;
+using System.Windows.Threading;         
 using MonitorApp.Models;
 using MonitorApp.Services;
 
@@ -15,33 +16,62 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 {
     public class GraphViewModel : INotifyPropertyChanged
     {
-        // ===========================
-        // Constants
-        // ===========================
         private const int MaxDataPoints = 60;
-        private const int VisibleLabelCount = 18;   // Thống nhất với Footer
+        private const double SampleIntervalSeconds = 1.0;
         private const double LabelIntervalSeconds = 4.0;
+        private const double PointWidthPx = 30.0;  // ✅ Width per data point in pixels
         private const double LabelWidth = 150.0;
 
-        // ===========================
-        // Fields
-        // ===========================
-        private readonly DispatcherTimer _timer;      // timeline + autoscale (16ms)
-        private readonly DispatcherTimer _apiTimer;   // gọi API summary (1s)
-        private readonly MonitorApiClient _api = new();   // client gọi backend
+        private readonly DispatcherTimer _timer;
+        private readonly DispatcherTimer _apiTimer;
+        private readonly MonitorApiClient _api = new();
+        
+        // ✅ Dùng Stopwatch để tính thời gian chính xác
+        private readonly Stopwatch _labelStopwatch = Stopwatch.StartNew();
+        
+        // ✅ Flag để kiểm soát cập nhật nhãn chỉ 1 lần/4s
+        private int _lastLabelUpdateIndex = -1;
+        
+        private DateTime _lastLabelDateTime;
+
+        // ✅ Pre-buffered data to avoid gaps during API delays
+        private double _lastDownloadSpeed = 0;
+        private double _lastUploadSpeed = 0;
+        private DateTime _lastDataAddTime = DateTime.Now;
+
+        // ✅ Dynamic chart width - expands as data grows
+        private double _chartWidth = 800; // Initial width
+        public double ChartWidth
+        {
+            get => _chartWidth;
+            private set { _chartWidth = value; OnPropertyChanged(); }
+        }
+
+        // ✅ Horizontal scroll offset to keep right edge visible
+        private double _horizontalScrollOffset = 0;
+        public double HorizontalScrollOffset
+        {
+            get => _horizontalScrollOffset;
+            private set { _horizontalScrollOffset = value; OnPropertyChanged(); }
+        }
 
         private ObservableCollection<double> downloadData;
         private ObservableCollection<double> uploadData;
         private ObservableCollection<string> timeLabels;
         private readonly List<string> allTimeLabels = new();
+        private int _totalDataPointsEverAdded = 0;  // Track total points for infinite scrolling
 
         private double downloadSpeed;
         private double uploadSpeed;
         private double smoothScrollOffset;
-        private DateTime lastLabelTime;
+        private DateTime lastApiTime;
+        private int lastDataCount;
 
-        // Max động để scale Y
         private double dynamicMaxValue = 100.0;
+        public string MaxLabel => FormatDataRate(DynamicMaxValue);
+
+        // thêm field này
+        private DateTime lastLabelTime;
 
         // ===========================
         // Ctor
@@ -50,7 +80,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         {
             InitializeData();
 
-            // Timer chỉ dùng cho timeline + autoscale
             _timer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS
@@ -58,11 +87,10 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             _timer.Tick += OnTimerTick;
             _timer.Start();
 
-            // Timer gọi API traffic/summary mỗi 1s
             _apiTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
-            };
+            };  
             _apiTimer.Tick += ApiTimer_Tick;
             _apiTimer.Start();
         }
@@ -127,7 +155,12 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         public double DynamicMaxValue
         {
             get => dynamicMaxValue;
-            private set { dynamicMaxValue = value; OnPropertyChanged(); }
+            private set
+            {
+                dynamicMaxValue = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(MaxLabel));
+            }
         }
 
         // ===========================
@@ -145,21 +178,26 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 DownloadData.Add(0);
                 UploadData.Add(0);
             }
+            _totalDataPointsEverAdded = MaxDataPoints;
 
-            // Khởi tạo time labels giống Footer:
-            // Bắt đầu từ (now - 25 * interval) và đi tới (now - 4s)
+            // Khởi tạo timeline: tạo 25 nhãn ban đầu (bắt đầu từ -100s)
             var now = DateTime.Now;
-            lastLabelTime = now.AddSeconds(-25 * LabelIntervalSeconds);
+            _lastLabelDateTime = now.AddSeconds(-25 * LabelIntervalSeconds);
+            lastLabelTime = _lastLabelDateTime;
 
             for (int i = 0; i < 25; i++)
             {
-                var t = lastLabelTime.AddSeconds(i * LabelIntervalSeconds);
+                var t = _lastLabelDateTime.AddSeconds(i * LabelIntervalSeconds);
                 allTimeLabels.Add(t.ToString("h:mm:ss tt"));
             }
 
-            // Sau khi thêm 25 nhãn, lùi lại 1 khoảng để lastLabelTime = now - 4s
-            lastLabelTime = lastLabelTime.AddSeconds(24 * LabelIntervalSeconds);
+            _lastLabelDateTime = _lastLabelDateTime.AddSeconds(24 * LabelIntervalSeconds);
+            lastApiTime = now;
+            lastDataCount = MaxDataPoints;
+            _lastDataAddTime = now;
 
+            // ✅ Initial chart width
+            UpdateChartWidth();
             UpdateVisibleTimeLabels();
         }
 
@@ -176,68 +214,114 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             }
             catch
             {
-                // Có lỗi kết nối thì bỏ qua tick này, tránh crash
                 return;
             }
 
             if (summary == null)
                 return;
 
-            // Parse chuỗi "1.23 MB/s" -> KB/s (double)
-            DownloadSpeed = ParseSpeed(summary.DownloadSpeed);
-            UploadSpeed = ParseSpeed(summary.UploadSpeed);
+            double newDownloadSpeed = ParseSpeed(summary.DownloadSpeed);
+            double newUploadSpeed = ParseSpeed(summary.UploadSpeed);
 
-            // thêm điểm cho đồ thị
-            DownloadData.Add(DownloadSpeed);
-            UploadData.Add(UploadSpeed);
+            DownloadSpeed = newDownloadSpeed;
+            UploadSpeed = newUploadSpeed;
 
+            // ✅ Add real data from API
+            DownloadData.Add(newDownloadSpeed);
+            UploadData.Add(newUploadSpeed);
+            _totalDataPointsEverAdded++;
+
+            // Keep only recent MaxDataPoints visible, but track total for infinite scroll
             if (DownloadData.Count > MaxDataPoints)
             {
                 DownloadData.RemoveAt(0);
                 UploadData.RemoveAt(0);
             }
 
+            // ✅ Store for pre-buffering next points
+            _lastDownloadSpeed = newDownloadSpeed;
+            _lastUploadSpeed = newUploadSpeed;
+            _lastDataAddTime = DateTime.Now;
+
+            lastApiTime = DateTime.Now;
+            lastDataCount = DownloadData.Count;
+
+            // ✅ Update chart width to accommodate new data
+            UpdateChartWidth();
+
             OnPropertyChanged(nameof(DownloadData));
             OnPropertyChanged(nameof(UploadData));
         }
 
         // ===========================
-        // Tick – chỉ xử lý timeline + autoscale
+        // Tick – SYNCHRONIZED với Stopwatch (KHÔNG GIẬT)
         // ===========================
         private void OnTimerTick(object? sender, EventArgs e)
         {
-            // 1) Timeline mượt
-            var now = DateTime.Now;
-            var timeSinceLast = (now - lastLabelTime).TotalSeconds;
-            double scrollProgress = timeSinceLast / LabelIntervalSeconds;
-            SmoothScrollOffset = -scrollProgress * LabelWidth;
+            // ✅ TIMELINE: Tịnh tiến mượt mà - dựa trên thời gian elapsed
+            double elapsedSeconds = _labelStopwatch.Elapsed.TotalSeconds;
+            
+            // Progress từ 0 → 1 trong mỗi khoảng 4 giây
+            double progress = (elapsedSeconds % LabelIntervalSeconds) / LabelIntervalSeconds;
+            
+            // ✅ Scroll offset: từ 0 → -150px (phải sang trái - đẩy dữ liệu cũ sang trái)
+            // progress = 0: offset = 0 (timeline ở vị trí ban đầu)
+            // progress = 1: offset = -150 (timeline đẩy sang trái để nhãn mới xuất hiện)
+            double scrollOffset = -progress * LabelWidth;
+            SmoothScrollOffset = scrollOffset;
 
-            if (timeSinceLast >= LabelIntervalSeconds)
+            // ✅ CHỈ UPDATE NHÃN 1 LẦN/4S (dùng index, không dùng time range)
+            int currentUpdateIndex = (int)(elapsedSeconds / LabelIntervalSeconds);
+            
+            if (currentUpdateIndex > _lastLabelUpdateIndex)
             {
+                _lastLabelUpdateIndex = currentUpdateIndex;
                 lastLabelTime = lastLabelTime.AddSeconds(LabelIntervalSeconds);
                 allTimeLabels.Add(lastLabelTime.ToString("h:mm:ss tt"));
-
-                if (allTimeLabels.Count > 100)
+                if (allTimeLabels.Count > 200)
                     allTimeLabels.RemoveAt(0);
-
-                SmoothScrollOffset = 0;
+                
                 UpdateVisibleTimeLabels();
             }
 
-            // 2) Auto-scale Y dựa trên điểm cuối
-            if (DownloadData.Count > 0 && UploadData.Count > 0)
+            // AUTO-SCALE Y
+            double maxY = 0;
+
+            if (DownloadData != null)
             {
-                double maxY = Math.Max(DownloadData[^1], UploadData[^1]);
-                DynamicMaxValue = Math.Max(20, maxY * 1.3);
+                foreach (var v in DownloadData)
+                    if (v > maxY) maxY = v;
             }
+
+            if (UploadData != null)
+            {
+                foreach (var v in UploadData)
+                    if (v > maxY) maxY = v;
+            }
+
+            double targetMax = Math.Max(20, maxY * 1.2);
+
+            const double lerpSpeed = 0.15;
+            if (double.IsNaN(DynamicMaxValue) || DynamicMaxValue <= 0)
+                DynamicMaxValue = targetMax;
+            else
+                DynamicMaxValue = DynamicMaxValue + (targetMax - DynamicMaxValue) * lerpSpeed;
         }
 
-        // Chỉ cập nhật phần hiển thị, không thêm/xoá nhãn ở đây
+        // ✅ Update chart width based on data points
+        private void UpdateChartWidth()
+        {
+            ChartWidth = Math.Max(800, DownloadData.Count * PointWidthPx);
+        }
+
         private void UpdateVisibleTimeLabels()
         {
             TimeLabels.Clear();
 
-            int startIndex = Math.Max(0, allTimeLabels.Count - VisibleLabelCount);
+            int visibleLabelCount = (int)(DownloadData.Count / (LabelIntervalSeconds / SampleIntervalSeconds));
+            if (visibleLabelCount < 5) visibleLabelCount = 5;
+
+            int startIndex = Math.Max(0, allTimeLabels.Count - visibleLabelCount);
             for (int i = startIndex; i < allTimeLabels.Count; i++)
                 TimeLabels.Add(allTimeLabels[i]);
         }
@@ -258,7 +342,7 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             if (data == null || data.Count == 0 || width <= 0 || height <= 0 || DynamicMaxValue <= 0)
                 return points;
 
-            double step = width / (MaxDataPoints - 1);
+            // ✅ Mỗi điểm cách nhau PointWidthPx pixel
             double max = DynamicMaxValue;
 
             // Điểm bắt đầu ở dưới cùng (cho Polygon/area)
@@ -267,13 +351,15 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             // Điểm dữ liệu
             for (int i = 0; i < data.Count; i++)
             {
-                double x = i * step;
+                // X position = điểm thứ i * chiều rộng mỗi điểm
+                double x = i * PointWidthPx;
                 double y = height - (data[i] / max * height);
                 points.Add(new Point(x, y));
             }
 
             // Điểm kết thúc ở dưới cùng
-            points.Add(new Point(width, height));
+            double endX = (data.Count - 1) * PointWidthPx;
+            points.Add(new Point(endX, height));
 
             return points;
         }
@@ -282,12 +368,12 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         {
             _timer?.Stop();
             _apiTimer?.Stop();
+            _labelStopwatch?.Stop();
         }
 
         // ===========================
         // Helpers
         // ===========================
-        // Parse "1.23 MB/s", "512 KB/s", "123 B/s", "1,23 MB/s", ...
         private double ParseSpeed(string? text)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -295,7 +381,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
             text = text.Replace("/s", "", StringComparison.OrdinalIgnoreCase).Trim();
 
-            // Lấy phần số (cho dù backend trả format hơi kỳ)
             var match = Regex.Match(text, @"[\d\.,]+");
             if (!match.Success)
                 return 0;
@@ -312,15 +397,14 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             var upper = text.ToUpperInvariant();
 
             if (upper.Contains("GB"))
-                return value * 1024 * 1024;   // KB/s
+                return value * 1024 * 1024;
             if (upper.Contains("MB"))
-                return value * 1024;          // KB/s
+                return value * 1024;
             if (upper.Contains("KB"))
-                return value;                 // KB/s
+                return value;
             if (upper.Contains("B"))
-                return value / 1024;          // B/s -> KB/s
+                return value / 1024;
 
-            // không có đơn vị -> coi như KB/s
             return value;
         }
 

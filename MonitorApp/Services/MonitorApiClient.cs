@@ -40,6 +40,17 @@ namespace MonitorApp.Services
             return await DeserializeAsync<TrafficSummary>(resp);
         }
 
+        // ========== GRASSWIRE PROTECT / FIREWALL ==========
+
+        public async Task<GrassWireProtectResponse?> GetFirewallAppsAsync(
+            int page = 1, int limit = 20, string status = "active", bool includeProcess = true)
+        {
+            var query = $"firewall/apps?status={status}&includeProcess={includeProcess}&page={page}&limit={limit}";
+            var resp = await _http.GetAsync(query);
+            return await DeserializeAsync<GrassWireProtectResponse>(resp);
+        }
+
+
         // ========== NETWORK SCANNER ==========
 
         public async Task<IReadOnlyList<ScannerDeviceDto>?> GetScannerDevicesAsync()
