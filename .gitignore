@@ -12,4 +12,5 @@ packages/
 # WPF/UI
 AppData/
 *.pdb
+backend/NetworkMonitor.Api/Data/
 
