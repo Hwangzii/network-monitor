@@ -1,16 +1,14 @@
 // file: NetworkMonitor.Api/Program.cs
 using System.IO;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure; // Thêm namespace này
+// using QuestPDF.Settings;       // Thêm namespace này
 
-// ===== SPEED FEATURE =====
+// ===== FEATURES =====
 using NetworkMonitor.Api.Features.Speed.Data;
 using NetworkMonitor.Api.Features.Speed.Services;
-
-// ===== TRAFFIC FEATURE =====
 using NetworkMonitor.Api.Features.Traffic.Data;
 using NetworkMonitor.Api.Features.Traffic.Services;
-
-// ===== OTHER SERVICES =====
 using NetworkMonitor.Api.Services.Scanner;
 using NetworkMonitor.Api.Services.Firewall;
 using NetworkMonitor.Api.Services.NetworkMonitor;
@@ -18,10 +16,14 @@ using NetworkMonitor.Api.Services.Traffic;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ==========================================
+// 1. CẤU HÌNH QUESTPDF LICENSE (QUAN TRỌNG)
+// ==========================================
+QuestPDF.Settings.License = LicenseType.Community;
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 
 // =====================
 // CORE SERVICES
@@ -29,48 +31,36 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IWifiService, WifiService>();
 builder.Services.AddSingleton<INetworkScannerService, NetworkScannerService>();
 
-
 // =====================
-// DATA FOLDER (CHUNG)
+// DATA FOLDER
 // =====================
 var dataFolder = Path.Combine(builder.Environment.ContentRootPath, "Data");
-Directory.CreateDirectory(dataFolder);
-
+if (!Directory.Exists(dataFolder)) Directory.CreateDirectory(dataFolder);
 
 // =====================
-// SPEEDTEST SQLITE
+// SPEEDTEST FEATURE
 // =====================
 var speedDbPath = Path.Combine(dataFolder, "speedtest_history.db");
-
 builder.Services.AddDbContextFactory<SpeedTestDbContext>(options =>
     options.UseSqlite($"Data Source={speedDbPath}"));
-
 builder.Services.AddScoped<SpeedTestHistoryService>();
 builder.Services.AddScoped<SpeedTestService>();
 
 // =====================
 // TRAFFIC FEATURE
 // =====================
-// KHÔNG CÓ DÒNG NÀY
-builder.Services.AddSingleton<TrafficService>();        // realtime summary
-builder.Services.AddScoped<TrafficChartService>();      // history chart
-
-
-
-// =====================
-// TRAFFIC SQLITE + BACKGROUND
-// =====================
 var trafficDbPath = Path.Combine(dataFolder, "traffic.db");
-
 builder.Services.AddDbContext<TrafficDbContext>(options =>
     options.UseSqlite($"Data Source={trafficDbPath}"));
 
-// Sampler + Background collector
+// Đăng ký các service quản lý dữ liệu traffic
 builder.Services.AddSingleton<TrafficSampler>();
 builder.Services.AddHostedService<TrafficCollector>();
-builder.Services.AddScoped<TrafficChartService>();
 
-
+// Đăng ký các service phục vụ API & Report
+builder.Services.AddSingleton<TrafficService>();        // realtime summary
+builder.Services.AddScoped<TrafficChartService>();      // history chart (đã dọn dẹp trùng lặp)
+builder.Services.AddSingleton<TrafficReportService>();  // xuất PDF
 
 // =====================
 // FIREWALL (WINDOWS ONLY)
@@ -81,36 +71,22 @@ if (OperatingSystem.IsWindows())
     builder.Services.AddSingleton<INetworkTrafficMonitor, EtwNetworkTrafficMonitor>();
     builder.Services.AddScoped<IFirewallService, FirewallService>();
 }
-else
-{
-    Console.WriteLine("Warning: Firewall services are only available on Windows platform.");
-}
-
 
 var app = builder.Build();
-
 
 // =====================
 // AUTO CREATE DATABASES
 // =====================
 using (var scope = app.Services.CreateScope())
 {
-    // Speed DB
-    var speedDbFactory = scope.ServiceProvider
-        .GetRequiredService<IDbContextFactory<SpeedTestDbContext>>();
+    var speedDbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<SpeedTestDbContext>>();
     using var speedDb = speedDbFactory.CreateDbContext();
     speedDb.Database.EnsureCreated();
 
-    // Traffic DB
-    var trafficDb = scope.ServiceProvider
-        .GetRequiredService<TrafficDbContext>();
+    var trafficDb = scope.ServiceProvider.GetRequiredService<TrafficDbContext>();
     trafficDb.Database.EnsureCreated();
 }
 
-
-// =====================
-// MIDDLEWARE
-// =====================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
