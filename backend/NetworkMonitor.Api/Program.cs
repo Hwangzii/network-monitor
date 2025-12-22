@@ -1,8 +1,8 @@
 // file: NetworkMonitor.Api/Program.cs
-using System.IO; // <-- THÊM cho Path và Directory
-using Microsoft.EntityFrameworkCore; // <-- CHO SQLITE
-using NetworkMonitor.Api.Features.Speed.Data; // <-- CHO SpeedTestDbContext
-using NetworkMonitor.Api.Features.Speed.Services; // <-- CHO SpeedTestService và SpeedTestHistoryService
+using System.IO;
+using Microsoft.EntityFrameworkCore;
+using NetworkMonitor.Api.Features.Speed.Data;
+using NetworkMonitor.Api.Features.Speed.Services;
 
 using NetworkMonitor.Api.Services.Traffic;
 using NetworkMonitor.Api.Services.Scanner;
@@ -20,12 +20,13 @@ builder.Services.AddSingleton<IWifiService, WifiService>();
 builder.Services.AddSingleton<TrafficService>();
 builder.Services.AddSingleton<INetworkScannerService, NetworkScannerService>();
 
-// === SQLITE HISTORY - THƯ MỤC GỐC /Data ===
-var dataFolder = Path.Combine(Directory.GetCurrentDirectory(), "Data");
-Directory.CreateDirectory(dataFolder);
+// === SQLITE HISTORY - Đặt trong thư mục project gốc/Data ===
+var dataFolder = Path.Combine(builder.Environment.ContentRootPath, "Data");
+Directory.CreateDirectory(dataFolder); // Tự tạo folder Data nếu chưa có
+
 var dbPath = Path.Combine(dataFolder, "speedtest_history.db");
 
-// ĐĂNG KÝ DbContextFactory (bắt buộc cho IDbContextFactory injection)
+// Đăng ký DbContextFactory
 builder.Services.AddDbContextFactory<SpeedTestDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
@@ -45,6 +46,14 @@ else
 }
 
 var app = builder.Build();
+
+// TỰ ĐỘNG TẠO DATABASE + SCHEMA NẾU CHƯA TỒN TẠI
+using (var scope = app.Services.CreateScope())
+{
+    var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<SpeedTestDbContext>>();
+    using var context = dbFactory.CreateDbContext();
+    context.Database.EnsureCreated(); // Tạo file db + bảng nếu chưa có
+}
 
 if (app.Environment.IsDevelopment())
 {

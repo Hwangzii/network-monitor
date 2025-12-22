@@ -116,12 +116,51 @@
 			]
 		},
 		{
-			"name": "Logs Analysis",
-			"item": []
-		},
-		{
-			"name": "System & Settings",
-			"item": []
+			"name": "Speed test",
+			"item": [
+				{
+					"name": "Speed run",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/speed/run",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"speed",
+								"run"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "speed test history",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/speed/history?limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"speed",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [
