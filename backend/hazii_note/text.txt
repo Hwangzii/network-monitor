@@ -14,7 +14,6 @@ using NetworkMonitor.Api.Features.Traffic.Services;
 using NetworkMonitor.Api.Services.Scanner;
 using NetworkMonitor.Api.Services.Firewall;
 using NetworkMonitor.Api.Services.NetworkMonitor;
-using NetworkMonitor.Api.Services.Traffic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,14 +46,6 @@ builder.Services.AddDbContextFactory<SpeedTestDbContext>(options =>
 
 builder.Services.AddScoped<SpeedTestHistoryService>();
 builder.Services.AddScoped<SpeedTestService>();
-
-// =====================
-// TRAFFIC FEATURE
-// =====================
-// KHÔNG CÓ DÒNG NÀY
-builder.Services.AddSingleton<TrafficService>();        // realtime summary
-builder.Services.AddScoped<TrafficChartService>();      // history chart
-
 
 
 // =====================
