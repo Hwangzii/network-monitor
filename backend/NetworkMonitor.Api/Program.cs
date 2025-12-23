@@ -49,6 +49,7 @@ builder.Services.AddScoped<SpeedTestService>();
 // =====================
 // TRAFFIC FEATURE
 // =====================
+builder.Services.AddSingleton<TrafficUsageService>();
 var trafficDbPath = Path.Combine(dataFolder, "traffic.db");
 builder.Services.AddDbContext<TrafficDbContext>(options =>
     options.UseSqlite($"Data Source={trafficDbPath}"));

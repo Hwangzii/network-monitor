@@ -95,4 +95,9 @@ public class EtwNetworkTrafficMonitor : INetworkTrafficMonitor
         public HashSet<string> CurrentHosts = new();
         public List<NetworkHost> Hosts = new();
     }
+
+    public IEnumerable<int> GetActivePids()
+{
+    return _stats.Keys;
+}
 }
