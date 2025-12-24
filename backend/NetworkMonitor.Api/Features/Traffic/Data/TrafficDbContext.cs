@@ -1,3 +1,4 @@
+// file: NetworkMonitor.Api/Features/Traffic/Data/TrafficDbContext.cs
 using Microsoft.EntityFrameworkCore;
 using NetworkMonitor.Api.Features.Traffic.Models;
 
@@ -9,4 +10,5 @@ public class TrafficDbContext : DbContext
         : base(options) { }
 
     public DbSet<TrafficSample> TrafficSamples => Set<TrafficSample>();
+    public DbSet<UsageSummary> UsageSummaries => Set<UsageSummary>();
 }

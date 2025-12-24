@@ -63,14 +63,17 @@ builder.Services.AddSingleton<TrafficService>();        // realtime summary
 builder.Services.AddScoped<TrafficChartService>();      // history chart (đã dọn dẹp trùng lặp)
 builder.Services.AddSingleton<TrafficReportService>();  // xuất PDF
 
+// Đăng ký background service lưu usage summary vào DB
+builder.Services.AddHostedService<TrafficUsageBackgroundService>();
+
 // =====================
 // FIREWALL (WINDOWS ONLY)
 // =====================
 if (OperatingSystem.IsWindows())
 {
     builder.Services.AddSingleton<INetworkStatusChecker, NetworkStatusChecker>();
-    builder.Services.AddSingleton<INetworkTrafficMonitor, EtwNetworkTrafficMonitor>();
     builder.Services.AddScoped<IFirewallService, FirewallService>();
+    builder.Services.AddSingleton<INetworkTrafficMonitor, EtwNetworkTrafficMonitor>();
 }
 
 var app = builder.Build();
