@@ -1,3 +1,4 @@
+// file: NetworkMonitor.Api/Features/Traffic/Services/TrafficChartService.cs
 using NetworkMonitor.Api.Features.Traffic.Data;
 using NetworkMonitor.Api.Features.Traffic.DTOs;
 using Microsoft.EntityFrameworkCore;
@@ -22,45 +23,34 @@ public class TrafficChartService
             .OrderBy(x => x.Time)
             .ToListAsync();
 
-        // ===== GROUP BY TIME BUCKET =====
+        var bucketTicks = TimeSpan.FromSeconds(bucketSeconds).Ticks;
+
         var points = samples
             .GroupBy(x =>
                 new DateTime(
-                    (x.Time.Ticks / TimeSpan.FromSeconds(bucketSeconds).Ticks)
-                    * TimeSpan.FromSeconds(bucketSeconds).Ticks,
+                    (x.Time.Ticks / bucketTicks) * bucketTicks,
                     DateTimeKind.Utc))
-            .Select(g =>
+            .Select(g => new TrafficChartPointDto
             {
-                var peakSample = g
-                    .OrderByDescending(x => x.DownloadSpeed + x.UploadSpeed)
-                    .First();
-
-                return new TrafficChartPointDto
-                {
-                    Time = g.Key,
-                    Download = peakSample.DownloadSpeed,
-                    Upload   = peakSample.UploadSpeed
-                };
+                Time = g.Key,
+                Download = g.Average(x => x.DownloadSpeed),
+                Upload   = g.Average(x => x.UploadSpeed)
             })
             .OrderBy(x => x.Time)
             .ToList();
 
-
-
-        // ===== MAX Y + PADDING =====
         var maxValue = points
             .SelectMany(p => new[] { p.Download, p.Upload })
             .DefaultIfEmpty(0)
             .Max();
 
-        var paddedMax = AddPadding(maxValue);
-
         return new TrafficChartResponseDto
         {
             Points = points,
-            MaxY = paddedMax
+            MaxY = AddPadding(maxValue)
         };
     }
+
 
     // ===============================
     private static (DateTime from, int bucketSeconds) ResolveRange(string range)
@@ -69,12 +59,13 @@ public class TrafficChartService
 
         return range switch
         {
-            "5m"  => (now.AddMinutes(-5),  20),
-            "3h"  => (now.AddHours(-3),    600),
-            "24h" => (now.AddHours(-24),   3600),
-            _     => (now.AddMinutes(-5),  20)
+            "5m"  => (now.AddMinutes(-5),   2),    // raw sampler rate
+            "3h"  => (now.AddHours(-3),     30),   // ~360 points
+            "24h" => (now.AddHours(-24),    300),  // 5 minutes
+            _     => (now.AddMinutes(-5),   2)
         };
     }
+
 
     private static double AddPadding(double max)
     {
