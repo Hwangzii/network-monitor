@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Net;
 using System.Linq;
 
 namespace NetworkMonitor.Api.Features.Traffic.Services;
@@ -15,8 +16,8 @@ public class TrafficUsageService
 {
     private readonly INetworkTrafficMonitor _trafficMonitor;
     private readonly DatabaseReader? _geoReader;
-    private readonly ConcurrentDictionary<int, string> _pidToExePathCache = new();
-    private readonly ConcurrentDictionary<int, string> _pidToProcessNameCache = new();
+    private readonly ConcurrentDictionary<int, string> _pidCacheName = new();
+    private readonly ConcurrentDictionary<int, string?> _pidCacheExe = new();
 
     public TrafficUsageService(INetworkTrafficMonitor trafficMonitor, IWebHostEnvironment env)
     {
@@ -28,6 +29,11 @@ public class TrafficUsageService
             if (File.Exists(dbPath))
             {
                 _geoReader = new DatabaseReader(dbPath);
+                Console.WriteLine("✅ GeoLite2-Country.mmdb loaded successfully!");
+            }
+            else
+            {
+                Console.WriteLine("⚠️ GeoLite2-Country.mmdb not found → unknown countries will use 'un' flag");
             }
         }
     }
@@ -35,214 +41,196 @@ public class TrafficUsageService
     private string FormatBytesPerSecond(long bps)
     {
         if (bps == 0) return "0 B/s";
-
-        double value = bps;
-        string[] suffixes = { "B/s", "KB/s", "MB/s", "GB/s" };
-        int i = 0;
-        while (value >= 1024 && i < suffixes.Length - 1)
-        {
-            value /= 1024;
-            i++;
-        }
-        return $"{value:0.##} {suffixes[i]}";
+        if (bps < 1024) return $"{bps} B/s";
+        if (bps < 1024 * 1024) return $"{bps / 1024.0:0.##} KB/s";
+        if (bps < 1024L * 1024 * 1024) return $"{bps / (1024.0 * 1024):0.##} MB/s";
+        return $"{bps / (1024.0 * 1024 * 1024):0.##} GB/s";
     }
 
-#pragma warning disable CA1416 // Chỉ chạy trên Windows - đã kiểm tra ở trên
+#pragma warning disable CA1416
     private string? GetIconBase64FromPid(int pid)
     {
-        if (!OperatingSystem.IsWindows()) return null;
-
         try
         {
-            using var process = Process.GetProcessById(pid);
-            string? exePath = process.MainModule?.FileName;
-            if (string.IsNullOrEmpty(exePath) || !File.Exists(exePath)) return null;
-
-            using var icon = Icon.ExtractAssociatedIcon(exePath);
-            if (icon == null) return null;
-
-            using var bmp = icon.ToBitmap();
+            using var p = Process.GetProcessById(pid);
+            var path = p.MainModule?.FileName;
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return null;
+            using var icon = Icon.ExtractAssociatedIcon(path);
+            using var bmp = icon!.ToBitmap();
             using var ms = new MemoryStream();
             bmp.Save(ms, ImageFormat.Png);
             return "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
         }
-        catch
-        {
-            return null;
-        }
+        catch { return null; }
     }
 #pragma warning restore CA1416
 
     private string GetProcessName(int pid)
-    {
-        if (_pidToProcessNameCache.TryGetValue(pid, out var cachedName))
-            return cachedName;
-
-        try
+        => _pidCacheName.GetOrAdd(pid, p =>
         {
-            using var process = Process.GetProcessById(pid);
-            var name = process.ProcessName;
-            _pidToProcessNameCache[pid] = name;
-            return name;
-        }
-        catch
-        {
-            var unknown = "Unknown Process";
-            _pidToProcessNameCache[pid] = unknown;
-            return unknown;
-        }
-    }
+            try { return Process.GetProcessById(p).ProcessName; }
+            catch { return "Unknown Process"; }
+        });
 
-    private string? GetExePath(int pid)
-    {
-        if (_pidToExePathCache.TryGetValue(pid, out var cachedPath))
-            return cachedPath;
-
-        try
-        {
-            using var process = Process.GetProcessById(pid);
-            var path = process.MainModule?.FileName;
-            if (!string.IsNullOrEmpty(path))
-                _pidToExePathCache[pid] = path;
-            return path;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private (string CountryName, string CountryCode) GetCountry(string ip)
+    private (string Name, string Code) GetCountry(string ip)
     {
         if (_geoReader == null || string.IsNullOrWhiteSpace(ip))
-            return ("Unknown", "xx");
+            return ("Unknown", "un");
 
-        // Local/private IPs
-        if (ip.StartsWith("127.") || ip.StartsWith("192.168.") ||
-            ip.StartsWith("10.") || (ip.StartsWith("172.") && ip.Length >= 9 && ip[4..9].CompareTo("16.") >= 0 && ip[4..9].CompareTo("31.") <= 0) ||
-            ip == "::1")
+        if (IsLocalIp(ip))
             return ("Local Network", "local");
 
         try
         {
             var response = _geoReader.Country(ip);
-            return (response.Country.Name ?? "Unknown", response.Country.IsoCode?.ToLower() ?? "xx");
+            var code = response.Country.IsoCode?.Trim().ToLower();
+            if (string.IsNullOrEmpty(code))
+                return ("Unknown", "un");
+
+            var name = response.Country.Name ?? code.ToUpper();
+            return (name, code);
         }
         catch
         {
-            return ("Unknown", "xx");
+            return ("Unknown", "un");
         }
+    }
+
+    private bool IsLocalIp(string ip)
+    {
+        return ip.StartsWith("10.") ||
+               ip.StartsWith("192.168.") ||
+               ip.StartsWith("127.") ||
+               (ip.StartsWith("172.") && int.TryParse(ip.Split('.')[1], out int n) && n >= 16 && n <= 31) ||
+               ip == "::1" ||
+               ip.StartsWith("fe80::") ||
+               ip.StartsWith("fc00::");
+    }
+
+    private string GetProtocolName(int port) => port switch
+    {
+        80 => "Hypertext Transfer Protocol (HTTP)",
+        443 => "Hypertext Transfer Protocol over SSL/TLS (HTTPS)",
+        53 => "Domain Name System (DNS)",
+        8080 => "HTTP Alternate",
+        25 => "Simple Mail Transfer Protocol (SMTP)",
+        21 => "File Transfer Protocol (FTP)",
+        22 => "Secure Shell (SSH)",
+        3389 => "Remote Desktop Protocol (RDP)",
+        _ => "TCP/UDP"
+    };
+
+    private string? ResolveHostname(string ip)
+    {
+        try { return Dns.GetHostEntry(ip).HostName; }
+        catch { return null; }
     }
 
     public TrafficUsageSummaryDto GetCurrentUsageSummary()
     {
         var dto = new TrafficUsageSummaryDto();
+        var activePids = _trafficMonitor.GetActivePids().ToList();
 
-        // DÙNG METHOD MỚI - an toàn, không truy cập private field
-        var activePids = _trafficMonitor.GetActivePids();
-
-        var appDict = new Dictionary<int, (long uploadBps, long downloadBps, string name, string? exePath)>();
-        var hostSet = new HashSet<string>();
-        var countryDict = new Dictionary<string, long>(); // "Name|Code" -> total bps
+        var apps = new Dictionary<int, AppUsageDto>();
+        var hosts = new Dictionary<string, HostUsageDto>();
+        var countries = new Dictionary<string, long>(); // "Name|Code" → bytes (chỉ quốc gia thật)
+        var types = new Dictionary<string, long>();
 
         foreach (var pid in activePids)
         {
             var usage = _trafficMonitor.GetUsageByPid(pid);
-            var hosts = _trafficMonitor.GetHostsByPid(pid);
+            var hostList = _trafficMonitor.GetHostsByPid(pid);
 
             long totalBps = usage.UploadBytesPerSecond + usage.DownloadBytesPerSecond;
-            if (totalBps == 0 && !hosts.Any()) continue;
+            if (totalBps == 0 && !hostList.Any()) continue;
 
-            string processName = GetProcessName(pid);
-            string? exePath = GetExePath(pid);
-
-            appDict[pid] = (usage.UploadBytesPerSecond, usage.DownloadBytesPerSecond, processName, exePath);
-
-            // Thu thập hosts + country (gán bps của process cho tất cả host của nó)
-            foreach (var host in hosts)
+            var app = new AppUsageDto
             {
-                if (!string.IsNullOrEmpty(host.RemoteIp))
-                {
-                    hostSet.Add(host.RemoteIp);
-
-                    var (countryName, countryCode) = GetCountry(host.RemoteIp);
-                    string key = $"{countryName}|{countryCode}";
-                    countryDict[key] = countryDict.GetValueOrDefault(key) + totalBps;
-                }
-            }
-        }
-
-        long totalBpsAll = appDict.Values.Sum(x => x.uploadBps + x.downloadBps);
-
-        // === Apps ===
-        foreach (var kv in appDict.OrderByDescending(x => x.Value.uploadBps + x.Value.downloadBps).Take(15))
-        {
-            long totalBps = kv.Value.uploadBps + kv.Value.downloadBps;
-
-            // Lấy country phổ biến nhất làm đại diện cho app
-            var topCountry = countryDict.OrderByDescending(c => c.Value).FirstOrDefault();
-            var (countryName, countryCode) = topCountry.Key?.Split('|') is string[] parts && parts.Length == 2
-                ? (parts[0], parts[1])
-                : ("Unknown", "xx");
-
-            dto.Apps.Add(new AppUsageDto
-            {
-                Name = kv.Value.name,
+                Name = GetProcessName(pid),
                 Usage = FormatBytesPerSecond(totalBps),
-                UsageBytes = totalBps, // current rate (bytes/s)
-                AppIcon = GetIconBase64FromPid(kv.Key),
-                CountryName = countryName,
-                CountryCode = countryCode,
-                CountryFlagUrl = $"https://flagcdn.com/w20/{countryCode}.png"
-            });
-        }
+                UsageBytes = totalBps,
+                AppIcon = GetIconBase64FromPid(pid)
+                // Country mặc định đã là "un" trong DTO → không cần set lại
+            };
 
-        // === Hosts ===
-        foreach (var ip in hostSet.OrderByDescending(ip =>
-        {
-            var (cn, cc) = GetCountry(ip);
-            return countryDict.GetValueOrDefault($"{cn}|{cc}");
-        }).Take(15))
-        {
-            var (countryName, countryCode) = GetCountry(ip);
+            var countryVotes = new Dictionary<string, long>();
 
-            dto.Hosts.Add(new HostUsageDto
+            foreach (var h in hostList)
             {
-                Hostname = ip,
-                Usage = "Active", // chưa có per-host bytes
-                UsageBytes = 0,
-                AppOwnerIcon = null, // tạm thời không biết app nào
-                CountryName = countryName,
-                CountryCode = countryCode,
-                CountryFlagUrl = $"https://flagcdn.com/w20/{countryCode}.png"
-            });
-        }
+                if (string.IsNullOrEmpty(h.RemoteIp)) continue;
 
-        // === Traffic Types ===
-        if (totalBpsAll > 0)
-        {
-            dto.TrafficTypes.Add(new TrafficTypeUsageDto
+                var (countryName, countryCode) = GetCountry(h.RemoteIp);
+
+                // Luôn cộng vào traffic types
+                string protocol = GetProtocolName(h.RemotePort);
+                types[protocol] = types.GetValueOrDefault(protocol) + h.Bytes;
+
+                // Chỉ thêm vào countries nếu là quốc gia thật (không local, không un)
+                if (countryCode != "local" && countryCode != "un")
+                {
+                    string key = $"{countryName}|{countryCode}";
+                    countries[key] = countries.GetValueOrDefault(key) + h.Bytes;
+                    countryVotes[countryCode] = countryVotes.GetValueOrDefault(countryCode) + h.Bytes;
+                }
+
+                // Aggregate host
+                if (!hosts.TryGetValue(h.RemoteIp, out var hostDto))
+                {
+                    hostDto = new HostUsageDto
+                    {
+                        Hostname = ResolveHostname(h.RemoteIp) ?? h.RemoteIp
+                    };
+                    hosts[h.RemoteIp] = hostDto;
+                }
+                hostDto.UsageBytes += h.Bytes;
+                hostDto.Usage = FormatBytesPerSecond(hostDto.UsageBytes);
+                hostDto.CountryName = countryName;
+                hostDto.CountryCode = countryCode;
+                hostDto.CountryFlagUrl = countryCode == "local" ? "" : $"https://flagcdn.com/w20/{countryCode}.png";
+            }
+
+            // Gán country cho app nếu có quốc gia thật
+            if (countryVotes.Any())
             {
-                Type = "TCP/UDP Traffic",
-                Usage = FormatBytesPerSecond(totalBpsAll),
-                Percentage = 100.0
-            });
+                var top = countryVotes.OrderByDescending(x => x.Value).First();
+                app.CountryName = top.Key.ToUpper();
+                app.CountryCode = top.Key;
+                app.CountryFlagUrl = $"https://flagcdn.com/w20/{top.Key}.png";
+            }
+            // Nếu không có quốc gia thật → giữ mặc định "un" từ DTO
+
+            apps[pid] = app;
         }
 
-        // === Countries ===
-        foreach (var kv in countryDict.OrderByDescending(x => x.Value).Take(10))
-        {
-            var parts = kv.Key.Split('|');
-            if (parts.Length < 2) continue;
+        // Fill DTO
+        dto.Apps.AddRange(apps.Values.OrderByDescending(a => a.UsageBytes).Take(20));
+        dto.Hosts.AddRange(hosts.Values.OrderByDescending(h => h.UsageBytes).Take(20));
 
-            dto.Countries.Add(new CountryUsageDto
+        long totalAll = apps.Values.Sum(a => a.UsageBytes);
+
+        // Traffic Types – luôn có ít nhất 1 entry
+        if (!types.Any() && totalAll > 0)
+            types["TCP/UDP"] = totalAll;
+
+        dto.TrafficTypes.AddRange(types.OrderByDescending(x => x.Value).Select(x => new TrafficTypeUsageDto
+        {
+            Type = x.Key,
+            Usage = FormatBytesPerSecond(x.Value),
+            Percentage = totalAll > 0 ? Math.Round(x.Value * 100.0 / totalAll, 1) : 0
+        }));
+
+        // Countries – chỉ thêm quốc gia thật
+        dto.Countries.AddRange(countries.OrderByDescending(x => x.Value).Take(10).Select(x =>
+        {
+            var parts = x.Key.Split('|');
+            return new CountryUsageDto
             {
                 CountryName = parts[0],
                 CountryCode = parts[1],
-                Usage = FormatBytesPerSecond(kv.Value),
+                Usage = FormatBytesPerSecond(x.Value),
                 FlagUrl = $"https://flagcdn.com/w40/{parts[1]}.png"
-            });
-        }
+            };
+        }));
 
         return dto;
     }
