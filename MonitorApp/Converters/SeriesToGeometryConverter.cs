@@ -9,14 +9,14 @@ using System.Windows.Media;
 namespace MonitorApp.Converters
 {
     /// <summary>
-    /// Build AREA geometry (closed path) with smooth curve (quadratic Bezier)
-    /// values:
+    /// Smooth AREA geometry using Catmull-Rom -> Cubic Bezier.
+    /// MultiBinding values:
     ///  [0] IList<double> series
     ///  [1] double width
     ///  [2] double height
     ///  [3] double maxY (optional; can be 0)
     /// </summary>
-    public class SeriesToGeometryConverter : IMultiValueConverter
+    public sealed class SeriesToGeometryConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
@@ -29,48 +29,59 @@ namespace MonitorApp.Converters
             if (values.Length >= 4 && values[3] is double d) maxY = d;
             if (maxY <= 0) maxY = Math.Max(1, series.Max());
 
-            double stepX = width / (series.Count - 1);
+            int n = series.Count;
+            double stepX = width / (n - 1);
 
-            // Convert to points
-            var pts = new Point[series.Count];
-            for (int i = 0; i < series.Count; i++)
+            // Build points (x, y)
+            var pts = new List<Point>(n);
+            for (int i = 0; i < n; i++)
             {
                 double x = i * stepX;
                 double y = height - (series[i] / maxY) * height;
                 y = Math.Clamp(y, 0, height);
-                pts[i] = new Point(x, y);
+                pts.Add(new Point(x, y));
             }
 
+            // Start from bottom-left -> up to first point
             var fig = new PathFigure
             {
-                StartPoint = new Point(0, height), // start at bottom-left
+                StartPoint = new Point(0, height),
                 IsClosed = true,
                 IsFilled = true
             };
 
-            // up to first point
             fig.Segments.Add(new LineSegment(pts[0], true));
 
-            // smooth curve using quadratic Bezier segments
-            for (int i = 1; i < pts.Length; i++)
+            // Smooth curve: Catmull-Rom to Bezier
+            for (int i = 0; i < n - 1; i++)
             {
-                var p0 = pts[i - 1];
-                var p1 = pts[i];
+                Point p0 = (i - 1) >= 0 ? pts[i - 1] : pts[i];
+                Point p1 = pts[i];
+                Point p2 = pts[i + 1];
+                Point p3 = (i + 2) < n ? pts[i + 2] : pts[i + 1];
 
-                // control point halfway on X, keep target Y for smoother curve
-                var cx = (p0.X + p1.X) / 2.0;
-                var c1 = new Point(cx, p0.Y);
-                var c2 = new Point(cx, p1.Y);
+                // Catmull-Rom -> Bezier control points
+                // c1 = p1 + (p2 - p0) / 6
+                // c2 = p2 - (p3 - p1) / 6
+                var c1 = new Point(
+                    p1.X + (p2.X - p0.X) / 6.0,
+                    p1.Y + (p2.Y - p0.Y) / 6.0
+                );
 
-                // 2 quadratic segments per step -> smoother
-                fig.Segments.Add(new QuadraticBezierSegment(c1, new Point(cx, (p0.Y + p1.Y) / 2.0), true));
-                fig.Segments.Add(new QuadraticBezierSegment(c2, p1, true));
+                var c2 = new Point(
+                    p2.X - (p3.X - p1.X) / 6.0,
+                    p2.Y - (p3.Y - p1.Y) / 6.0
+                );
+
+                fig.Segments.Add(new BezierSegment(c1, c2, p2, true));
             }
 
-            // down to bottom-right then close
+            // Close down to bottom-right
             fig.Segments.Add(new LineSegment(new Point(width, height), true));
 
-            return new PathGeometry(new[] { fig });
+            var geo = new PathGeometry();
+            geo.Figures.Add(fig);
+            return geo;
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

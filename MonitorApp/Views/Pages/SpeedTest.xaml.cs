@@ -15,14 +15,18 @@ using System.Windows.Shapes;
 
 namespace MonitorApp.Views.Pages
 {
-    /// <summary>
-    /// Interaction logic for LogAnalysis.xaml
-    /// </summary>
     public partial class SpeedTest : UserControl
     {
         public SpeedTest()
         {
             InitializeComponent();
         }
+
+        // ✅ Fix CS1061: XAML đang gọi SelectionChanged="DataGrid_SelectionChanged"
+        private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // TODO: xử lý nếu cần, còn không để trống cũng được
+        }
     }
 }
+

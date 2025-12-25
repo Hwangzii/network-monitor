@@ -47,10 +47,27 @@
                             Height="{Binding ElementName=ChartScroller, Path=ActualHeight}"
                             Background="Transparent">
 
-                        <!-- Download AREA -->
+                        <!-- Upload AREA (vẽ trước) -->
+                        <Path Stroke="#F99CBF"
+                              StrokeThickness="2"
+                              Fill="#F99CBF"
+                              Opacity="0.45"
+                              SnapsToDevicePixels="True">
+                            <Path.Data>
+                                <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}">
+                                    <Binding Path="UploadData"/>
+                                    <Binding Path="ChartWidth"/>
+                                    <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
+                                    <Binding Path="DynamicMaxValue"/>
+                                </MultiBinding>
+                            </Path.Data>
+                        </Path>
+
+                        <!-- Download AREA (vẽ sau để phần overlap ngả CAM) -->
                         <Path Stroke="#FDBA21"
                               StrokeThickness="2"
                               Fill="#FDBA21"
+                              Opacity="0.65"
                               SnapsToDevicePixels="True">
                             <Path.Data>
                                 <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}">
@@ -62,20 +79,7 @@
                             </Path.Data>
                         </Path>
 
-                        <!-- Upload AREA -->
-                        <Path Stroke="#F99CBF"
-                              StrokeThickness="2"
-                              Fill="#F99CBF"
-                              SnapsToDevicePixels="True">
-                            <Path.Data>
-                                <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}">
-                                    <Binding Path="UploadData"/>
-                                    <Binding Path="ChartWidth"/>
-                                    <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
-                                    <Binding Path="DynamicMaxValue"/>
-                                </MultiBinding>
-                            </Path.Data>
-                        </Path>
+
 
 
                     </Canvas>
