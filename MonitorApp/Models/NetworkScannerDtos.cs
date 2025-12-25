@@ -36,6 +36,9 @@ namespace MonitorApp.Models
 
         [JsonPropertyName("first_seen")]
         public string First_Seen { get; set; }
+        [JsonPropertyName("iconDeviceUrl")]
+        public string IconDeviceUrl { get; set; }
+
     }
 
     public class WifiInfoDto

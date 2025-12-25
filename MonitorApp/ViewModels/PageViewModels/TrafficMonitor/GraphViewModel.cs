@@ -16,7 +16,14 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         private readonly MonitorApiClient _api = new();
 
         private readonly DispatcherTimer _dataTimer;   // gọi API theo range
-        private readonly DispatcherTimer _axisTimer;   // chạy trục thời gian mượt 60fps
+        private readonly DispatcherTimer _axisTimer;   // chạy trục thời gian mượt
+        private TrafficChartPoint[] _visiblePoints = Array.Empty<TrafficChartPoint>();
+        // ✅ MaxY trục sao cho đỉnh cao nhất chiếm ~75% chiều cao chart
+        private const double PeakFillRatio = 0.95;
+        // ✅ mượt scale Y
+        private const double SmoothAlpha = 0.18;
+
+        private double _targetMaxValue = 1;
 
         private double _viewportWidth = 800;
         public double ViewportWidth
@@ -32,13 +39,53 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             private set { _chartWidth = value; OnPropertyChanged(); }
         }
 
+        // Crosshair state
+        private bool _isHovering;
+        public bool IsHovering
+        {
+            get => _isHovering;
+            set { _isHovering = value; OnPropertyChanged(); }
+        }
+
+        private double _hoverX;            // X theo tọa độ ChartCanvas (đã trừ scroll offset để vẽ)
+        public double HoverX
+        {
+            get => _hoverX;
+            set { _hoverX = value; OnPropertyChanged(); }
+        }
+
+        private double _hoverDownloadY;    // Y theo tọa độ ChartCanvas
+        public double HoverDownloadY
+        {
+            get => _hoverDownloadY;
+            set { _hoverDownloadY = value; OnPropertyChanged(); }
+        }
+
+        private double _hoverUploadY;      // Y theo tọa độ ChartCanvas
+        public double HoverUploadY
+        {
+            get => _hoverUploadY;
+            set { _hoverUploadY = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// ✅ Đây là MaxY của trục Y đang dùng để scale (converter đang bind vào)
+        /// </summary>
         private double _dynamicMaxValue = 1;
         public double DynamicMaxValue
         {
             get => _dynamicMaxValue;
-            private set { _dynamicMaxValue = value <= 0 ? 1 : value; OnPropertyChanged(); OnPropertyChanged(nameof(MaxLabel)); }
+            private set
+            {
+                _dynamicMaxValue = value <= 0 ? 1 : value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(MaxLabel));
+            }
         }
 
+        /// <summary>
+        /// ✅ Label hiển thị đúng MaxY của trục Y (thước đo scale)
+        /// </summary>
         public string MaxLabel => FormatDataRate(DynamicMaxValue);
 
         public ObservableCollection<double> DownloadData { get; } = new();
@@ -80,20 +127,17 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
             SelectedRange = NormalizeRange(TrafficRangeBus.CurrentRange);
 
-            // API refresh timer
             _dataTimer = new DispatcherTimer();
             _dataTimer.Tick += async (_, __) => await LoadChartAsync(SelectedRange);
             ApplyRefreshInterval(SelectedRange);
 
-            // Axis smooth timer (60fps)
             _axisTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(16) // ~60fps
+                Interval = TimeSpan.FromMilliseconds(16)
             };
             _axisTimer.Tick += (_, __) =>
             {
-                // chỉ update trục + x theo NOW để mượt
-                UpdateAxisAndX_Smooth();
+                UpdateAxisAndX_Smooth(); // tick + series + scale
             };
             _axisTimer.Start();
 
@@ -104,7 +148,7 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         {
             if (width <= 0) return;
             ViewportWidth = width;
-            ChartWidth = width; // luôn full màn hình
+            ChartWidth = width;
             UpdateAxisAndX_Smooth();
         }
 
@@ -117,6 +161,7 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             ApplyRefreshInterval(range);
             _ = LoadChartAsync(range);
 
+            // update ngay UI
             UpdateAxisAndX_Smooth();
         }
 
@@ -146,7 +191,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
         private string GetTickFormat(string range)
         {
-            // 5m có giây + AM/PM như mẫu
             if (range == "5m") return "h:mm:ss tt";
             return "h:mm tt";
         }
@@ -155,7 +199,7 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         {
             var (r, _) = GetRangeConfig(SelectedRange);
             double sec = Math.Max(1, r.TotalSeconds);
-            return ViewportWidth / sec; // NOW luôn sát phải
+            return ViewportWidth / sec;
         }
 
         private async Task LoadChartAsync(string range)
@@ -167,15 +211,9 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
                 _lastPoints = resp.Points.ToArray();
 
-                if (resp.MaxY > 0)
-                    DynamicMaxValue = resp.MaxY;
-                else if (_lastPoints.Length > 0)
-                {
-                    var max = _lastPoints.Max(p => Math.Max(p.Download, p.Upload));
-                    DynamicMaxValue = max * 1.2;
-                }
+                // ✅ KHÔNG set DynamicMaxValue theo resp.MaxY nữa
+                // ✅ scale sẽ tính theo window hiển thị trong UpdateAxisAndX_Smooth()
 
-                // cập nhật series theo NOW (sẽ dùng chung hàm smooth)
                 UpdateAxisAndX_Smooth();
             }
             catch
@@ -184,8 +222,39 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             }
         }
 
+        // ===== Y-scale helpers =====
+        private static double NiceCeil(double value)
+        {
+            if (value <= 0) return 1;
+
+            double exp = Math.Floor(Math.Log10(value));
+            double f = value / Math.Pow(10, exp);
+
+            double niceF = f <= 1 ? 1
+                       : f <= 2 ? 2
+                       : f <= 5 ? 5
+                       : 10;
+
+            return niceF * Math.Pow(10, exp);
+        }
+
+        private void UpdateYScaleTarget(double maxVisible)
+        {
+            if (maxVisible <= 0) maxVisible = 1;
+
+            // ✅ maxVisible chiếm ~75% chiều cao => MaxY = maxVisible / 0.75
+            double rawTarget = maxVisible / PeakFillRatio;
+
+            _targetMaxValue = NiceCeil(Math.Max(1, rawTarget));
+
+            if (DynamicMaxValue <= 0) DynamicMaxValue = _targetMaxValue;
+
+            // smooth để MaxLabel/scale không giật
+            DynamicMaxValue = DynamicMaxValue + (_targetMaxValue - DynamicMaxValue) * SmoothAlpha;
+        }
+
         /// <summary>
-        /// Update XPoints + TimeTicks mượt theo NOW (không clamp Left để tránh "kẹt")
+        /// Update series + ticks + Y-scale theo dữ liệu window đang hiển thị
         /// </summary>
         private void UpdateAxisAndX_Smooth()
         {
@@ -197,7 +266,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
             double pxPerSec = PxPerSecond();
 
-            // ====== Series X (align theo windowStart -> NOW ở mép phải) ======
             DownloadData.Clear();
             UploadData.Clear();
             XPoints.Clear();
@@ -206,20 +274,27 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 .Where(p => p.Time.ToUniversalTime() >= windowStartUtc && p.Time.ToUniversalTime() <= nowUtc)
                 .OrderBy(p => p.Time)
                 .ToArray();
+            _visiblePoints = pts;
+            double maxVisible = 0;
 
             foreach (var p in pts)
             {
                 var t = p.Time.ToUniversalTime();
                 double x = (t - windowStartUtc).TotalSeconds * pxPerSec;
 
-                // clamp X trong viewport để khỏi vẽ vượt
                 if (x < 0) x = 0;
                 if (x > ViewportWidth) x = ViewportWidth;
 
                 XPoints.Add(x);
                 DownloadData.Add(p.Download);
                 UploadData.Add(p.Upload);
+
+                double m = Math.Max(p.Download, p.Upload);
+                if (m > maxVisible) maxVisible = m;
             }
+
+            // ✅ Đây là nơi MaxY được tính đúng theo window
+            UpdateYScaleTarget(maxVisible);
 
             if (pts.Length > 0)
             {
@@ -232,7 +307,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 UploadSpeed = 0;
             }
 
-            // ====== TimeTicks (mượt) ======
             BuildTimeTicksSmooth(windowStartUtc, nowUtc, tickStep, pxPerSec);
 
             OnPropertyChanged(nameof(DownloadData));
@@ -241,10 +315,100 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             OnPropertyChanged(nameof(TimeTicks));
         }
 
-        /// <summary>
-        /// Sinh tick dựa trên tick gần NOW nhất ở phía phải, rồi kéo sang trái.
-        /// Tick/label sẽ trôi liên tục theo mili-giây => không khựng.
-        /// </summary>
+        public bool UpdateHover(double mouseXAbs, double chartHeight, double scrollOffset)
+        {
+            // mouseXAbs: X theo tọa độ data (pos.X + HorizontalOffset)
+            // chartHeight: ChartCanvas.ActualHeight
+            // scrollOffset: ChartScroller.HorizontalOffset
+
+            if (_visiblePoints == null || _visiblePoints.Length == 0) { IsHovering = false; return false; }
+            if (XPoints.Count != _visiblePoints.Length) { IsHovering = false; return false; }
+            if (chartHeight <= 1) { IsHovering = false; return false; }
+
+            // clamp theo vùng dữ liệu (ChartWidth)
+            if (mouseXAbs < 0) mouseXAbs = 0;
+            if (mouseXAbs > ChartWidth) mouseXAbs = ChartWidth;
+
+            int bestIdx = 0;
+            double bestDist = double.MaxValue;
+
+            for (int i = 0; i < XPoints.Count; i++)
+            {
+                double d = Math.Abs(XPoints[i] - mouseXAbs);
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    bestIdx = i;
+                }
+            }
+
+            var p = _visiblePoints[bestIdx];
+            double snapXAbs = XPoints[bestIdx];
+
+            // Scale giống converter: y = height - (value/max)*height
+            double max = DynamicMaxValue <= 0 ? 1 : DynamicMaxValue;
+
+            double yDown = chartHeight - (p.Download / max) * chartHeight;
+            double yUp = chartHeight - (p.Upload / max) * chartHeight;
+
+            // clamp
+            yDown = Math.Max(0, Math.Min(chartHeight, yDown));
+            yUp = Math.Max(0, Math.Min(chartHeight, yUp));
+
+            // X để vẽ trên viewport (trừ offset)
+            HoverX = snapXAbs - scrollOffset;
+            HoverDownloadY = yDown;
+            HoverUploadY = yUp;
+            IsHovering = true;
+
+            return true;
+        }
+
+        public void ClearHover()
+        {
+            IsHovering = false;
+        }
+
+        public bool TryGetHoverInfo(double mouseX, out string text, out double snapX)
+        {
+            text = "";
+            snapX = 0;
+
+            if (_visiblePoints == null || _visiblePoints.Length == 0) return false;
+            if (XPoints.Count != _visiblePoints.Length) return false;
+
+            // clamp
+            if (mouseX < 0) mouseX = 0;
+            if (mouseX > ViewportWidth) mouseX = ViewportWidth;
+
+            // tìm index gần nhất theo XPoints (O(n) nhưng n nhỏ nên ổn)
+            int bestIdx = 0;
+            double bestDist = double.MaxValue;
+
+            for (int i = 0; i < XPoints.Count; i++)
+            {
+                double d = Math.Abs(XPoints[i] - mouseX);
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    bestIdx = i;
+                }
+            }
+
+            var p = _visiblePoints[bestIdx];
+            snapX = XPoints[bestIdx];
+
+            // format time theo range
+            string timeFmt = SelectedRange == "5m" ? "HH:mm:ss" : "HH:mm";
+            string timeLabel = p.Time.ToLocalTime().ToString(timeFmt);
+
+            text =
+                $"Time: {timeLabel}\n" +
+                $"Download: {FormatDataRate(p.Download)}\n" +
+                $"Upload: {FormatDataRate(p.Upload)}";
+
+            return true;
+        }
         private void BuildTimeTicksSmooth(DateTime windowStartUtc, DateTime nowUtc, TimeSpan tickStep, double pxPerSec)
         {
             TimeTicks.Clear();
@@ -255,31 +419,24 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             long stepTicks = tickStep.Ticks;
             if (stepTicks <= 0) return;
 
-            // tick "chuẩn" gần NOW nhất (làm mốc bên phải)
             long nowTicks = nowUtc.Ticks;
             long rightTickTicks = (nowTicks / stepTicks) * stepTicks;
             var rightTickUtc = new DateTime(rightTickTicks, DateTimeKind.Utc);
 
-            // NOW lệch bao nhiêu so với rightTick => tick trôi liên tục
-            double offsetSec = (nowUtc - rightTickUtc).TotalSeconds; // [0..step)
-            double rightX = ViewportWidth - offsetSec * pxPerSec;    // tick bên phải trôi sang trái
+            double offsetSec = (nowUtc - rightTickUtc).TotalSeconds;
+            double rightX = ViewportWidth - offsetSec * pxPerSec;
 
             double stepPx = tickStep.TotalSeconds * pxPerSec;
             if (stepPx <= 0.1) stepPx = 0.1;
 
-            // đi từ phải sang trái
             for (int i = 0; ; i++)
             {
                 var t = rightTickUtc - TimeSpan.FromTicks(stepTicks * (long)i);
                 double x = rightX - i * stepPx;
 
-                // stop khi tick đã ra khỏi màn hình trái đủ xa
                 if (x < -labelWidth) break;
-
-                // bỏ tick nằm ngoài window start (tránh label vô nghĩa)
                 if (t < windowStartUtc) break;
 
-                // Left = x - labelWidth/2 (KHÔNG clamp để tránh bị "kẹt" ở mép)
                 double left = x - labelWidth / 2.0;
 
                 TimeTicks.Add(new TimeTick
@@ -290,8 +447,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 });
             }
 
-            // hiện tại đang add từ phải->trái, muốn thứ tự trái->phải thì reverse
-            // (không bắt buộc nhưng dễ đọc/debug)
             if (TimeTicks.Count > 1)
             {
                 var reversed = TimeTicks.Reverse().ToList();
