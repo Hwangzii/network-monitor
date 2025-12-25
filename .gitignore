@@ -12,5 +12,10 @@ packages/
 # WPF/UI
 AppData/
 *.pdb
-backend/NetworkMonitor.Api/Data/
 
+backend/NetworkMonitor.Api/Data/devices.db
+backend/NetworkMonitor.Api/Data/devices-log.db
+backend/NetworkMonitor.Api/Data/speedtest_history.db
+backend/NetworkMonitor.Api/Data/traffic.db
+backend/NetworkMonitor.Api/Data/traffic.db-shm
+backend/NetworkMonitor.Api/Data/traffic.db-wal

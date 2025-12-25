@@ -87,6 +87,9 @@ public class TrafficUsageService
     {
         var dto = new TrafficUsageSummaryDto();
         var activePids = _trafficMonitor.GetActivePids().ToList();
+        
+        // Dictionary để gộp dữ liệu quốc gia
+        var countryAgg = new Dictionary<string, (string Name, long Bytes)>();
 
         var apps = new Dictionary<int, AppUsageDto>();
         var hosts = new Dictionary<string, HostUsageDto>();
@@ -115,6 +118,24 @@ public class TrafficUsageService
                 if (string.IsNullOrEmpty(h.RemoteIp)) continue;
 
                 totalAllBytes += h.Bytes;
+
+                var (cName, cCode) = GetCountry(h.RemoteIp);
+                
+                // XỬ LÝ THEO YÊU CẦU: Nếu là local network thì chuyển thành VN
+                if (cCode == "local") 
+                {
+                    cCode = "vn";
+                    cName = "Vietnam";
+                }
+
+                // Gộp dữ liệu quốc gia cho danh sách Countries (bỏ qua "un" - Unknown)
+                if (cCode != "un")
+                {
+                    if (!countryAgg.ContainsKey(cCode))
+                        countryAgg[cCode] = (cName, h.Bytes);
+                    else
+                        countryAgg[cCode] = (cName, countryAgg[cCode].Bytes + h.Bytes);
+                }
                 
                 // Traffic Types
                 string protocol = GetProtocolName(h.RemotePort);
@@ -123,13 +144,12 @@ public class TrafficUsageService
                 // Hosts
                 if (!hosts.TryGetValue(h.RemoteIp, out var hDto))
                 {
-                    var (cName, cCode) = GetCountry(h.RemoteIp);
                     hDto = new HostUsageDto
                     {
                         Hostname = ResolveHostname(h.RemoteIp),
                         CountryName = cName,
                         CountryCode = cCode,
-                        CountryFlagUrl = cCode == "local" ? "" : $"https://flagcdn.com/w20/{cCode}.png"
+                        CountryFlagUrl = $"https://flagcdn.com/w20/{cCode}.png"
                     };
                     hosts[h.RemoteIp] = hDto;
                 }
@@ -150,10 +170,36 @@ public class TrafficUsageService
             Percentage = totalAllBytes > 0 ? Math.Round(kv.Value * 100.0 / totalAllBytes, 1) : 0
         }).OrderByDescending(x => x.Percentage).ToList();
 
+        // Đổ dữ liệu gộp vào danh sách Countries của DTO
+        dto.Countries = countryAgg.Select(kv => new CountryUsageDto
+        {
+            CountryCode = kv.Key,
+            CountryName = kv.Value.Name,
+            UsageBytes = kv.Value.Bytes,
+            Usage = FormatBytesPerSecond(kv.Value.Bytes),
+            FlagUrl = $"https://flagcdn.com/w40/{kv.Key}.png"
+        }).OrderByDescending(c => c.UsageBytes).ToList();
+
         return dto;
     }
 
     private string FormatBytesPerSecond(long bps) => bps <= 0 ? "0 B/s" : bps < 1024 ? $"{bps} B/s" : bps < 1048576 ? $"{bps / 1024.0:0.##} KB/s" : $"{bps / 1048576.0:0.##} MB/s";
     private string GetProtocolName(int port) => port switch { 80 => "HTTP", 443 => "HTTPS", 53 => "DNS", 3389 => "RDP", _ => "TCP/UDP" };
-    private (string Name, string Code) GetCountry(string ip) { /* Logic GeoIP giữ nguyên */ return ("Unknown", "un"); }
+    private (string Name, string Code) GetCountry(string ip)
+    {
+        if (string.IsNullOrEmpty(ip) || ip == "127.0.0.1" || ip.StartsWith("192.168.")) 
+            return ("Local Network", "local");
+
+        if (_geoReader != null)
+        {
+            try
+            {
+                // Tra cứu quốc gia từ file GeoLite2-Country.mmdb
+                var response = _geoReader.Country(ip);
+                return (response.Country.Name ?? "Unknown", response.Country.IsoCode?.ToLower() ?? "un");
+            }
+            catch { /* IP không có trong DB */ }
+        }
+        return ("Unknown", "un");
+    }
 }

@@ -1,4 +1,6 @@
-// TrafficUsageSummaryDto.cs
+// file: NetworkMonitor.Api/Features/Traffic/DTOs/TrafficUsageSummaryDto.cs
+// CẬP NHẬT: Sửa định nghĩa CountryUsageDto trong file này
+
 namespace NetworkMonitor.Api.Features.Traffic.DTOs;
 
 public class TrafficUsageSummaryDto
@@ -12,12 +14,12 @@ public class TrafficUsageSummaryDto
 public class AppUsageDto
 {
     public string Name { get; set; } = string.Empty;
-    public string Usage { get; set; } = "0 KB";            // formatted, e.g. "357.5 MB"
+    public string Usage { get; set; } = "0 KB";
     public long UsageBytes { get; set; }
     public string CountryName { get; set; } = "Unknown";
     public string CountryCode { get; set; } = "un";
     public string CountryFlagUrl { get; set; } = "https://flagcdn.com/w20/un.png";
-    public string? AppIcon { get; set; }                   // base64 or null
+    public string? AppIcon { get; set; }
 }
 
 public class HostUsageDto
@@ -28,8 +30,7 @@ public class HostUsageDto
     public string CountryName { get; set; } = "Unknown";
     public string CountryCode { get; set; } = "un";
     public string CountryFlagUrl { get; set; } = "https://flagcdn.com/w20/xx.png";
-    public string? AppOwnerIcon { get; set; }              // icon của app sở hữu connection này
-
+    public string? AppOwnerIcon { get; set; }
 }
 
 public class TrafficTypeUsageDto
@@ -45,4 +46,7 @@ public class CountryUsageDto
     public string CountryCode { get; set; } = "un";
     public string Usage { get; set; } = "0 KB";
     public string FlagUrl { get; set; } = "https://flagcdn.com/w40/un.png";
+    
+    // ✅ THÊM TRƯỜNG NÀY để hỗ trợ gộp dữ liệu lịch sử
+    public long UsageBytes { get; set; }
 }

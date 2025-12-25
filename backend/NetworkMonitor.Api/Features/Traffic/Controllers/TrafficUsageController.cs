@@ -27,8 +27,16 @@ public class TrafficUsageController : ControllerBase
         if (string.IsNullOrWhiteSpace(range))
             return Ok(_usageService.GetCurrentUsageSummary());
 
-        var fromTime = DateTime.UtcNow.AddMinutes(-30); 
+        // 1. Phân tích khoảng thời gian (5m, 3h, 24h)
+        DateTime fromTime = DateTime.UtcNow;
+        if (range.EndsWith("m") && int.TryParse(range[..^1], out int m))
+            fromTime = fromTime.AddMinutes(-m);
+        else if (range.EndsWith("h") && int.TryParse(range[..^1], out int h))
+            fromTime = fromTime.AddHours(-h);
+        else
+            fromTime = fromTime.AddMinutes(-30); // Mặc định nếu range sai định dạng
 
+        // 2. Lấy dữ liệu từ DB
         var summaries = await _dbContext.UsageSummaries
             .Where(u => u.Timestamp >= fromTime)
             .AsNoTracking()
@@ -36,6 +44,7 @@ public class TrafficUsageController : ControllerBase
 
         if (!summaries.Any()) return Ok(new TrafficUsageSummaryDto());
 
+        // 3. Giải mã dữ liệu JSON
         var decodedData = summaries
             .Select(s => JsonSerializer.Deserialize<TrafficUsageSummaryDto>(s.JsonData, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }))
             .Where(d => d != null)
@@ -47,37 +56,49 @@ public class TrafficUsageController : ControllerBase
         // Tính Grand Total an toàn
         long grandTotalBytes = decodedData.Sum(d => d.Apps?.Sum(a => a.UsageBytes) ?? 0);
 
+        // 4. Gộp toàn bộ dữ liệu (Apps, Hosts, Countries, TrafficTypes)
         var appsAgg = new Dictionary<string, AppUsageDto>();
         var hostsAgg = new Dictionary<string, HostUsageDto>();
         var typeAgg = new Dictionary<string, long>();
+        var countriesAgg = new Dictionary<string, CountryUsageDto>();
 
         foreach (var data in decodedData)
         {
-            // Agg Apps
+            // Gộp Apps
             if (data.Apps != null)
             {
                 foreach (var app in data.Apps)
                 {
-                    if (!appsAgg.TryGetValue(app.Name, out var aDto)) {
-                        aDto = app; appsAgg[app.Name] = aDto;
+                    if (!appsAgg.TryGetValue(app.Name, out var aDto)) 
+                    {
+                        aDto = app; 
+                        appsAgg[app.Name] = aDto;
                     }
-                    else aDto.UsageBytes += app.UsageBytes;
+                    else 
+                    {
+                        aDto.UsageBytes += app.UsageBytes;
+                    }
                 }
             }
 
-            // Agg Hosts (Sửa từ == thành !=)
+            // Gộp Hosts
             if (data.Hosts != null)
             {
                 foreach (var host in data.Hosts)
                 {
-                    if (!hostsAgg.TryGetValue(host.Hostname, out var hDto)) {
-                        hDto = host; hostsAgg[host.Hostname] = hDto;
+                    if (!hostsAgg.TryGetValue(host.Hostname, out var hDto)) 
+                    {
+                        hDto = host; 
+                        hostsAgg[host.Hostname] = hDto;
                     }
-                    else hDto.UsageBytes += host.UsageBytes;
+                    else 
+                    {
+                        hDto.UsageBytes += host.UsageBytes;
+                    }
                 }
             }
 
-            // Agg Traffic Types (Sửa từ == thành !=)
+            // Gộp Traffic Types
             if (data.TrafficTypes != null && data.Apps != null)
             {
                 long snapshotTotal = data.Apps.Sum(a => a.UsageBytes);
@@ -87,17 +108,69 @@ public class TrafficUsageController : ControllerBase
                     typeAgg[type.Type] = typeAgg.GetValueOrDefault(type.Type) + estimatedBytes;
                 }
             }
+
+            // Gộp Countries
+            if (data.Countries != null)
+            {
+                foreach (var country in data.Countries)
+                {
+                    if (!countriesAgg.TryGetValue(country.CountryCode, out var cDto))
+                    {
+                        cDto = new CountryUsageDto
+                        {
+                            CountryCode = country.CountryCode,
+                            CountryName = country.CountryName,
+                            FlagUrl = country.FlagUrl,
+                            UsageBytes = country.UsageBytes
+                        };
+                        countriesAgg[country.CountryCode] = cDto;
+                    }
+                    else
+                    {
+                        cDto.UsageBytes += country.UsageBytes;
+                    }
+                }
+            }
         }
 
+        // 5. Tạo kết quả tổng hợp
         var result = new TrafficUsageSummaryDto
         {
-            Apps = appsAgg.Values.OrderByDescending(x => x.UsageBytes).Take(20).Select(a => { a.Usage = FormatBytes(a.UsageBytes); return a; }).ToList(),
-            Hosts = hostsAgg.Values.OrderByDescending(x => x.UsageBytes).Take(20).Select(h => { h.Usage = FormatBytes(h.UsageBytes); return h; }).ToList(),
-            TrafficTypes = typeAgg.Select(kv => new TrafficTypeUsageDto {
-                Type = kv.Key,
-                Usage = FormatBytes(kv.Value),
-                Percentage = grandTotalBytes > 0 ? Math.Round(kv.Value * 100.0 / grandTotalBytes, 1) : 0
-            }).OrderByDescending(x => x.Percentage).ToList()
+            Apps = appsAgg.Values
+                .OrderByDescending(x => x.UsageBytes)
+                .Take(20)
+                .Select(a => { 
+                    a.Usage = FormatBytes(a.UsageBytes); 
+                    return a; 
+                })
+                .ToList(),
+
+            Hosts = hostsAgg.Values
+                .OrderByDescending(x => x.UsageBytes)
+                .Take(20)
+                .Select(h => { 
+                    h.Usage = FormatBytes(h.UsageBytes); 
+                    return h; 
+                })
+                .ToList(),
+
+            TrafficTypes = typeAgg
+                .Select(kv => new TrafficTypeUsageDto 
+                {
+                    Type = kv.Key,
+                    Usage = FormatBytes(kv.Value),
+                    Percentage = grandTotalBytes > 0 ? Math.Round(kv.Value * 100.0 / grandTotalBytes, 1) : 0
+                })
+                .OrderByDescending(x => x.Percentage)
+                .ToList(),
+
+            Countries = countriesAgg.Values
+                .OrderByDescending(c => c.UsageBytes)
+                .Select(c => {
+                    c.Usage = FormatBytes(c.UsageBytes);
+                    return c;
+                })
+                .ToList()
         };
 
         return Ok(result);
