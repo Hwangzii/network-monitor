@@ -20,7 +20,7 @@ namespace MonitorApp.ViewModels.LayoutsViewModel
         {
             ShowTrafficMonitorCommand = new RelayCommand(_ => OnPageChanged("Traffic"));
             ShowGlassWireProtectCommand = new RelayCommand(_ => OnPageChanged("Protect"));
-            ShowLogAnalysisCommand = new RelayCommand(_ => OnPageChanged("Log"));
+            ShowLogAnalysisCommand = new RelayCommand(_ => OnPageChanged("Speed"));
             ShowNetworkScannerCommand = new RelayCommand(_ => OnPageChanged("Scanner"));
         }
 

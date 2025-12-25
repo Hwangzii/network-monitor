@@ -39,8 +39,8 @@ namespace MonitorApp.ViewModels.LayoutsViewModel
                     CurrentPage = new GrassWireProtect();
                     break;
 
-                case "Log":
-                    CurrentPage = new LogAnalysis();
+                case "Speed":
+                    CurrentPage = new SpeedTest();
                     break;
 
                 case "Scanner":

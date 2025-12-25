@@ -1,127 +1,162 @@
 ﻿<UserControl x:Class="MonitorApp.Views.Pages.TrafficMonitor.TM_Center.Graph"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor.TM_Center"
              xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
              xmlns:conv="clr-namespace:MonitorApp.Converters"
-             mc:Ignorable="d" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
              Background="Transparent">
+
     <UserControl.DataContext>
         <vm:GraphViewModel/>
     </UserControl.DataContext>
 
     <UserControl.Resources>
         <ResourceDictionary>
+            <!-- Converters phải có x:Key -->
             <conv:SeriesToGeometryConverter x:Key="SeriesToGeometryConverter"/>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+            <!-- Merge styles -->
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/MonitorApp;component/Resources/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
 
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="30"/>
+            <RowDefinition Height="34"/>
         </Grid.RowDefinitions>
 
         <!-- Chart Area -->
-        <Border Grid.Row="0" 
-                Style="{StaticResource ChartBorderStyle}"
-                VerticalAlignment="Stretch">
+        <Border Grid.Row="0" Style="{StaticResource ChartBorderStyle}">
             <Grid>
-                <!-- Grid Lines -->
-                <ItemsControl x:Name="GridLines" Style="{StaticResource GridLinesStyle}"/>
 
-                <!-- ✅ ScrollViewer cho infinite scrolling chart -->
-                <ScrollViewer x:Name="ChartScroller" 
-                              HorizontalScrollBarVisibility="Hidden" 
+                <ScrollViewer x:Name="ChartScroller"
+                              HorizontalScrollBarVisibility="Hidden"
                               VerticalScrollBarVisibility="Hidden"
                               ClipToBounds="True">
-                    <!-- Canvas với width động -->
-                    <Canvas x:Name="ChartCanvas" 
+
+                    <Canvas x:Name="ChartCanvas"
                             Width="{Binding ChartWidth}"
+                            MinWidth="{Binding ElementName=ChartScroller, Path=ActualWidth}"
+                            Height="{Binding ElementName=ChartScroller, Path=ActualHeight}"
                             Background="Transparent">
-                        
-                        <!-- Download Line -->
-                        <Path Stroke="#FBBF24" StrokeThickness="2.5" Fill="Transparent" SnapsToDevicePixels="True">
+
+                        <!-- Download AREA -->
+                        <Path Stroke="#FDBA21"
+                              StrokeThickness="2"
+                              Fill="#FDBA21"
+                              SnapsToDevicePixels="True">
                             <Path.Data>
                                 <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}">
                                     <Binding Path="DownloadData"/>
-                                    <Binding ElementName="ChartCanvas" Path="ActualWidth"/>
+                                    <Binding Path="ChartWidth"/>
                                     <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
                                     <Binding Path="DynamicMaxValue"/>
                                 </MultiBinding>
                             </Path.Data>
                         </Path>
 
-                        <!-- Upload Line -->
-                        <Path Stroke="#F9A8D4" StrokeThickness="2.5" Fill="Transparent" SnapsToDevicePixels="True">
+                        <!-- Upload AREA -->
+                        <Path Stroke="#F99CBF"
+                              StrokeThickness="2"
+                              Fill="#F99CBF"
+                              SnapsToDevicePixels="True">
                             <Path.Data>
                                 <MultiBinding Converter="{StaticResource SeriesToGeometryConverter}">
                                     <Binding Path="UploadData"/>
-                                    <Binding ElementName="ChartCanvas" Path="ActualWidth"/>
+                                    <Binding Path="ChartWidth"/>
                                     <Binding ElementName="ChartCanvas" Path="ActualHeight"/>
                                     <Binding Path="DynamicMaxValue"/>
                                 </MultiBinding>
                             </Path.Data>
                         </Path>
+
+
                     </Canvas>
                 </ScrollViewer>
 
-                <!-- Legend Panel -->
-                <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" 
-                           Margin="20,20,0,0" Style="{StaticResource LegendPanelStyle}">
+                <!-- Legend -->
+                <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left"
+                            Margin="20,20,0,0" Style="{StaticResource LegendPanelStyle}">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                         <Ellipse Width="12" Height="12" Fill="#FBBF24" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding DownloadSpeed, StringFormat={}{0:F1} KB/s}" 
+                        <TextBlock Text="{Binding DownloadSpeed, StringFormat={}{0:F1} KB/s}"
                                    Style="{StaticResource ValueTextStyle}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Ellipse Width="12" Height="12" Fill="#F9A8D4" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding UploadSpeed, StringFormat={}{0:F1} KB/s}" 
+                        <TextBlock Text="{Binding UploadSpeed, StringFormat={}{0:F1} KB/s}"
                                    Style="{StaticResource ValueTextStyle}"/>
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Max Value Label -->
-                <Border HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="0,12,18,0"
-                        Padding="10,2"
+                <!-- Max Value -->
+                <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Margin="0,12,18,0" Padding="10,2"
                         CornerRadius="12"
-                        Background="#F5F7FB"
-                        BorderBrush="#E0E4EC"
-                        BorderThickness="1">
+                        Background="#F5F7FB" BorderBrush="#E0E4EC" BorderThickness="1">
                     <TextBlock Text="{Binding MaxLabel}"
-                               FontSize="11"
-                               FontWeight="SemiBold"
-                               Foreground="#64748B"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Center"/>
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="#64748B"/>
                 </Border>
+
             </Grid>
         </Border>
 
-        <!-- ✅ Timeline tịnh tiến mượt mà - dùng RenderTransform -->
-        <Border Grid.Row="1"
-                Height="30"
-                Style="{StaticResource TimelineBorderStyle}"
-                Margin="0"
-                HorizontalAlignment="Stretch">
-            <Grid x:Name="TopTimelineHost" ClipToBounds="True">
-                <ItemsControl ItemsSource="{Binding TimeLabels}"
-                              Style="{StaticResource TimeLabelsStyle}"
-                              HorizontalAlignment="Stretch"
-                              Width="{Binding ActualWidth, ElementName=TopTimelineHost}">
-                    <!-- ✅ Tịnh tiến mượt mà như ban đầu -->
-                    <ItemsControl.RenderTransform>
-                        <TranslateTransform X="{Binding SmoothScrollOffset}"/>
-                    </ItemsControl.RenderTransform>
-                </ItemsControl>
-            </Grid>
+        <!-- Timeline -->
+        <Border Grid.Row="1" Height="34"
+                Style="{StaticResource TimelineBorderStyle}">
+
+            <ScrollViewer x:Name="TimelineScroller"
+              HorizontalScrollBarVisibility="Hidden"
+              VerticalScrollBarVisibility="Hidden"
+              ClipToBounds="True">
+                <Canvas Width="{Binding ViewportWidth}" Height="30" Background="Transparent">
+
+                    <ItemsControl ItemsSource="{Binding TimeTicks}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <!-- Đặt item bằng Left đã tính sẵn (center = X) -->
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                                <Setter Property="Canvas.Top" Value="0" />
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <!-- WIDTH cố định, tick ở giữa, text center -->
+                                <Grid Width="{Binding ItemWidth}" Height="30">
+                                    <Rectangle Width="1" Height="6"
+                                   Fill="#CCCCCC"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Top"/>
+
+                                    <TextBlock Text="{Binding Label}"
+                                   FontSize="10"
+                                   Foreground="#999999"
+                                   Margin="0,10,0,0"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                </Canvas>
+            </ScrollViewer>
+
         </Border>
     </Grid>
 </UserControl>

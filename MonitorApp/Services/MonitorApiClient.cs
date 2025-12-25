@@ -40,6 +40,16 @@ namespace MonitorApp.Services
             return await DeserializeAsync<TrafficSummary>(resp);
         }
 
+        public async Task<TrafficChartResponse?> GetTrafficChartAsync(string range)
+        {
+            if (string.IsNullOrWhiteSpace(range))
+                range = "5m";
+
+            var resp = await _http.GetAsync($"traffic/chart?range={Uri.EscapeDataString(range)}");
+            return await DeserializeAsync<TrafficChartResponse>(resp);
+        }
+
+
         // ========== GRASSWIRE PROTECT / FIREWALL ==========
 
         public async Task<GrassWireProtectResponse?> GetFirewallAppsAsync(

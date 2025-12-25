@@ -18,9 +18,9 @@ namespace MonitorApp.Views.Pages
     /// <summary>
     /// Interaction logic for LogAnalysis.xaml
     /// </summary>
-    public partial class LogAnalysis : UserControl
+    public partial class SpeedTest : UserControl
     {
-        public LogAnalysis()
+        public SpeedTest()
         {
             InitializeComponent();
         }

@@ -324,30 +324,62 @@
                 <DropShadowEffect Color="#666666" BlurRadius="8" ShadowDepth="2" Opacity="0.2"/>
             </Setter.Value>
         </Setter>
-
-
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="20">
+                    <Grid>
+                        <!-- Border -->
+                        <Border x:Name="Border"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="20"/>
 
-                        <Grid>
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Left"
-                                              VerticalAlignment="Center"/>
+                        <!-- Toggle -->
+                        <ToggleButton x:Name="ToggleButton"
+                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                              Background="Transparent"
+                              BorderThickness="0"/>
 
-                            <Path Data="M6 9l6 6 6-6" 
-                                  Stroke="#666666" StrokeThickness="2"
-                                  HorizontalAlignment="Right"
-                                  Margin="5,5,10,10"/>
-                        </Grid>
-                    </Border>
+                        <!-- Selected item -->
+                        <ContentPresenter
+                    Content="{TemplateBinding SelectionBoxItem}"
+                    ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                    Margin="{TemplateBinding Padding}"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Left"/>
+
+                        <!-- Arrow -->
+                        <Path Data="M6 9l6 6 6-6"
+                      Stroke="#666666"
+                      StrokeThickness="2"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Margin="0,0,12,0"/>
+
+                        <!-- Dropdown -->
+                        <Popup x:Name="PART_Popup"
+                       IsOpen="{TemplateBinding IsDropDownOpen}"
+                       Placement="Bottom"
+                       AllowsTransparency="True"
+                       Focusable="False"
+                       PopupAnimation="Slide">
+
+                            <Border Background="White"
+                            CornerRadius="12"
+                            BorderBrush="#E0E0E0"
+                            BorderThickness="1"
+                            Margin="0,6,0,0">
+                                <ScrollViewer>
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+
     </Style>
 
     <!-- ========= TOGGLE 2 NỬA (WAVE / GRID+GLOBE) ========= -->

@@ -1,45 +1,35 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using MonitorApp.ViewModels.PageViewModels.TrafficMonitor;
 
 namespace MonitorApp.Views.Pages.TrafficMonitor.TM_Center
 {
-    /// <summary>
-    /// Interaction logic for Graph.xaml
-    /// </summary>
     public partial class Graph : UserControl
     {
-        private GraphViewModel _viewModel;
+        private GraphViewModel? _viewModel;
 
         public Graph()
         {
             InitializeComponent();
-            Loaded += Graph_Loaded;
+
+            Loaded += (_, __) =>
+            {
+                _viewModel ??= DataContext as GraphViewModel;
+
+                // set viewport width lần đầu
+                _viewModel?.SetViewportWidth(ActualWidth);
+            };
+
+            SizeChanged += (_, __) =>
+            {
+                (_viewModel ??= DataContext as GraphViewModel)
+                    ?.SetViewportWidth(ActualWidth);
+            };
         }
 
-        private void Graph_Loaded(object sender, RoutedEventArgs e)
+        public void ChangeRange(string range)
         {
-            // ✅ Get ViewModel
-            _viewModel = DataContext as GraphViewModel;
-            
-            if (_viewModel != null)
-            {
-                // ✅ Chart auto-scroll to right when width increases
-                ChartScroller.ScrollChanged += (s, args) =>
-                {
-                    if (args.ExtentWidthChange > 0)
-                    {
-                        ChartScroller.ScrollToRightEnd();
-                    }
-                };
-
-                // ✅ Scroll to right immediately
-                ChartScroller.Dispatcher.BeginInvoke(() =>
-                {
-                    ChartScroller.ScrollToRightEnd();
-                });
-            }
+            (_viewModel ??= DataContext as GraphViewModel)?.ChangeRange(range);
         }
     }
 }

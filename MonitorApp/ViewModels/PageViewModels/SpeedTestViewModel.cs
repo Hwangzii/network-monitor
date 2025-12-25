@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MonitorApp.ViewModels.PageViewModels
 {
-    class LogAnalysisViewModel
+    class SpeedTestViewModel
     {
     }
 }

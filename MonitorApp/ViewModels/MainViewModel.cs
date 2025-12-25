@@ -43,6 +43,12 @@ namespace MonitorApp.ViewModels
                 case "GlassWire":
                     CurrentPage = new GrassWireProtect();
                     break;
+                case "Speed":
+                    CurrentPage = new SpeedTest();
+                    break;
+                case "Network":
+                    CurrentPage = new NetworkScanner();
+                    break;
             }
         }
 

@@ -67,7 +67,7 @@
                     </Canvas>
                 </Viewbox>
 
-                <TextBlock Text="Filter"
+                <TextBlock Text="Ex PDF"
                            FontSize="14"
                            FontWeight="Medium"
                            Margin="0,0,0,0"
@@ -221,12 +221,11 @@
                     Margin="0,5,0,5">
 
             <!-- ComboBox thời gian -->
-            <ComboBox Style="{StaticResource RoundedComboBoxStyle}" SelectionChanged="ComboBox_SelectionChanged">
-                <ComboBoxItem Content="5 Minutes" IsSelected="True"/>
-                <ComboBoxItem Content="15 Minutes"/>
-                <ComboBoxItem Content="30 Minutes"/>
-                <ComboBoxItem Content="1 Hour"/>
-                <ComboBoxItem Content="24 Hours"/>
+            <ComboBox  Style="{StaticResource RoundedComboBoxStyle}" 
+                       SelectionChanged="ComboBox_SelectionChanged">
+                <ComboBoxItem Content="5m" IsSelected="True"/>
+                <ComboBoxItem Content="3h"/>
+                <ComboBoxItem Content="24h"/>
             </ComboBox>
         </StackPanel>
     </Grid>

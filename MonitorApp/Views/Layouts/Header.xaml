@@ -108,7 +108,7 @@
 
             <!-- Log Analysis + badge 9+ -->
             <RadioButton Style="{StaticResource NavButtonStyle}"
-                         Content="Log&#x0a;Analysis"
+                         Content="Speed&#x0a;Test"
                          GroupName="MainTabs"
                          Margin="0,10,0,10"
                          Command="{Binding ShowLogAnalysisCommand}">
