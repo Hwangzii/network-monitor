@@ -1,28 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using MonitorApp.ViewModels.PageViewModels.TrafficMonitor;
 
 namespace MonitorApp.Views.Pages.TrafficMonitor
 {
-    /// <summary>
-    /// Interaction logic for TM_Footer.xaml
-    /// </summary>
     public partial class TM_Footer : UserControl
     {
+        private TM_FooterViewModel? _vm;
+
         public TM_Footer()
         {
             InitializeComponent();
+
+            Loaded += (_, __) =>
+            {
+                _vm ??= DataContext as TM_FooterViewModel;
+                _vm?.SetViewportWidth(ActualWidth);
+            };
+
+            SizeChanged += (_, __) =>
+            {
+                (_vm ??= DataContext as TM_FooterViewModel)
+                    ?.SetViewportWidth(ActualWidth);
+            };
         }
     }
 }

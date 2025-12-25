@@ -4,11 +4,15 @@
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              
                 xmlns:center="clr-namespace:MonitorApp.Views.Pages.TrafficMonitor.TM_Center"
-                xmlns:viewmodels="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
+                xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels.TrafficMonitor"
                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              Height="auto"
              Background="Transparent">
 
+    <UserControl.DataContext>
+        <vm:TM_HeaderViewModel/>
+    </UserControl.DataContext>
+    
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

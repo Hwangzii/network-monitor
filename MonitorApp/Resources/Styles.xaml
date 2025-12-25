@@ -358,23 +358,32 @@
                       Margin="0,0,12,0"/>
 
                         <!-- Dropdown -->
+                        <!-- Dropdown -->
                         <Popup x:Name="PART_Popup"
-                       IsOpen="{TemplateBinding IsDropDownOpen}"
-                       Placement="Bottom"
-                       AllowsTransparency="True"
-                       Focusable="False"
-                       PopupAnimation="Slide">
+                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               Placement="Bottom"
+                               AllowsTransparency="True"
+                               Focusable="False"
+                               PopupAnimation="Slide"
+                               PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}">
 
                             <Border Background="White"
-                            CornerRadius="12"
-                            BorderBrush="#E0E0E0"
-                            BorderThickness="1"
-                            Margin="0,6,0,0">
-                                <ScrollViewer>
+                                    CornerRadius="12"
+                                    BorderBrush="#E0E0E0"
+                                    BorderThickness="1"
+                                    Margin="0,6,0,0"
+                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    SnapsToDevicePixels="True">
+
+                                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                              VerticalScrollBarVisibility="Auto"
+                                              CanContentScroll="True">
+
                                     <ItemsPresenter/>
                                 </ScrollViewer>
                             </Border>
                         </Popup>
+
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

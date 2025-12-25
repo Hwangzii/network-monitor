@@ -46,6 +46,35 @@
                             MinWidth="{Binding ElementName=ChartScroller, Path=ActualWidth}"
                             Height="{Binding ElementName=ChartScroller, Path=ActualHeight}"
                             Background="Transparent">
+                        <!-- CROSSHAIR (overlay) -->
+                        <Line X1="{Binding HoverX}" X2="{Binding HoverX}"
+                                  Y1="0" Y2="{Binding ElementName=ChartCanvas, Path=ActualHeight}"
+                                  Stroke="#94A3B8" StrokeThickness="1"
+                                  Visibility="{Binding IsHovering, Converter={StaticResource BoolToVis}}"/>
+
+                        <!-- Download dot -->
+                        <Ellipse Width="8" Height="8"
+         Stroke="#FDBA21" StrokeThickness="2"
+         Fill="#FFFFFF"
+         Canvas.Left="{Binding HoverX}"
+         Canvas.Top="{Binding HoverDownloadY}"
+         Visibility="{Binding IsHovering, Converter={StaticResource BoolToVis}}">
+                            <Ellipse.RenderTransform>
+                                <TranslateTransform X="-4" Y="-4"/>
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+
+                        <!-- Upload dot -->
+                        <Ellipse Width="8" Height="8"
+         Stroke="#F99CBF" StrokeThickness="2"
+         Fill="#FFFFFF"
+         Canvas.Left="{Binding HoverX}"
+         Canvas.Top="{Binding HoverUploadY}"
+         Visibility="{Binding IsHovering, Converter={StaticResource BoolToVis}}">
+                            <Ellipse.RenderTransform>
+                                <TranslateTransform X="-4" Y="-4"/>
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
 
                         <!-- Upload AREA (vẽ trước) -->
                         <Path Stroke="#F99CBF"
@@ -81,24 +110,8 @@
 
 
 
-
                     </Canvas>
                 </ScrollViewer>
-
-                <!-- Legend -->
-                <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left"
-                            Margin="20,20,0,0" Style="{StaticResource LegendPanelStyle}">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                        <Ellipse Width="12" Height="12" Fill="#FBBF24" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding DownloadSpeed, StringFormat={}{0:F1} KB/s}"
-                                   Style="{StaticResource ValueTextStyle}"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="12" Height="12" Fill="#F9A8D4" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding UploadSpeed, StringFormat={}{0:F1} KB/s}"
-                                   Style="{StaticResource ValueTextStyle}"/>
-                    </StackPanel>
-                </StackPanel>
 
                 <!-- Max Value -->
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top"
