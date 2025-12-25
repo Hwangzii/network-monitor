@@ -76,6 +76,14 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Usage",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
 				}
 			]
 		},
