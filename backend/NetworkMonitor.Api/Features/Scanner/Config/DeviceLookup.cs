@@ -11,8 +11,8 @@ public static class DeviceLookup
         { "Laptop", "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNBREFEQUQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1sYXB0b3AtaWNvbiBsdWNpZGUtbGFwdG9wIj48cGF0aCBkPSJNMTggNWEyIDIgMCAwIDEgMiAydjguNTI2YTIgMiAwIDAgMCAuMjEyLjg5N2wxLjA2OCAyLjEyN2ExIDEgMCAwIDEtLjkgMS40NUgzLjYyYTEgMSAwIDAgMS0uOS0xLjQ1bDEuMDY4LTIuMTI3QTIgMiAwIDAgMCA0IDE1LjUyNlY3YTIgMiAwIDAgMSAyLTJ6Ii8+PHBhdGggZD0iTTIwLjA1NCAxNS45ODdIMy45NDYiLz48L3N2Zz4=" },
         { "Desktop", "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNBREFEQUQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1tb25pdG9yLWljb24gbHVjaWRlLW1vbml0b3IiPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIxNCIgeD0iMiIgeT0iMyIgcng9IjIiLz48bGluZSB4MT0iOCIgeDI9IjE2IiB5MT0iMjEiIHkyPSIyMSIvPjxsaW5lIHgxPSIxMiIgeDI9IjEyIiB5MT0iMTciIHkyPSIyMSIvPjwvc3ZnPg==" },
         { "Wi-Fi", "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNBREFEQUQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS13aWZpLWljb24gbHVjaWRlLXdpZmkiPjxwYXRoIGQ9Ik0xMiAyMGguMDEiLz48cGF0aCBkPSJNMiA4LjgyYTE1IDE1IDAgMCAxIDIwIDAiLz48cGF0aCBkPSJNNSAxMi44NTlhMTAgMTAgMCAwIDEgMTQgMCIvPjxwYXRoIGQ9Ik04LjUgMTYuNDI5YTUgNSAwIDAgMSA3IDAiLz48L3N2Zz4=" },
-        { "Smart TV", "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNBREFEQUQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS10di1pY29uIGx1Y2lkZS10diI+PHBhdGggZD0ibTE3IDItNSA1LTUtNSIvPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIxNSIgeD0iMiIgeT0iNyIgcng9IjIiLz48L3N2Zz4=" },
-        { "Generic", "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNBREFEQUQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1naXQtZm9yay1pY29uIGx1Y2lkZS1naXQtZm9yayI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxOCIgcj0iMyIvPjxjaXJjbGUgY3g9IjYiIGN5PSI2IiByPSIzIi8+PGNpcmNsZSBjeD0iMTgiIGN5PSI2IiByPSIzIi8+PHBhdGggZD0iTTE4IDl2MmMwIC42LS40IDEtMSAxSDdjLS42IDAtMS0uNC0xLTFWOSIvPjxwYXRoIGQ9Ik0xMiAxMnYzIi8+PC9zdmc+" }
+        { "Smart TV", "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXR2LWljb24gbHVjaWRlLXR2Ij48cGF0aCBkPSJtMTcgMi01IDUtNS01Ii8+PHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjE1IiB4PSIyIiB5PSI3IiByeD0iMiIvPjwvc3ZnPg==" },
+        { "Generic", "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWhhdC1nbGFzc2VzLWljb24gbHVjaWRlLWhhdC1nbGFzc2VzIj48cGF0aCBkPSJNMTQgMThhMiAyIDAgMCAwLTQgMCIvPjxwYXRoIGQ9Im0xOSAxMS0yLjExLTYuNjU3YTIgMiAwIDAgMC0yLjc1Mi0xLjE0OGwtMS4yNzYuNjFBMiAyIDAgMCAxIDEyIDRIOC41YTIgMiAwIDAgMC0xLjkyNSAxLjQ1Nkw1IDExIi8+PHBhdGggZD0iTTIgMTFoMjAiLz48Y2lyY2xlIGN4PSIxNyIgY3k9IjE4IiByPSIzIi8+PGNpcmNsZSBjeD0iNyIgY3k9IjE4IiByPSIzIi8+PC9zdmc+" }
     };
 
     public static string GetIconUrl(string type) 
@@ -20,20 +20,44 @@ public static class DeviceLookup
 
     // 2. Tra cứu Vendor và Type sơ bộ từ OUI
     public static (string Vendor, string Type) GetVendorInfo(string mac)
+{
+    if (string.IsNullOrWhiteSpace(mac) || mac.Length < 8) return ("Unknown", "Generic");
+    
+    // Lấy 6 ký tự đầu (OUI) và chuẩn hóa
+    var oui = mac[..8].Replace(":", "").Replace("-", "").ToUpperInvariant();
+
+    var map = new Dictionary<string, (string Vendor, string Type)>(StringComparer.OrdinalIgnoreCase)
     {
-        if (string.IsNullOrWhiteSpace(mac) || mac.Length < 8) return ("Unknown", "Generic");
-        var oui = mac[..8].Replace(":", "").Replace("-", "").ToUpperInvariant();
+        // === DỮ LIỆU TỪ ẢNH CUNG CẤP ===
+        { "127928", ("Samsung", "Mobile Phone") }, // S10-cua-Thanh-Hang
+        { "E0D362", ("TP-Link", "Generic") },      // Generic (TP-Link)
+        { "E02BE9", ("Lenovo", "Laptop") },       // hazii-ThinkPad-L15-Gen-2
+        { "AE84C6", ("Generic", "Mobile Phone") }, // Android-2 / Generic
+        { "6CEBB6", ("Huawei", "Router") },       // Router (Huawei)
+        { "F49634", ("Intel", "Desktop") },       // DESKTOP-U5P4O52
+        { "82E326", ("Apple", "Mobile Phone") },   // Mobile Phone (Apple - iOS)
+        { "C40D96", ("Huawei", "Wi-Fi") },        // Wi-Fi (Huawei EchoLife)
+        { "2A15CA", ("Oppo", "Mobile Phone") },   // OPPO-A5-2020
+        { "3A3649", ("Generic", "Generic") },      // Thiết bị Generic đầu danh sách
+        { "16D4C4", ("Generic", "Generic") },      // Thiết bị Generic 192.168.1.208
 
-        var map = new Dictionary<string, (string Vendor, string Type)>(StringComparer.OrdinalIgnoreCase)
-        {
-            {"B0B867", ("TP-Link", "Router")}, {"C8D3A3", ("TP-Link", "Router")}, {"F81A67", ("TP-Link", "Router")},
-            {"6CE8B6", ("Huawei", "Router")}, {"ACD1B8", ("Xiaomi", "Router")}, {"C40D96", ("Huawei", "Wi-Fi")},
-            {"D4F4BE", ("Apple", "Mobile Phone")}, {"F4F5D8", ("Apple", "Mobile Phone")}, {"04E536", ("Apple", "Mobile Phone")},
-            {"82E326", ("Mobile Device", "Mobile Phone")}, {"2A15CA", ("Oppo", "Mobile Phone")},
-            {"E029E9", ("Lenovo", "Laptop")}, {"F49634", ("Intel", "Desktop")}, {"00D49E", ("Dell", "Laptop")},
-            {"D8C359", ("ASUS", "Laptop")}, {"E0B9BA", ("Samsung", "Smart TV")}, {"3A3649", ("Generic", "Generic")}
-        };
+        // === DỮ LIỆU BỔ SUNG PHỔ BIẾN ===
+        { "B0B867", ("TP-Link", "Router") }, 
+        { "C8D3A3", ("TP-Link", "Router") }, 
+        { "F81A67", ("TP-Link", "Router") }, 
+        { "3C5A37", ("Samsung", "Mobile Phone") }, 
+        { "5C3A35", ("Samsung", "Mobile Phone") }, 
+        { "7C3A37", ("Samsung", "Mobile Phone") }, 
+        { "ACD1A3", ("Xiaomi", "Router") },
+        { "ACD1B8", ("Xiaomi", "Router") }, 
+        { "D4F4BE", ("Apple", "Mobile Phone") }, 
+        { "F4F5D8", ("Apple", "Mobile Phone") }, 
+        { "04E536", ("Apple", "Mobile Phone") },
+        { "00D49E", ("Dell", "Laptop") },
+        { "D8C359", ("ASUS", "Laptop") }, 
+        { "E0B9BA", ("Samsung", "Smart TV") }
+    };
 
-        return map.TryGetValue(oui, out var v) ? v : ("Unknown", "Generic");
-    }
+    return map.TryGetValue(oui, out var v) ? v : ("Unknown", "Generic");
+}
 }
