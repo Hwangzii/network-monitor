@@ -49,7 +49,7 @@ builder.Services.AddScoped<SpeedTestService>();
 // =====================
 // TRAFFIC FEATURE
 // =====================
-builder.Services.AddSingleton<TrafficUsageService>();
+
 var trafficDbPath = Path.Combine(dataFolder, "traffic.db");
 builder.Services.AddDbContext<TrafficDbContext>(options =>
     options.UseSqlite($"Data Source={trafficDbPath}"));
@@ -74,6 +74,7 @@ if (OperatingSystem.IsWindows())
     builder.Services.AddSingleton<INetworkStatusChecker, NetworkStatusChecker>();
     builder.Services.AddScoped<IFirewallService, FirewallService>();
     builder.Services.AddSingleton<INetworkTrafficMonitor, EtwNetworkTrafficMonitor>();
+    builder.Services.AddSingleton<TrafficUsageService>();
 }
 
 var app = builder.Build();
