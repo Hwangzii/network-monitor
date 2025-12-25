@@ -1,1 +1,0 @@
-tree /F | Select-String -NotMatch "\\bin\\|\\obj\\" > hazii_note/structure.txt
