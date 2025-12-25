@@ -10,8 +10,12 @@ packages/
 .DS_Store
 backend/hazii_note
 
-backend/hazii_note/
-
 # WPF/UI
 AppData/
+<<<<<<< HEAD
 *.pdb
+=======
+*.pdb
+backend/NetworkMonitor.Api/Data/
+
+>>>>>>> hao_branch_merge
