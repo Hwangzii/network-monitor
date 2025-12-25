@@ -53,17 +53,16 @@ public class NetworkScannerService : INetworkScannerService
 
         var now = DateTime.UtcNow;
         var onlineMacs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var result = new List<DeviceResponseDto>();
+        // var result = new List<DeviceResponseDto>();
 
-        foreach (var ip in activeIps)
-        {
-            var ipStr = ip.ToString();
-            var mac = arpTable.GetValueOrDefault(ipStr, "N/A");
-            if (mac != "N/A") onlineMacs.Add(mac);
+        // TẠO DANH SÁCH CÁC TASK ĐỂ CHẠY SONG SONG
+        var tasks = activeIps.Select(ip => 
+            UpdateOrCreateDevice(ip.ToString(), arpTable.GetValueOrDefault(ip.ToString(), "N/A"), localIp, gatewayIp, now)
+        );
 
-            var device = await UpdateOrCreateDevice(ipStr, mac, localIp, gatewayIp, now);
-            result.Add(device);
-        }
+        // Chạy tất cả cùng lúc
+        var devices = await Task.WhenAll(tasks);
+        var result = devices.ToList();
 
         // Thêm thiết bị offline
         foreach (var known in _devices.FindAll())
@@ -128,12 +127,17 @@ public class NetworkScannerService : INetworkScannerService
 
             try
             {
-                var entry = await Dns.GetHostEntryAsync(ip);
-                var hostname = entry.HostName.Split('.')[0];
-                if (!known.KnownHostnames.Contains(hostname))
-                    known.KnownHostnames.Add(hostname);
+                // Giới hạn thời gian chờ DNS tối đa 1 giây
+                var dnsTask = Dns.GetHostEntryAsync(ip);
+                if (await Task.WhenAny(dnsTask, Task.Delay(1000)) == dnsTask)
+                {
+                    var entry = await dnsTask;
+                    var hostname = entry.HostName.Split('.')[0];
+                    if (!known.KnownHostnames.Contains(hostname))
+                        known.KnownHostnames.Add(hostname);
+                }
             }
-            catch { }
+            catch { /* Bỏ qua nếu lỗi hoặc timeout */ }
 
             var (vendor, type) = GetVendorAndTypeFromMac(mac);
             known.Vendor = vendor;
@@ -364,46 +368,29 @@ public class NetworkScannerService : INetworkScannerService
             return "";
 
         var openPorts = new List<int>();
-        var timeoutMs = 800; // timeout mỗi port
+        // Giảm timeout xuống 200-300ms cho mạng nội bộ
+        var timeoutMs = 250; 
 
-        var tasks = CommonPorts.Select(port => Task.Run(async () =>
+        // Chỉ quét các port thực sự quan trọng để nhận diện loại thiết bị
+        var essentialPorts = new[] { 80, 443, 22, 135, 445 }; 
+
+        var tasks = essentialPorts.Select(port => Task.Run(async () =>
         {
             using var client = new TcpClient();
             try
             {
-                // Tạo task connect không timeout
                 var connectTask = client.ConnectAsync(ip, port);
-
-                // Đua giữa connect và delay
                 var completedTask = await Task.WhenAny(connectTask, Task.Delay(timeoutMs));
 
-                if (completedTask == connectTask)
+                if (completedTask == connectTask && client.Connected)
                 {
-                    // Nếu connect thành công trước timeout
-                    if (client.Connected)
-                    {
-                        lock (openPorts)
-                        {
-                            openPorts.Add(port);
-                        }
-                    }
+                    lock (openPorts) { openPorts.Add(port); }
                 }
-                // Nếu timeout → không làm gì, bỏ qua port này
             }
-            catch
-            {
-                // Bắt lỗi kết nối (refused, unreachable, v.v.)
-            }
-            finally
-            {
-                client.Close();
-            }
+            catch { }
         }));
 
         await Task.WhenAll(tasks);
-
-        if (openPorts.Count == 0) return "";
-        openPorts.Sort();
-        return string.Join(",", openPorts);
+        return openPorts.Count == 0 ? "" : string.Join(",", openPorts.OrderBy(x => x));
     }
 }
