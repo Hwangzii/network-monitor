@@ -4,238 +4,356 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="600"
-             d:DesignWidth="1100"
-             Background="#F5F7FB">
+             Background="#F6F8FC"
+             d:DesignHeight="800" d:DesignWidth="1200">
 
-    <Grid Margin="24">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="Primary" Color="#2563EB"/>
+        <SolidColorBrush x:Key="PrimarySoft" Color="#E8F0FF"/>
+        <SolidColorBrush x:Key="TextMain" Color="#111827"/>
+        <SolidColorBrush x:Key="TextSub" Color="#6B7280"/>
+        <SolidColorBrush x:Key="Card" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="CardSoft" Color="#F0F5FF"/>
+        <SolidColorBrush x:Key="StrokeSoft" Color="#E6ECF7"/>
+
+        <Style x:Key="MetricCard" TargetType="Border">
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Background" Value="{StaticResource CardSoft}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource StrokeSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="18"/>
+        </Style>
+
+        <!--DataGrid -->
+        <Style x:Key="HistoryGrid" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+
+            <!-- Quan trọng: để nền ăn theo Border bên ngoài -->
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="RowBackground" Value="Transparent"/>
+            <Setter Property="AlternatingRowBackground" Value="Transparent"/>
+
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="CanUserSortColumns" Value="False"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+
+            <Setter Property="RowHeight" Value="40"/>
+            <Setter Property="ColumnHeaderHeight" Value="34"/>
+            <Setter Property="FontSize" Value="12"/>
+
+            <!-- Header style -->
+            <Setter Property="ColumnHeaderStyle">
+                <Setter.Value>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Foreground" Value="{StaticResource Primary}"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Padding" Value="12,0"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+
+            <!-- Row style -->
+            <Setter Property="RowStyle">
+                <Setter.Value>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+
+            <!-- Cell style -->
+            <Setter Property="CellStyle">
+                <Setter.Value>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="12,0"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Text alignment cho cell -->
+        <Style x:Key="CellTextLeft" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Left"/>
+        </Style>
+
+        <Style x:Key="CellTextCenter" TargetType="TextBlock" BasedOn="{StaticResource CellTextLeft}">
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="IconButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="26">
         <Grid.RowDefinitions>
-            <!-- Header (filters, search, button) -->
-            <RowDefinition Height="Auto"/>
-            <!-- Content (log list) -->
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" MinHeight="487"/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <!-- ================= HEADER ================= -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <!-- Filters -->
+                <ColumnDefinition Width="320"/>
                 <ColumnDefinition Width="*"/>
-                <!-- Spacer -->
-                <ColumnDefinition Width="Auto"/>
-                <!-- Search -->
-                <ColumnDefinition Width="Auto"/>
-                <!-- Mark all as read -->
+                <ColumnDefinition Width="320"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Filters: Important / All Time -->
-            <StackPanel Grid.Column="0"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                       >
-                <ComboBox Width="130"
-                          Height="32"
-                          SelectedIndex="0"
-                          Padding="8,2"
-                          VerticalContentAlignment="Center">
-                    <ComboBoxItem Content="Important"/>
-                    <ComboBoxItem Content="All Alerts"/>
-                    <ComboBoxItem Content="Blocked Only"/>
-                </ComboBox>
+            <StackPanel Grid.Column="0" Margin="10,18,18,0">
 
-                <ComboBox Width="130"
-                          Height="32"
-                          SelectedIndex="0"
-                          Padding="8,2"
-                          VerticalContentAlignment="Center">
-                    <ComboBoxItem Content="All Time"/>
-                    <ComboBoxItem Content="Today"/>
-                    <ComboBoxItem Content="Last 7 days"/>
-                    <ComboBoxItem Content="Last 30 days"/>
-                </ComboBox>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                    <Border Width="44" Height="44" CornerRadius="22" Background="#3F51F7" Margin="0,0,14,0">
+                        <Image Source="/Resources/Icons/wifi.png" Stretch="Uniform" Margin="10"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="116.96.45.149" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="IP Address" FontSize="12" Foreground="#94A3B8"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                    <Border Width="44" Height="44" CornerRadius="22" Background="#3F51F7" Margin="0,0,14,0">
+                        <Image Source="/Resources/Icons/world.png" Stretch="Uniform" Margin="10"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Not available" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="Provider" FontSize="12" Foreground="#94A3B8"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="44" Height="44" CornerRadius="22" Background="#3F51F7" Margin="0,0,14,0">
+                        <Image Source="/Resources/Icons/world.png" Stretch="Uniform" Margin="10"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Vietnam" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="Location" FontSize="12" Foreground="#94A3B8"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Margin="0,22,0,0" Width="269" CornerRadius="16"
+                        Background="#EEF4FF" BorderBrush="#DDE8FF" BorderThickness="1" Padding="18">
+                    <StackPanel HorizontalAlignment="Center">
+                        <Image Source="/Resources/Icons/image 78.png" Stretch="Uniform" Margin="10" Height="64" Width="113"/>
+                        <TextBlock Text="PDFly - PDF Editor &amp; Reader" FontSize="12" FontWeight="SemiBold"
+                                   TextAlignment="Center" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Text="Edit, convert, sign, protect your PDFs with ease" FontSize="10.5"
+                                   Foreground="#94A3B8" TextAlignment="Center" Margin="0,6,0,12"/>
+                        <Button Content="Download" Width="140" Height="34"
+                                Background="#2F5BFF" Foreground="White" FontWeight="SemiBold" BorderBrush="#2F5BFF">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="6"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
-            <!-- Search box -->
-            <Border Grid.Column="2"
-                    Margin="16,0"
-                    CornerRadius="16"
-                    BorderThickness="1"
-                    BorderBrush="#D2D7E4"
-                    Background="White"
-                    Height="32">
-                <Grid Margin="8,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Fake search icon -->
-                    <Ellipse Width="16" Height="16"
-                             StrokeThickness="2"
-                             Stroke="#A0A6B8"
-                             VerticalAlignment="Center"/>
-                    <Rectangle Width="6" Height="2"
-                               StrokeThickness="2"
-                               Stroke="#A0A6B8"
-                               RenderTransformOrigin="0.5,0.5"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Right"
-                               Margin="0,0,-2,-2">
-                        <Rectangle.RenderTransform>
-                            <RotateTransform Angle="45"/>
-                        </Rectangle.RenderTransform>
-                    </Rectangle>
-
-                    <TextBox Grid.Column="1"
-                             Margin="8,0,0,0"
-                             BorderThickness="0"
-                             Background="Transparent"
-                             VerticalContentAlignment="Center"
-                             FontSize="12"
-                             Foreground="#444"
-                             Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Ready" Foreground="{StaticResource TextSub}" FontSize="14" Margin="0,0,0,12" HorizontalAlignment="Center"/>
+                <Grid>
+                    <Ellipse Width="300" Height="300" Stroke="#EAF0FF" StrokeThickness="18"/>
+                    <Button Content="Start Test" Width="170" Height="42"
+                            Margin="65,400,65,0" Background="{StaticResource Primary}" Foreground="White" FontWeight="SemiBold" BorderBrush="{StaticResource Primary}" VerticalAlignment="Top" d:LayoutOverrides="Height">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="21"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
                 </Grid>
-            </Border>
+            </StackPanel>
 
-            <!-- Mark all as read button -->
-            <Button Grid.Column="3"
-                    Content="Mark all as read"
-                    Height="32"
-                    Padding="16,0"
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Center"
-                    Command="{Binding MarkAllAsReadCommand}">
-            </Button>
-        </Grid>
-
-        <!-- ================= CONTENT ================= -->
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto">
-            <StackPanel Orientation="Vertical" >
-
-                <!-- ====== Today group ====== -->
-                <TextBlock Text="Today"
-                           FontWeight="SemiBold"
-                           Foreground="#555"
-                           Margin="0,0,0,4"/>
-
-                <!-- 1 alert item giống top card trong ảnh -->
-                <Border CornerRadius="8"
-                        Background="#FFFDF8E7"
-                        BorderBrush="#FFE5C48C"
-                        BorderThickness="1"
-                        Padding="16"
-                        SnapsToDevicePixels="True">
+            <StackPanel Grid.Column="2" Margin="18,18,10,0">
+                <Border Style="{StaticResource MetricCard}" Height="120" Margin="0,0,0,14">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <!-- Status dot -->
-                            <ColumnDefinition Width="Auto"/>
-                            <!-- Icon & NEW -->
-                            <ColumnDefinition Width="*"/>
-                            <!-- Main content -->
-                            <ColumnDefinition Width="Auto"/>
-                            <!-- Right info -->
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Status dot -->
-                        <Ellipse Grid.Column="0"
-                                 Width="8" Height="8"
-                                 Fill="#F35656"
-                                 VerticalAlignment="Top"
-                                 Margin="0,4,8,0"/>
-
-                        <!-- App icon + NEW pill -->
-                        <StackPanel Grid.Column="1"
-                                    Orientation="Vertical"
-                                    Margin="0,0,16,0">
-                            <Border Width="32" Height="32"
-                                    CornerRadius="16"
-                                    Background="#E8F0FF"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Top">
-                                <TextBlock Text="e"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           FontWeight="Bold"
-                                           Foreground="#3361FF"/>
-                            </Border>
-
-                            <Border CornerRadius="10"
-                                    Background="#28A745"
-                                    Padding="8,2"
-                                    Margin="0,8,0,0"
-                                    HorizontalAlignment="Center">
-                                <TextBlock Text="NEW"
-                                           Foreground="White"
-                                           FontSize="10"
-                                           FontWeight="SemiBold"/>
-                            </Border>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Path Data="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
+                                  Fill="{StaticResource Primary}" Stretch="Uniform" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Download" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Primary}"/>
                         </StackPanel>
-
-                        <!-- Main text -->
-                        <StackPanel Grid.Column="2"
-                                    Orientation="Vertical"
-                                    >
-                            <TextBlock Text="Microsoft Edge WebView2 initiated its first network connection to"
-                                       FontWeight="SemiBold"
-                                       Foreground="#333"
-                                       TextWrapping="Wrap"/>
-
-                            <StackPanel Orientation="Horizontal" >
-                                <!-- small document icon -->
-                                <Rectangle Width="14" Height="14"
-                                           RadiusX="2" RadiusY="2"
-                                           Stroke="#B0B6C6"
-                                           StrokeThickness="1"
-                                           Fill="Transparent"
-                                           VerticalAlignment="Center"/>
-                                <TextBlock Text="fe80::b286:f656:1f68:fe43"
-                                           FontFamily="Consolas"
-                                           FontSize="12"
-                                           Foreground="#666"/>
-                            </StackPanel>
-                        </StackPanel>
-
-                        <!-- Right info: label + time -->
-                        <StackPanel Grid.Column="3"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Stretch"
-                                    Margin="16,0,0,0"
-                                    >
-                            <TextBlock Text="First network activity"
-                                       FontSize="11"
-                                       Foreground="#777"
-                                       HorizontalAlignment="Right"/>
-                            <TextBlock Text="7:14 am"
-                                       FontSize="11"
-                                       Foreground="#999"
-                                       HorizontalAlignment="Right"/>
-                        </StackPanel>
+                        <TextBlock Grid.Row="1" Text="0.0" FontSize="34" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Grid.Row="2" Text="mbps" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource TextSub}"/>
                     </Grid>
                 </Border>
 
-                <!-- ====== Yesterday group (placeholder) ====== -->
-                <TextBlock Text="Yesterday"
-                           FontWeight="SemiBold"
-                           Foreground="#555"
-                           Margin="0,16,0,4"/>
-
-                <!-- Placeholder card list, anh có thể đổi sang ItemsControl/ListView binding Alerts -->
-                <Border CornerRadius="8"
-                        Background="White"
-                        BorderBrush="#E1E5F0"
-                        BorderThickness="1"
-                        Padding="16">
-                    <TextBlock Text="Upgrade to see unlimited alert history..."
-                               Foreground="#777"
-                               TextWrapping="Wrap"/>
+                <Border Style="{StaticResource MetricCard}" Height="120" Margin="0,0,0,14">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Path Data="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"
+                                  Fill="{StaticResource Primary}" Stretch="Uniform" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Upload" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Primary}"/>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" Text="0.0" FontSize="34" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Grid.Row="2" Text="mbps" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+                    </Grid>
                 </Border>
 
+                <Border Style="{StaticResource MetricCard}" Height="120">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Path Data="M22,11H17L15,4L9,19L7,11H2V13H8L10,19L16,4L18,13H22V11Z"
+                                  Fill="{StaticResource Primary}" Stretch="Uniform" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Ping" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Primary}"/>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" Text="0.0" FontSize="34" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextMain}"/>
+                        <TextBlock Grid.Row="2" Text="ms" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+                    </Grid>
+                </Border>
             </StackPanel>
-        </ScrollViewer>
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="0,18,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="{StaticResource Primary}" Width="4" Height="18" CornerRadius="2"/>
+                    <TextBlock Text="Test History"
+                               FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextMain}"
+                               Margin="10,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Border Grid.Column="1"
+                        Background="{StaticResource CardSoft}"
+                        BorderBrush="{StaticResource StrokeSoft}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="4">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource IconButtonStyle}" Width="24" Height="24" Margin="2,0">
+                            <Path Data="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"
+                                  Fill="{StaticResource TextSub}"
+                                  Stretch="Uniform" Width="8" Height="12"/>
+                        </Button>
+
+                        <TextBlock Text="1 of 15"
+                                   FontSize="12" FontWeight="Medium"
+                                   Foreground="{StaticResource TextMain}"
+                                   Margin="10,0" VerticalAlignment="Center"/>
+
+                        <Border Background="{StaticResource Primary}" Width="24" Height="24" CornerRadius="12">
+                            <Button Style="{StaticResource IconButtonStyle}" Width="24" Height="24">
+                                <Path Data="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                                      Fill="White"
+                                      Stretch="Uniform" Width="8" Height="12"/>
+                            </Button>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Background="{StaticResource PrimarySoft}"
+                    BorderBrush="{StaticResource Primary}"
+                    BorderThickness="2"
+                    CornerRadius="14"
+                    Padding="14">
+
+                <!--DataGrid.Resources nền trắng ScrollViewer -->
+                <DataGrid Style="{StaticResource HistoryGrid}"
+                          SelectionChanged="DataGrid_SelectionChanged">
+
+                    <DataGrid.Resources>
+                        <Style TargetType="ScrollViewer">
+                            <Setter Property="Background" Value="Transparent"/>
+                        </Style>
+                    </DataGrid.Resources>
+
+                    <DataGrid.Columns>
+                        <!-- Date: trái -->
+                        <DataGridTextColumn Header="Date" Width="*"
+                                            Binding="{Binding Date}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellTextLeft}"/>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Download: giữa -->
+                        <DataGridTextColumn Header="Download" Width="220"
+                                            Binding="{Binding Download}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellTextCenter}"/>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Upload: giữa -->
+                        <DataGridTextColumn Header="Upload" Width="220"
+                                            Binding="{Binding Upload}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellTextCenter}"/>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Ping: giữa -->
+                        <DataGridTextColumn Header="Ping" Width="180"
+                                            Binding="{Binding Ping}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellTextCenter}"/>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
     </Grid>
 </UserControl>

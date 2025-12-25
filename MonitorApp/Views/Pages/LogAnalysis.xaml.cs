@@ -24,5 +24,20 @@ namespace MonitorApp.Views.Pages
         {
             InitializeComponent();
         }
+
+        // Các hàm này hiện chưa được gắn vào nút nào bên XAML
+        // Bạn có thể viết logic xử lý tại đây sau này
+        private void OpenExportModal_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }
