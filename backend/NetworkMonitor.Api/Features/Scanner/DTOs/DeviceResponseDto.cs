@@ -1,5 +1,4 @@
 // File: NetworkMonitor.Api/DTOs/DeviceResponseDto.cs
-
 namespace NetworkMonitor.Api.DTOs;
 
 public class DeviceResponseDto
@@ -15,4 +14,6 @@ public class DeviceResponseDto
     public string mac_address { get; set; } = "";
     public string last_seen { get; set; } = "";
     public string first_seen { get; set; } = "";
+    // THÊM TRƯỜNG MỚI
+    public string iconDeviceUrl { get; set; } = ""; 
 }

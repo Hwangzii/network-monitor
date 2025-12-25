@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using LiteDB;
 using NetworkMonitor.Api.DTOs;
 using NetworkMonitor.Api.Models;
+using NetworkMonitor.Api.Features.Scanner.Config;
 
 namespace NetworkMonitor.Api.Services.Scanner;
 
@@ -63,6 +64,12 @@ public class NetworkScannerService : INetworkScannerService
         // Chạy tất cả cùng lúc
         var devices = await Task.WhenAll(tasks);
         var result = devices.ToList();
+
+        foreach (var d in result)
+        {
+            if (!string.IsNullOrEmpty(d.mac_address) && d.mac_address != "N/A")
+                onlineMacs.Add(d.mac_address);
+        }
 
         // Thêm thiết bị offline
         foreach (var known in _devices.FindAll())
@@ -139,10 +146,6 @@ public class NetworkScannerService : INetworkScannerService
             }
             catch { /* Bỏ qua nếu lỗi hoặc timeout */ }
 
-            var (vendor, type) = GetVendorAndTypeFromMac(mac);
-            known.Vendor = vendor;
-            known.DeviceType = type;
-
             _devices.Upsert(known);
         }
 
@@ -170,8 +173,11 @@ public class NetworkScannerService : INetworkScannerService
     }
 
     private DeviceResponseDto ToDto(KnownDevice device, bool isOnline, DateTime now, string currentIp,
-                                    bool isLocalPc = false, bool isGateway = false)
+                                bool isLocalPc = false, bool isGateway = false)
     {
+        // 1. Lấy Vendor và Type cơ bản từ file Config dựa trên MAC
+        var (vendor, type) = DeviceLookup.GetVendorInfo(device.Mac);
+
         var dto = new DeviceResponseDto
         {
             isOnline = isOnline,
@@ -179,22 +185,23 @@ public class NetworkScannerService : INetworkScannerService
             ip = currentIp,
             first_seen = device.FirstSeen.ToString("dd MMM, yyyy, h:mm tt", CultureInfo.InvariantCulture),
             last_seen = device.LastSeen.ToString("dd MMM, yyyy, h:mm tt", CultureInfo.InvariantCulture),
-            type = "Generic",
-            name = "Generic",
-            description = device.Vendor,
+            type = type,        // Lấy từ lookup
+            description = vendor, // Lấy từ lookup
             location = "",
             system = ""
         };
 
-        // Tên đẹp nhất
+        // 2. Ưu tiên xác định Tên thiết bị (Name)
         if (!string.IsNullOrWhiteSpace(device.CustomName))
             dto.name = device.CustomName;
         else if (device.KnownHostnames.Count > 0)
             dto.name = device.KnownHostnames[^1];
-        else if (device.Vendor != "Unknown")
-            dto.name = device.Vendor;
+        else if (vendor != "Unknown")
+            dto.name = vendor;
+        else
+            dto.name = "Generic Device";
 
-        // Hệ điều hành
+        // 3. Nhận diện Hệ điều hành (System) qua Hostname
         foreach (var h in device.KnownHostnames)
         {
             var hl = h.ToLowerInvariant();
@@ -204,29 +211,24 @@ public class NetworkScannerService : INetworkScannerService
             else if (hl.Contains("macbook")) dto.system = "macOS";
         }
 
-        // Loại thiết bị
-        dto.type = device.DeviceType switch
-        {
-            "Router" => "Router",
-            "iPhone/iPad" => "Mobile Phone",
-            "Laptop" => "Laptop",
-            "Smart TV" => "Smart TV",
-            "Laptop/PC" => "Desktop",
-            _ => "Generic"
-        };
+        // 4. Gán Icon dựa trên Type đã phân loại từ DeviceLookup
+        dto.iconDeviceUrl = DeviceLookup.GetIconUrl(dto.type);
 
+        // 5. Xử lý các trường hợp đặc biệt (Override cho máy này và Gateway)
         if (isLocalPc)
         {
             dto.type = "Desktop";
             dto.name = Environment.MachineName;
             dto.description = $"{Environment.MachineName} (This Device)";
             dto.system = "Windows";
+            dto.iconDeviceUrl = DeviceLookup.GetIconUrl("Desktop"); //
         }
         else if (isGateway)
         {
             dto.type = "Router";
             dto.name = device.KnownHostnames.LastOrDefault() ?? "Router";
             dto.description = "Default Gateway";
+            dto.iconDeviceUrl = DeviceLookup.GetIconUrl("Router"); //
         }
 
         return dto;
@@ -291,56 +293,6 @@ public class NetworkScannerService : INetworkScannerService
         return activeIps;
     }
 
-    private Dictionary<string, string> GetArpTable()
-    {
-        var table = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        try
-        {
-            using var p = new Process
-            {
-                StartInfo = new ProcessStartInfo("arp", "-a")
-                {
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
-                }
-            };
-            p.Start();
-            var output = p.StandardOutput.ReadToEnd();
-            p.WaitForExit(5000);
-
-            var regex = new Regex(@"(?<ip>\d{1,3}(\.\d{1,3}){3})\s+(?<mac>[0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2})");
-            foreach (Match m in regex.Matches(output))
-            {
-                var ip = m.Groups["ip"].Value.Trim();
-                var mac = m.Groups["mac"].Value.Trim().Replace("-", ":").ToUpperInvariant();
-                table[ip] = mac;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Could not read ARP table");
-        }
-        return table;
-    }
-
-    private (string Vendor, string Type) GetVendorAndTypeFromMac(string mac)
-    {
-        if (string.IsNullOrWhiteSpace(mac) || mac.Length < 8) return ("Unknown", "Generic");
-        var oui = mac[..8].Replace(":", "").ToUpperInvariant();
-
-        var map = new Dictionary<string, (string Vendor, string Type)>
-        {
-            {"B0B867", ("TP-Link", "Router")}, {"C8D3A3", ("TP-Link", "Router")}, {"F81A67", ("TP-Link", "Router")},
-            {"6CE8B6", ("Huawei", "Router")}, {"ACD1B8", ("Xiaomi", "Router")},
-            {"D4F4BE", ("Apple", "iPhone/iPad")}, {"F4F5D8", ("Apple", "iPhone/iPad")}, {"04E536", ("Apple", "iPhone/iPad")},
-            {"E029E9", ("Lenovo", "Laptop")}, {"F49634", ("Intel", "Laptop/PC")}, {"00D49E", ("Dell", "Laptop")},
-            {"D8C359", ("ASUS", "Laptop")}, {"E0B9BA", ("Samsung", "Smart TV")}
-        };
-
-        return map.TryGetValue(oui, out var v) ? v : ("Unknown", "Generic");
-    }
-
         // Danh sách các port phổ biến cần scan (phù hợp với router, camera, printer, server, IoT...)
     private static readonly int[] CommonPorts = new[]
     {
@@ -392,5 +344,44 @@ public class NetworkScannerService : INetworkScannerService
 
         await Task.WhenAll(tasks);
         return openPorts.Count == 0 ? "" : string.Join(",", openPorts.OrderBy(x => x));
+    }
+
+    private Dictionary<string, string> GetArpTable()
+    {
+        var arpTable = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "arp",
+                    Arguments = "-a",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            string output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            // Regex để bắt IP và MAC address từ output của lệnh arp -a
+            var regex = new Regex(@"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+([0-9a-f]{2}[:-][0-9a-f]{2}[:-][0-9a-f]{2}[:-][0-9a-f]{2}[:-][0-9a-f]{2}[:-][0-9a-f]{2})", RegexOptions.IgnoreCase);
+            var matches = regex.Matches(output);
+
+            foreach (Match match in matches)
+            {
+                var ip = match.Groups[1].Value;
+                var mac = match.Groups[2].Value.Replace("-", ":").ToUpperInvariant();
+                if (!arpTable.ContainsKey(ip)) arpTable[ip] = mac;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reading ARP table");
+        }
+        return arpTable;
     }
 }
