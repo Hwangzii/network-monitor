@@ -1,0 +1,239 @@
+{
+	"info": {
+		"_postman_id": "03c13c90-feea-4601-9562-d721ea058417",
+		"name": "22CN1 - Network monitor",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40003846",
+		"_collection_link": "https://www.postman.com/universal-comet-169044/workspace/hazii/collection/40003846-03c13c90-feea-4601-9562-d721ea058417?action=share&source=collection_link&creator=40003846"
+	},
+	"item": [
+		{
+			"name": "Traffic Monitor",
+			"item": [
+				{
+					"name": "summary traffic monitor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/traffic/summary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"traffic",
+								"summary"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Graph",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/traffic/chart?range=5m",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"traffic",
+								"chart"
+							],
+							"query": [
+								{
+									"key": "range",
+									"value": "5m"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Export PDF",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/traffic/export/pdf?range=5m",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"traffic",
+								"export",
+								"pdf"
+							],
+							"query": [
+								{
+									"key": "range",
+									"value": "5m"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Usage",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Protect & Firewall",
+			"item": [
+				{
+					"name": "Apps",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/firewall/apps?status=active&page=1&limit=70",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"firewall",
+								"apps"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "active",
+									"description": "active/uninstalled"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "70"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Network Scanner",
+			"item": [
+				{
+					"name": "taber network scanner",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/scanner/devices",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"scanner",
+								"devices"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Wifi",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/scanner/wifi",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"scanner",
+								"wifi"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Speed test",
+			"item": [
+				{
+					"name": "Speed run",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/speed/run",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"speed",
+								"run"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "speed test history",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/speed/history?limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"speed",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
