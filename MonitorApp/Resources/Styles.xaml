@@ -839,7 +839,7 @@
     <!-- ============= GLOBAL BRUSHES ============= -->
 
     <SolidColorBrush x:Key="ColorBorderLight" Color="#D2D7E4"/>
-    <SolidColorBrush x:Key="ColorBorderTable" Color="#E1E5F0"/>
+    <SolidColorBrush x:Key="ColorBorderTable" Color="Transparent"/>
     <SolidColorBrush x:Key="ColorRowAlt" Color="#FAFBFE"/>
     <SolidColorBrush x:Key="ColorRowSelected" Color="#E3F2FD"/>
     <SolidColorBrush x:Key="ColorHeaderBg" Color="#F5F7FB"/>
@@ -861,7 +861,7 @@
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="BorderBrush" Value="{StaticResource ColorBorderTable}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="#777"/>
+        <Setter Property="Foreground" Value="Transparent"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
         <Setter Property="Padding" Value="8,6"/>
     </Style>
@@ -872,7 +872,7 @@
 
     <Style x:Key="TableRowStyle"
            TargetType="DataGridRow">
-        <Setter Property="Background" Value="White"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Height" Value="42"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Padding" Value="6"/>

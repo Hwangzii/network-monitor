@@ -22,6 +22,8 @@ namespace MonitorApp.ViewModels.PageViewModels
         public string MacAddress { get; set; }
         public string LastSeen { get; set; }
         public string FirstSeen { get; set; }
+        public string IconDeviceUrl { get; set; }
+
     }
 
     public class NetworkScannerViewModel : INotifyPropertyChanged
@@ -89,10 +91,12 @@ namespace MonitorApp.ViewModels.PageViewModels
 
         public async Task LoadDevicesAsync()
         {
+
             try
             {
                 var apiDevices = await _api.GetScannerDevicesAsync();
                 if (apiDevices == null) return;
+                System.Diagnostics.Debug.WriteLine("ICON: " + (apiDevices.FirstOrDefault()?.IconDeviceUrl?.Substring(0, 30) ?? "null"));
 
                 var list = await Task.Run(() =>
                     apiDevices.Select(d => new NetworkDevice
@@ -106,7 +110,9 @@ namespace MonitorApp.ViewModels.PageViewModels
                         Ports = d.Ports,
                         MacAddress = d.Mac_Address,
                         LastSeen = d.Last_Seen,
-                        FirstSeen = d.First_Seen
+                        FirstSeen = d.First_Seen,
+                        IconDeviceUrl = d.IconDeviceUrl
+
                     }).ToList()
                 );
 

@@ -3,8 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:conv="clr-namespace:MonitorApp.Converters"
               xmlns:vm="clr-namespace:MonitorApp.ViewModels.PageViewModels"
              mc:Ignorable="d"
+             xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+
              d:DesignHeight="600"
              d:DesignWidth="1100"
              Loaded="UserControl_Loaded"
@@ -13,13 +16,16 @@
     <UserControl.DataContext>
         <vm:NetworkScannerViewModel />
     </UserControl.DataContext>
-    
+
     <UserControl.Resources>
         <ResourceDictionary>
             <!-- Styles chung của app -->
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/MonitorApp;component/Resources/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- ADD: converter -->
+            <conv:Base64SvgToTempFileConverter x:Key="Base64SvgToTempFile"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -59,17 +65,10 @@
                             </Canvas>
                         </Viewbox>
 
-                        <TextBlock Text="{Binding SelectedDeviceName, FallbackValue=DESKTOP của đạt}"
+                        <TextBlock Text="{Binding SelectedDeviceName}"
                                    VerticalAlignment="Center"
                                    FontWeight="SemiBold"
                                    Foreground="#333"/>
-                        <TextBlock Text="▼"
-                                   DockPanel.Dock="Left"
-                                   Margin="0,0,10,0"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Right"
-                                   Foreground="#999"
-                                   FontSize="10"/>
                     </DockPanel>
                 </Border>
 
@@ -171,7 +170,7 @@
                 CornerRadius="8"
                 BorderThickness="1"
                 BorderBrush="{StaticResource ColorBorderTable}"
-                Background="White">
+                Background="Transparent">
             <DataGrid ItemsSource="{Binding Devices}"
                       AutoGenerateColumns="False"
                       HeadersVisibility="Column"
@@ -222,10 +221,16 @@
                                         </Ellipse.Style>
                                     </Ellipse>
 
-                                    <!-- Icon máy / mobile giả lập -->
-                                    <Ellipse Width="20" Height="20"
-                                             Stroke="#B0B6C6"
-                                             StrokeThickness="1"/>
+                                    <Border Width="20" Height="20"
+                                            BorderThickness="0"
+                                            Background="Transparent"
+                                            VerticalAlignment="Center">
+                                        <svgc:SvgViewbox Margin="0"
+                                             Stretch="Uniform"
+                                             Source="{Binding IconDeviceUrl, Converter={StaticResource Base64SvgToTempFile}}"/>
+                                    </Border>
+
+
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>

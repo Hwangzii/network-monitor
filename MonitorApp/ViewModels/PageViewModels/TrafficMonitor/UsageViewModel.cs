@@ -44,25 +44,38 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
         public async Task LoadAsync()
         {
-            if (!await _loadGate.WaitAsync(0)) return; // đang load thì bỏ
+            if (!await _loadGate.WaitAsync(0)) return;
             _cts?.Cancel();
-            _cts = new CancellationTokenSource(TimeSpan.FromSeconds(8)); // timeout riêng cho Load
+            _cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
 
             try
             {
                 Debug.WriteLine("⏳ LoadAsync START");
 
                 var usageTask = _api.GetTrafficUsageSummaryAsync(_cts.Token);
-                var chartTask = _api.GetTrafficChartAsync("5m", _cts.Token);
-                var sumTask = _api.GetTrafficSummaryAsync(_cts.Token);
 
-                await Task.WhenAll(usageTask, chartTask, sumTask);
+                // 2 task này bạn chưa dùng trong trang Usage thì có thể bỏ,
+                // để tránh chậm và timeout.
+                // var chartTask = _api.GetTrafficChartAsync("5m", _cts.Token);
+                // var sumTask   = _api.GetTrafficSummaryAsync(_cts.Token);
 
-                var usage = usageTask.Result; // có thể null nếu timeout
-                var chart = chartTask.Result;
-                var sum = sumTask.Result;
+                var usage = await usageTask;
 
-                // TODO: set property + OnPropertyChanged / ObservableCollection.Clear+Add
+                if (usage == null)
+                {
+                    Debug.WriteLine("⚠️ usage-summary NULL -> clear UI");
+                    AppsData.Clear();
+                    HostsData.Clear();
+                    TrafficTypeData.Clear();
+                    CountriesData.Clear();
+                    return;
+                }
+
+                FillApps(usage);
+                FillHosts(usage);
+                FillTrafficTypes(usage);
+                FillCountries(usage);
+
                 Debug.WriteLine("✅ LoadAsync DONE");
             }
             catch (OperationCanceledException)
@@ -135,18 +148,17 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             TrafficTypeData.Clear();
 
             var types = resp.TrafficTypes ?? new();
-            double max = types.Count == 0 ? 1 : Math.Max(1, types.Max(x => x.Percentage));
-
             foreach (var t in types.OrderByDescending(x => x.Percentage))
             {
                 TrafficTypeData.Add(new UsageTrafficTypeItem
                 {
                     Type = t.Type ?? "",
                     Size = t.Usage ?? "",
-                    Progress = (t.Percentage * 100.0) / max
+                    Progress = Math.Max(0, Math.Min(100, t.Percentage)) // ✅ đúng
                 });
             }
         }
+
 
         private void FillCountries(TrafficUsageSummaryResponse resp)
         {
@@ -159,13 +171,14 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             {
                 CountriesData.Add(new UsageCountryItem
                 {
-                    Country = c.Country ?? "",
+                    Country = c.CountryName ?? "",                 // ✅
                     Size = c.Usage ?? "",
-                    Flag = ImageHelper.FromUrl(c.CountryFlagUrl),
+                    Flag = ImageHelper.FromUrl(c.FlagUrl),         // ✅
                     Progress = (c.UsageBytes * 100.0) / max
                 });
             }
         }
+
 
         protected void OnPropertyChanged([CallerMemberName] string name = "")
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
