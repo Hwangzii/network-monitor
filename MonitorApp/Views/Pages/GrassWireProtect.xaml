@@ -73,28 +73,6 @@
                     </Border>
                 </StackPanel>
 
-                <!-- Search -->
-                <StackPanel Grid.Column="3" Orientation="Vertical" Margin="60,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="220">
-                    <TextBlock Text="Search" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4" FontWeight="Normal"/>
-                    <Border Background="#F3F4F6" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="16" Padding="10,6" Height="24">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Text="🔍" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
-
-                            <TextBox Grid.Column="1"
-                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Foreground="#1E293B"
-                                     FontSize="11"
-                                     VerticalContentAlignment="Center"/>
-                        </Grid>
-                    </Border>
-                </StackPanel>
             </Grid>
         </Border>
 

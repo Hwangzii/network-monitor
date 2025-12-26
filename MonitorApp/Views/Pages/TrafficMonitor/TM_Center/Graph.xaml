@@ -54,11 +54,11 @@
 
                         <!-- Download dot -->
                         <Ellipse Width="8" Height="8"
-         Stroke="#FDBA21" StrokeThickness="2"
-         Fill="#FFFFFF"
-         Canvas.Left="{Binding HoverX}"
-         Canvas.Top="{Binding HoverDownloadY}"
-         Visibility="{Binding IsHovering, Converter={StaticResource BoolToVis}}">
+                                 Stroke="#FDBA21" StrokeThickness="2"
+                                 Fill="#FFFFFF"
+                                 Canvas.Left="{Binding HoverX}"
+                                 Canvas.Top="{Binding HoverDownloadY}"
+                                 Visibility="{Binding IsHovering, Converter={StaticResource BoolToVis}}">
                             <Ellipse.RenderTransform>
                                 <TranslateTransform X="-4" Y="-4"/>
                             </Ellipse.RenderTransform>
@@ -66,11 +66,11 @@
 
                         <!-- Upload dot -->
                         <Ellipse Width="8" Height="8"
-         Stroke="#F99CBF" StrokeThickness="2"
-         Fill="#FFFFFF"
-         Canvas.Left="{Binding HoverX}"
-         Canvas.Top="{Binding HoverUploadY}"
-         Visibility="{Binding IsHovering, Converter={StaticResource BoolToVis}}">
+                                 Stroke="#F99CBF" StrokeThickness="2"
+                                 Fill="#FFFFFF"
+                                 Canvas.Left="{Binding HoverX}"
+                                 Canvas.Top="{Binding HoverUploadY}"
+                                 Visibility="{Binding IsHovering, Converter={StaticResource BoolToVis}}">
                             <Ellipse.RenderTransform>
                                 <TranslateTransform X="-4" Y="-4"/>
                             </Ellipse.RenderTransform>
@@ -108,20 +108,42 @@
                             </Path.Data>
                         </Path>
 
+                        <!-- SELECTION overlay -->
+                        <Rectangle Canvas.Left="{Binding SelectionLeft}"
+                                   Canvas.Top="0"
+                                   Width="{Binding SelectionWidth}"
+                                   Height="{Binding ElementName=ChartCanvas, Path=ActualHeight}"
+                                   Fill="#3348A3FF"
+                                   Stroke="#A3B8FF"
+                                   StrokeThickness="1"
+                                   Visibility="{Binding IsSelectionVisible, Converter={StaticResource BoolToVis}}"/>
 
 
                     </Canvas>
                 </ScrollViewer>
 
                 <!-- Max Value -->
+                <!-- Max Value -->
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top"
-                        Margin="0,12,18,0" Padding="10,2"
+                        Margin="0,12,18,0" Padding="10,6"
                         CornerRadius="12"
                         Background="#F5F7FB" BorderBrush="#E0E4EC" BorderThickness="1">
-                    <TextBlock Text="{Binding MaxLabel}"
-                               FontSize="11" FontWeight="SemiBold"
-                               Foreground="#64748B"/>
+                    <StackPanel>
+                        <TextBlock Text="{Binding MaxLabel}"
+                                   FontSize="11" FontWeight="SemiBold"
+                                   Foreground="#64748B"/>
+
+                        <TextBlock Text="{Binding SelectionSummary}"
+                                   Margin="0,6,0,0"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Foreground="#334155"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="260"/>
+
+                    </StackPanel>
                 </Border>
+
 
             </Grid>
         </Border>

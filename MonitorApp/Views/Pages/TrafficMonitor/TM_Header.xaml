@@ -32,7 +32,8 @@
         <!-- LEFT: Filter pill -->
         <Button Grid.Column="0"
                 Style="{StaticResource HeaderButtonStyle}"
-                HorizontalAlignment="Center" Margin="0,5,0,5">
+                HorizontalAlignment="Center" Margin="0,5,0,5"
+                Click="ExportPdf_Click">
             <StackPanel Orientation="Horizontal">
                 <Viewbox Width="24" Height="24"
                          Margin="0,0,5,0">

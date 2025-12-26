@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using MonitorApp.Helpers;
+using System.Threading;
 using MonitorApp.Models;
 using MonitorApp.Services;
 using System.Diagnostics;
@@ -171,13 +172,14 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             {
                 CountriesData.Add(new UsageCountryItem
                 {
-                    Country = c.CountryName ?? "",                 // ✅
+                    Country = c.Country ?? "",                      // ✅ đúng DTO hiện tại
                     Size = c.Usage ?? "",
-                    Flag = ImageHelper.FromUrl(c.FlagUrl),         // ✅
+                    Flag = ImageHelper.FromUrl(c.CountryFlagUrl),   // ✅ đúng DTO hiện tại
                     Progress = (c.UsageBytes * 100.0) / max
                 });
             }
         }
+
 
 
         protected void OnPropertyChanged([CallerMemberName] string name = "")

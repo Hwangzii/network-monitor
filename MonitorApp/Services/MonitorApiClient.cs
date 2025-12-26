@@ -121,6 +121,34 @@ namespace MonitorApp.Services
         public Task<TrafficUsageSummaryResponse?> GetTrafficUsageSummaryAsync(CancellationToken ct = default)
             => SendAndDeserializeAsync<TrafficUsageSummaryResponse>("traffic/usage-summary", ct);
 
+        public async Task<byte[]?> GetTrafficExportPdfAsync(string range, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(range)) range = "5m";
+
+            try
+            {
+                var url = $"traffic/export/pdf?range={Uri.EscapeDataString(range)}";
+
+                using var req = BuildGet(url);
+                Debug.WriteLine($"➡️ GET (PDF) {_http.BaseAddress}{url}");
+
+                using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+                Debug.WriteLine($"⬅️ (PDF) {(int)resp.StatusCode} {resp.ReasonPhrase}");
+
+                resp.EnsureSuccessStatusCode();
+
+                // đọc thẳng bytes (PDF)
+                var bytes = await resp.Content.ReadAsByteArrayAsync(ct);
+                Debug.WriteLine($"📄 PDF bytes = {bytes?.Length ?? 0}");
+                return bytes;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"💥 EXPORT PDF ERROR: {ex}");
+                return null;
+            }
+        }
+
         // ========== GRASSWIRE PROTECT / FIREWALL ==========
 
         public Task<GrassWireProtectResponse?> GetFirewallAppsAsync(

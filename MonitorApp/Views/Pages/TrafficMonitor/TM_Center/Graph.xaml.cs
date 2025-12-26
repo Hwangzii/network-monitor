@@ -3,13 +3,13 @@ using System.Windows.Controls;
 using MonitorApp.ViewModels.PageViewModels.TrafficMonitor;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Input;
 
 namespace MonitorApp.Views.Pages.TrafficMonitor.TM_Center
 {
     public partial class Graph : UserControl
     {
         private GraphViewModel? _viewModel;
+        private bool _dragging;
 
         private readonly ToolTip _hoverTip = new ToolTip
         {
@@ -21,17 +21,14 @@ namespace MonitorApp.Views.Pages.TrafficMonitor.TM_Center
         {
             if (_viewModel == null) return;
 
-            // ChartCanvas nằm trong ScrollViewer => cộng offset để khớp dữ liệu theo ChartWidth
-            double x = e.GetPosition(ChartCanvas).X + ChartScroller.HorizontalOffset;
+            double xAbs = e.GetPosition(ChartCanvas).X + ChartScroller.HorizontalOffset;
 
-            if (_viewModel.TryGetHoverInfo(x, out var text, out var snapX))
+            // tooltip
+            if (_viewModel.TryGetHoverInfo(xAbs, out var text, out var snapXAbs))
             {
                 _hoverTip.Content = text;
-
-                // đặt tooltip theo vị trí snap (trừ offset để hiển thị đúng trên vùng nhìn thấy)
-                _hoverTip.HorizontalOffset = (snapX - ChartScroller.HorizontalOffset) + 12;
+                _hoverTip.HorizontalOffset = (snapXAbs - ChartScroller.HorizontalOffset) + 12;
                 _hoverTip.VerticalOffset = e.GetPosition(ChartCanvas).Y + 12;
-
                 _hoverTip.IsOpen = true;
             }
             else
@@ -39,12 +36,8 @@ namespace MonitorApp.Views.Pages.TrafficMonitor.TM_Center
                 _hoverTip.IsOpen = false;
             }
 
-            if (_viewModel == null) return;
-
-            double xAbs = e.GetPosition(ChartCanvas).X + ChartScroller.HorizontalOffset;
-            double h = ChartCanvas.ActualHeight;
-
-            _viewModel.UpdateHover(xAbs, h, ChartScroller.HorizontalOffset);
+            // crosshair
+            _viewModel.UpdateHover(xAbs, ChartCanvas.ActualHeight, ChartScroller.HorizontalOffset);
         }
 
         public Graph()
@@ -64,8 +57,10 @@ namespace MonitorApp.Views.Pages.TrafficMonitor.TM_Center
 
                 ChartCanvas.MouseMove += ChartCanvas_MouseMove;
                 ChartCanvas.MouseLeave += (_, __2) => _hoverTip.IsOpen = false;
-                ChartCanvas.MouseMove += ChartCanvas_MouseMove;
                 ChartCanvas.MouseLeave += (_, __2) => _viewModel?.ClearHover();
+                ChartCanvas.MouseLeftButtonDown += ChartCanvas_MouseLeftButtonDown;
+                ChartCanvas.MouseLeftButtonUp += ChartCanvas_MouseLeftButtonUp;
+                ChartCanvas.MouseMove += ChartCanvas_MouseMove_Select;
 
 
             };
@@ -75,6 +70,41 @@ namespace MonitorApp.Views.Pages.TrafficMonitor.TM_Center
                 (_viewModel ??= DataContext as GraphViewModel)
                     ?.SetViewportWidth(ActualWidth);
             };
+        }
+        private void ChartCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (_viewModel == null) return;
+
+            _dragging = true;
+            ChartCanvas.CaptureMouse();
+
+            double xAbs = e.GetPosition(ChartCanvas).X + ChartScroller.HorizontalOffset;
+            _viewModel.BeginSelection(xAbs);
+
+            e.Handled = true;
+        }
+
+        private void ChartCanvas_MouseMove_Select(object sender, MouseEventArgs e)
+        {
+            if (_viewModel == null) return;
+            if (!_dragging) return;
+            if (Mouse.LeftButton != MouseButtonState.Pressed) return;
+
+            double xAbs = e.GetPosition(ChartCanvas).X + ChartScroller.HorizontalOffset;
+            _viewModel.UpdateSelection(xAbs);
+        }
+
+        private void ChartCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_viewModel == null) return;
+            if (!_dragging) return;
+
+            double xAbs = e.GetPosition(ChartCanvas).X + ChartScroller.HorizontalOffset;
+            _viewModel.EndSelection(xAbs);
+
+            _dragging = false;
+            ChartCanvas.ReleaseMouseCapture();
+            e.Handled = true;
         }
 
         public void ChangeRange(string range)

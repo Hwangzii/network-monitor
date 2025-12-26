@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace MonitorApp.Models
@@ -45,11 +46,20 @@ namespace MonitorApp.Models
 
     public class CountryUsageDto
     {
-        public string? Country { get; set; }
+        [JsonPropertyName("countryName")]
+        public string? Country { get; set; }          // ✅ map đúng
+
+        [JsonPropertyName("usage")]
         public string? Usage { get; set; }
+
+        [JsonPropertyName("usageBytes")]
         public long UsageBytes { get; set; }
+
+        [JsonPropertyName("countryCode")]
         public string? CountryCode { get; set; }
-        public string? CountryFlagUrl { get; set; }
+
+        [JsonPropertyName("flagUrl")]
+        public string? CountryFlagUrl { get; set; }   // ✅ map đúng
     }
 }
 

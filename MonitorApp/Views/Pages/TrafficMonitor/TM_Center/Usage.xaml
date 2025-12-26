@@ -67,6 +67,7 @@
 
                                         <!-- underline progress -->
                                         <ProgressBar Grid.Row="1"
+                                                     Margin="0,6,0,0"
                                                      Value="{Binding Progress}"
                                                      Style="{StaticResource UsageProgressBarStyle}"/>
                                     </Grid>
@@ -116,6 +117,7 @@
 
                                         <!-- underline progress -->
                                         <ProgressBar Grid.Row="1"
+                                                     Margin="0,6,0,0"
                                                      Value="{Binding Progress}"
                                                      Style="{StaticResource UsageProgressBarStyle}"/>
                                     </Grid>
@@ -148,21 +150,29 @@
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
-                                        <!-- content row -->
+                                        <!-- content row: giống Apps/Hosts/Countries -->
                                         <Grid Grid.Row="0">
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <TextBlock Grid.Column="0" Text="{Binding Type}" Style="{StaticResource ItemNameStyle}" Margin="0"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Size}" Style="{StaticResource ItemSizeStyle}"/>
+                                            <TextBlock Grid.Column="0"
+                                               Text="{Binding Type}"
+                                               Style="{StaticResource ItemNameStyle}"
+                                               Margin="0"/>
+
+                                            <TextBlock Grid.Column="2"
+                                               Text="{Binding Size}"
+                                               Style="{StaticResource ItemSizeStyle}"/>
                                         </Grid>
 
                                         <!-- underline progress -->
                                         <ProgressBar Grid.Row="1"
-                                                     Value="{Binding Progress}"
-                                                     Style="{StaticResource UsageProgressBarStyle}"/>
+                                             Margin="0,6,0,0"
+                                             Value="{Binding Progress}"
+                                             Style="{StaticResource UsageProgressBarStyle}"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -202,12 +212,13 @@
                                             </Grid.ColumnDefinitions>
 
                                             <Image Grid.Column="0" Source="{Binding Flag}" Style="{StaticResource ItemFlagStyle}"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Country}" Style="{StaticResource ItemNameStyle}"/>
+                                            <TextBlock Grid.Column="1" Margin="10,0,0,0" Text="{Binding Country}" Style="{StaticResource ItemNameStyle}"/>
                                             <TextBlock Grid.Column="2" Text="{Binding Size}" Style="{StaticResource ItemSizeStyle}"/>
                                         </Grid>
 
                                         <!-- underline progress -->
                                         <ProgressBar Grid.Row="1"
+                                                     Margin="0,6,0,0"
                                                      Value="{Binding Progress}"
                                                      Style="{StaticResource UsageProgressBarStyle}"/>
                                     </Grid>

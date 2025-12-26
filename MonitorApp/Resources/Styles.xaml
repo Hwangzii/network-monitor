@@ -615,12 +615,18 @@
         <Setter Property="FontFamily" Value="Segoe UI"/>
     </Style>
 
+    
     <!-- ScrollViewer Style -->
     <Style x:Key="UsageScrollViewerStyle" TargetType="ScrollViewer">
         <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
         <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
         <Setter Property="Background" Value="Transparent"/>
+
+        <!-- QUAN TRỌNG: cho content full width -->
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     </Style>
+
 
     <!-- ItemsControl Style -->
     <Style x:Key="UsageItemsControlStyle" TargetType="ItemsControl">
@@ -676,6 +682,28 @@
         <Setter Property="HorizontalAlignment" Value="Right"/>
         <Setter Property="FontWeight" Value="Normal"/>
     </Style>
+    <Style x:Key="ThinScrollBarStyle" TargetType="ScrollBar">
+        <!-- Độ rộng thanh kéo -->
+        <Setter Property="Width" Value="2"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Margin" Value="2"/>
+
+        <!-- Thumb (phần kéo) -->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid>
+                        <Track x:Name="PART_Track">
+                            <Track.Thumb>
+                                <Thumb Background="#C5CCD8"
+                                  />
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
     <!-- Progress Bar Style -->
     <Style x:Key="UsageProgressBarStyle" TargetType="ProgressBar">
@@ -689,8 +717,6 @@
         <Setter Property="Foreground">
             <Setter.Value>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                    <GradientStop Color="#EC4899" Offset="0"/>
-                    <GradientStop Color="#F472B6" Offset="0.5"/>
                     <GradientStop Color="#FBBF24" Offset="1"/>
                 </LinearGradientBrush>
             </Setter.Value>
