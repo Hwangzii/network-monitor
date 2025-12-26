@@ -7,15 +7,28 @@
              Background="#F6F8FC"
              d:DesignHeight="800" d:DesignWidth="1200">
 
+    <!-- ===================================================== -->
+    <!-- RESOURCES: Màu sắc + Style dùng chung cho toàn trang   -->
+    <!-- ===================================================== -->
     <UserControl.Resources>
-        <SolidColorBrush x:Key="Primary" Color="#2563EB"/>
-        <SolidColorBrush x:Key="PrimarySoft" Color="#E8F0FF"/>
-        <SolidColorBrush x:Key="TextMain" Color="#111827"/>
-        <SolidColorBrush x:Key="TextSub" Color="#6B7280"/>
-        <SolidColorBrush x:Key="Card" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="CardSoft" Color="#F0F5FF"/>
-        <SolidColorBrush x:Key="StrokeSoft" Color="#E6ECF7"/>
 
+        <!-- ========== THEME COLORS ========== -->
+        <SolidColorBrush x:Key="Primary" Color="#2563EB"/>
+        <!-- Màu chủ đạo (xanh) -->
+        <SolidColorBrush x:Key="PrimarySoft" Color="#E8F0FF"/>
+        <!-- Nền xanh nhạt -->
+        <SolidColorBrush x:Key="TextMain" Color="#111827"/>
+        <!-- Chữ chính -->
+        <SolidColorBrush x:Key="TextSub" Color="#6B7280"/>
+        <!-- Chữ phụ -->
+        <SolidColorBrush x:Key="Card" Color="#FFFFFF"/>
+        <!-- Card trắng -->
+        <SolidColorBrush x:Key="CardSoft" Color="#F0F5FF"/>
+        <!-- Card mềm -->
+        <SolidColorBrush x:Key="StrokeSoft" Color="#E6ECF7"/>
+        <!-- Viền nhạt -->
+
+        <!-- ========== CARD STYLE cho 3 ô metric (Download/Upload/Ping) ========== -->
         <Style x:Key="MetricCard" TargetType="Border">
             <Setter Property="CornerRadius" Value="14"/>
             <Setter Property="Background" Value="{StaticResource CardSoft}"/>
@@ -24,33 +37,41 @@
             <Setter Property="Padding" Value="18"/>
         </Style>
 
-        <!--DataGrid -->
+        <!-- ===================================================== -->
+        <!-- DATAGRID STYLE: bỏ nền trắng + bỏ gridline + đẹp UI    -->
+        <!-- ===================================================== -->
         <Style x:Key="HistoryGrid" TargetType="DataGrid">
             <Setter Property="AutoGenerateColumns" Value="False"/>
+            <!-- Không tự sinh cột -->
             <Setter Property="HeadersVisibility" Value="Column"/>
+            <!-- Chỉ hiện header cột -->
             <Setter Property="GridLinesVisibility" Value="None"/>
+            <!-- Tắt kẻ ô -->
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
 
-            <!-- Quan trọng: để nền ăn theo Border bên ngoài -->
+            <!-- Quan trọng: để nền DataGrid trong suốt (ăn theo Border ngoài) -->
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="RowBackground" Value="Transparent"/>
             <Setter Property="AlternatingRowBackground" Value="Transparent"/>
 
+            <!-- Chặn thao tác chỉnh sửa -->
             <Setter Property="CanUserAddRows" Value="False"/>
             <Setter Property="CanUserDeleteRows" Value="False"/>
             <Setter Property="CanUserResizeRows" Value="False"/>
             <Setter Property="CanUserSortColumns" Value="False"/>
             <Setter Property="IsReadOnly" Value="True"/>
 
+            <!-- Chọn nguyên hàng -->
             <Setter Property="SelectionMode" Value="Single"/>
             <Setter Property="SelectionUnit" Value="FullRow"/>
 
+            <!-- Kích thước -->
             <Setter Property="RowHeight" Value="40"/>
             <Setter Property="ColumnHeaderHeight" Value="34"/>
             <Setter Property="FontSize" Value="12"/>
 
-            <!-- Header style -->
+            <!-- HEADER STYLE -->
             <Setter Property="ColumnHeaderStyle">
                 <Setter.Value>
                     <Style TargetType="DataGridColumnHeader">
@@ -66,7 +87,7 @@
                 </Setter.Value>
             </Setter>
 
-            <!-- Row style -->
+            <!-- ROW STYLE -->
             <Setter Property="RowStyle">
                 <Setter.Value>
                     <Style TargetType="DataGridRow">
@@ -77,7 +98,7 @@
                 </Setter.Value>
             </Setter>
 
-            <!-- Cell style -->
+            <!-- CELL STYLE -->
             <Setter Property="CellStyle">
                 <Setter.Value>
                     <Style TargetType="DataGridCell">
@@ -93,7 +114,7 @@
             </Setter>
         </Style>
 
-        <!-- Text alignment cho cell -->
+        <!-- Text căn trái / căn giữa cho nội dung cell -->
         <Style x:Key="CellTextLeft" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="TextAlignment" Value="Left"/>
@@ -103,6 +124,7 @@
             <Setter Property="TextAlignment" Value="Center"/>
         </Style>
 
+        <!-- Nút icon (mũi tên pagination) không nền/không viền -->
         <Style x:Key="IconButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -118,21 +140,34 @@
         </Style>
     </UserControl.Resources>
 
+    <!-- ===================================================== -->
+    <!-- ROOT GRID: Chia layout thành 2 phần (trên + dưới)      -->
+    <!-- ===================================================== -->
     <Grid Margin="26">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" MinHeight="487"/>
+            <!-- Khu vực trên: IP + Start Test + Metric -->
             <RowDefinition/>
+            <!-- Khu vực dưới: Test History -->
         </Grid.RowDefinitions>
 
+        <!-- ===================================================== -->
+        <!-- TOP AREA (Row 0): 3 cột Left / Center / Right          -->
+        <!-- ===================================================== -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="320"/>
+                <!-- LEFT: thông tin -->
                 <ColumnDefinition Width="*"/>
+                <!-- CENTER: vòng tròn + Start -->
                 <ColumnDefinition Width="320"/>
+                <!-- RIGHT: Download/Upload/Ping -->
             </Grid.ColumnDefinitions>
 
+            <!-- ================= LEFT PANEL ================= -->
             <StackPanel Grid.Column="0" Margin="10,18,18,0">
 
+                <!-- Block 1: IP Address -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
                     <Border Width="44" Height="44" CornerRadius="22" Background="#3F51F7" Margin="0,0,14,0">
                         <Image Source="/Resources/Icons/wifi.png" Stretch="Uniform" Margin="10"/>
@@ -143,6 +178,7 @@
                     </StackPanel>
                 </StackPanel>
 
+                <!-- Block 2: Provider -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
                     <Border Width="44" Height="44" CornerRadius="22" Background="#3F51F7" Margin="0,0,14,0">
                         <Image Source="/Resources/Icons/world.png" Stretch="Uniform" Margin="10"/>
@@ -153,6 +189,7 @@
                     </StackPanel>
                 </StackPanel>
 
+                <!-- Block 3: Location -->
                 <StackPanel Orientation="Horizontal">
                     <Border Width="44" Height="44" CornerRadius="22" Background="#3F51F7" Margin="0,0,14,0">
                         <Image Source="/Resources/Icons/world.png" Stretch="Uniform" Margin="10"/>
@@ -163,6 +200,7 @@
                     </StackPanel>
                 </StackPanel>
 
+                <!-- Banner quảng cáo/app card -->
                 <Border Margin="0,22,0,0" Width="269" CornerRadius="16"
                         Background="#EEF4FF" BorderBrush="#DDE8FF" BorderThickness="1" Padding="18">
                     <StackPanel HorizontalAlignment="Center">
@@ -171,6 +209,8 @@
                                    TextAlignment="Center" Foreground="{StaticResource TextMain}"/>
                         <TextBlock Text="Edit, convert, sign, protect your PDFs with ease" FontSize="10.5"
                                    Foreground="#94A3B8" TextAlignment="Center" Margin="0,6,0,12"/>
+
+                        <!-- Nút download (bo góc bằng cách style Border trong Button.Resources) -->
                         <Button Content="Download" Width="140" Height="34"
                                 Background="#2F5BFF" Foreground="White" FontWeight="SemiBold" BorderBrush="#2F5BFF">
                             <Button.Resources>
@@ -183,22 +223,42 @@
                 </Border>
             </StackPanel>
 
+            <!-- ================= CENTER PANEL ================= -->
             <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="Ready" Foreground="{StaticResource TextSub}" FontSize="14" Margin="0,0,0,12" HorizontalAlignment="Center"/>
+                <TextBlock Text="Ready"
+                           Foreground="{StaticResource TextSub}"
+                           FontSize="14"
+                           Margin="0,0,0,12"
+                           HorizontalAlignment="Center"/>
+
                 <Grid>
+                    <!-- Vòng tròn trang trí -->
                     <Ellipse Width="300" Height="300" Stroke="#EAF0FF" StrokeThickness="18"/>
-                    <Button Content="Start Test" Width="170" Height="42"
-                            Margin="65,400,65,0" Background="{StaticResource Primary}" Foreground="White" FontWeight="SemiBold" BorderBrush="{StaticResource Primary}" VerticalAlignment="Top" d:LayoutOverrides="Height">
+
+                    <!-- Nút Start Test -->
+                    <Button Content="Start Test"
+                            Width="170" Height="42"
+                            Margin="65,400,65,0"
+                            Background="{StaticResource Primary}"
+                            Foreground="White"
+                            FontWeight="SemiBold"
+                            BorderBrush="{StaticResource Primary}"
+                            VerticalAlignment="Top"
+                            d:LayoutOverrides="Height">
                         <Button.Resources>
                             <Style TargetType="Border">
                                 <Setter Property="CornerRadius" Value="21"/>
+                                <!-- bo pill -->
                             </Style>
                         </Button.Resources>
                     </Button>
                 </Grid>
             </StackPanel>
 
+            <!-- ================= RIGHT PANEL ================= -->
             <StackPanel Grid.Column="2" Margin="18,18,10,0">
+
+                <!-- Metric 1: Download -->
                 <Border Style="{StaticResource MetricCard}" Height="120" Margin="0,0,0,14">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -206,16 +266,26 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
+
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Path Data="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
-                                  Fill="{StaticResource Primary}" Stretch="Uniform" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                  Fill="{StaticResource Primary}" Stretch="Uniform" Width="16" Height="16"
+                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBlock Text="Download" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Primary}"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="1" Text="0.0" FontSize="34" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock Grid.Row="2" Text="mbps" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+
+                        <TextBlock Grid.Row="1" Text="0.0"
+                                   FontSize="34" FontWeight="Bold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMain}"/>
+
+                        <TextBlock Grid.Row="2" Text="mbps"
+                                   FontSize="11" HorizontalAlignment="Center"
+                                   Foreground="{StaticResource TextSub}"/>
                     </Grid>
                 </Border>
 
+                <!-- Metric 2: Upload -->
                 <Border Style="{StaticResource MetricCard}" Height="120" Margin="0,0,0,14">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -223,16 +293,26 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
+
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Path Data="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"
-                                  Fill="{StaticResource Primary}" Stretch="Uniform" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                  Fill="{StaticResource Primary}" Stretch="Uniform" Width="16" Height="16"
+                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBlock Text="Upload" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Primary}"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="1" Text="0.0" FontSize="34" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock Grid.Row="2" Text="mbps" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+
+                        <TextBlock Grid.Row="1" Text="0.0"
+                                   FontSize="34" FontWeight="Bold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMain}"/>
+
+                        <TextBlock Grid.Row="2" Text="mbps"
+                                   FontSize="11" HorizontalAlignment="Center"
+                                   Foreground="{StaticResource TextSub}"/>
                     </Grid>
                 </Border>
 
+                <!-- Metric 3: Ping -->
                 <Border Style="{StaticResource MetricCard}" Height="120">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -240,38 +320,57 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
+
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Path Data="M22,11H17L15,4L9,19L7,11H2V13H8L10,19L16,4L18,13H22V11Z"
-                                  Fill="{StaticResource Primary}" Stretch="Uniform" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                  Fill="{StaticResource Primary}" Stretch="Uniform" Width="16" Height="16"
+                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBlock Text="Ping" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Primary}"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="1" Text="0.0" FontSize="34" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock Grid.Row="2" Text="ms" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource TextSub}"/>
+
+                        <TextBlock Grid.Row="1" Text="0.0"
+                                   FontSize="34" FontWeight="Bold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMain}"/>
+
+                        <TextBlock Grid.Row="2" Text="ms"
+                                   FontSize="11" HorizontalAlignment="Center"
+                                   Foreground="{StaticResource TextSub}"/>
                     </Grid>
                 </Border>
             </StackPanel>
         </Grid>
 
+        <!-- ===================================================== -->
+        <!-- BOTTOM AREA (Row 1): Test History                      -->
+        <!-- ===================================================== -->
         <Grid Grid.Row="1" Margin="0,18,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <!-- tiêu đề + pagination -->
                 <RowDefinition Height="*"/>
+                <!-- bảng -->
             </Grid.RowDefinitions>
 
+            <!-- ===== Header Test History + Pagination ===== -->
             <Grid Grid.Row="0" Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
+                <!-- Title -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="{StaticResource Primary}" Width="4" Height="18" CornerRadius="2"/>
                     <TextBlock Text="Test History"
-                               FontSize="16" FontWeight="SemiBold"
+                               FontSize="16"
+                               FontWeight="SemiBold"
                                Foreground="{StaticResource TextMain}"
-                               Margin="10,0,0,0" VerticalAlignment="Center"/>
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center"/>
                 </StackPanel>
 
+                <!-- Pagination -->
                 <Border Grid.Column="1"
                         Background="{StaticResource CardSoft}"
                         BorderBrush="{StaticResource StrokeSoft}"
@@ -279,17 +378,23 @@
                         CornerRadius="16"
                         Padding="4">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                        <!-- Prev -->
                         <Button Style="{StaticResource IconButtonStyle}" Width="24" Height="24" Margin="2,0">
                             <Path Data="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"
                                   Fill="{StaticResource TextSub}"
                                   Stretch="Uniform" Width="8" Height="12"/>
                         </Button>
 
+                        <!-- Page text -->
                         <TextBlock Text="1 of 15"
-                                   FontSize="12" FontWeight="Medium"
+                                   FontSize="12"
+                                   FontWeight="Medium"
                                    Foreground="{StaticResource TextMain}"
-                                   Margin="10,0" VerticalAlignment="Center"/>
+                                   Margin="10,0"
+                                   VerticalAlignment="Center"/>
 
+                        <!-- Next -->
                         <Border Background="{StaticResource Primary}" Width="24" Height="24" CornerRadius="12">
                             <Button Style="{StaticResource IconButtonStyle}" Width="24" Height="24">
                                 <Path Data="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
@@ -297,21 +402,24 @@
                                       Stretch="Uniform" Width="8" Height="12"/>
                             </Button>
                         </Border>
+
                     </StackPanel>
                 </Border>
             </Grid>
 
+            <!-- ===== DataGrid container ===== -->
             <Border Grid.Row="1"
                     Background="{StaticResource PrimarySoft}"
-                    BorderBrush="{StaticResource Primary}"
-                    BorderThickness="2"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
                     CornerRadius="14"
                     Padding="14">
 
-                <!--DataGrid.Resources nền trắng ScrollViewer -->
+                <!-- DataGrid lịch sử -->
                 <DataGrid Style="{StaticResource HistoryGrid}"
                           SelectionChanged="DataGrid_SelectionChanged">
 
+                    <!-- Fix nền trắng từ ScrollViewer bên trong DataGrid -->
                     <DataGrid.Resources>
                         <Style TargetType="ScrollViewer">
                             <Setter Property="Background" Value="Transparent"/>
@@ -319,7 +427,8 @@
                     </DataGrid.Resources>
 
                     <DataGrid.Columns>
-                        <!-- Date: trái -->
+
+                        <!-- Date (căn trái) -->
                         <DataGridTextColumn Header="Date" Width="*"
                                             Binding="{Binding Date}">
                             <DataGridTextColumn.ElementStyle>
@@ -327,7 +436,7 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <!-- Download: giữa -->
+                        <!-- Download (căn giữa) -->
                         <DataGridTextColumn Header="Download" Width="220"
                                             Binding="{Binding Download}">
                             <DataGridTextColumn.ElementStyle>
@@ -335,7 +444,7 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <!-- Upload: giữa -->
+                        <!-- Upload (căn giữa) -->
                         <DataGridTextColumn Header="Upload" Width="220"
                                             Binding="{Binding Upload}">
                             <DataGridTextColumn.ElementStyle>
@@ -343,17 +452,17 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <!-- Ping: giữa -->
+                        <!-- Ping (căn giữa) -->
                         <DataGridTextColumn Header="Ping" Width="180"
                                             Binding="{Binding Ping}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource CellTextCenter}"/>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
+
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
         </Grid>
-
     </Grid>
 </UserControl>
