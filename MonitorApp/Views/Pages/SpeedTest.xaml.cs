@@ -1,35 +1,55 @@
 ﻿using Microsoft.Win32;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
-using QuestPDF.Infrastructure; // cần LicenseType + IContainer (QuestPDF)
+using QuestPDF.Infrastructure;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Threading;
-using QColors = QuestPDF.Helpers.Colors; // alias để không đụng System.Windows.Media.Colors
+using QColors = QuestPDF.Helpers.Colors;
+
+using MonitorApp.Models;
+using MonitorApp.Services;
 
 namespace MonitorApp.Views.Pages
 {
     public partial class SpeedTest : UserControl, INotifyPropertyChanged
     {
-        private DispatcherTimer _timer;
-        private DateTime _startTime;
-
-        // 0 = chạy giả (loading), 1 = reset về 0, 2 = đo thật
-        private int _phase = 0;
+        // =========================
+        // API
+        // =========================
+        private readonly MonitorApiClient _api = new();
+        private CancellationTokenSource? _runCts;
 
         public double MaxSpeed { get; } = 999.9;
 
-        private readonly Random _rng = new Random();
-        private double _targetSpeed = 0;
+        // =========================
+        // OPTIONAL: Info (nếu XAML bind)
+        // =========================
+        private string _ipAddress = "Not available";
+        public string IpAddress { get => _ipAddress; set { _ipAddress = value; OnPropertyChanged(); } }
+
+        private string _provider = "Not available";
+        public string Provider { get => _provider; set { _provider = value; OnPropertyChanged(); } }
+
+        private string _location = "Not available";
+        public string Location { get => _location; set { _location = value; OnPropertyChanged(); } }
+
+        private string _statusText = "Ready";
+        public string StatusText { get => _statusText; set { _statusText = value; OnPropertyChanged(); } }
+
+        private string _qualityText = "Good";
+        public string QualityText { get => _qualityText; set { _qualityText = value; OnPropertyChanged(); } }
 
         // =========================
-        // ✅ METRICS (đồng bộ 3 card)
+        // METRICS (3 card)
         // =========================
         private double _download;
         public string DownloadValue => _download.ToString("0.0");
@@ -37,14 +57,14 @@ namespace MonitorApp.Views.Pages
         private double _upload;
         public string UploadValue => _upload.ToString("0.0");
 
-        private int _ping;
-        public string PingValue => _ping.ToString();
+        private double _ping;
+        public string PingValue => _ping.ToString("0.0");
 
-        private void SetMetrics(double download, double upload, int ping)
+        private void SetMetrics(double? download, double? upload, double? ping)
         {
-            _download = download;
-            _upload = upload;
-            _ping = ping;
+            if (download.HasValue) _download = download.Value;
+            if (upload.HasValue) _upload = upload.Value;
+            if (ping.HasValue) _ping = ping.Value;
 
             OnPropertyChanged(nameof(DownloadValue));
             OnPropertyChanged(nameof(UploadValue));
@@ -52,17 +72,18 @@ namespace MonitorApp.Views.Pages
         }
 
         // =========================
-        // ✅ LỊCH SỬ ĐO
+        // HISTORY (DataGrid)
         // =========================
         public ObservableCollection<HistoryRow> History { get; } = new ObservableCollection<HistoryRow>();
 
         public class HistoryRow
         {
             public string Date { get; set; } = "";
-            public string Download { get; set; } = "";
-            public string Upload { get; set; } = "";
-            public string Ping { get; set; } = "";
+            public double Download { get; set; }
+            public double Upload { get; set; }
+            public double Ping { get; set; }
         }
+
 
         // =========================
         // SPEED VALUE + ARC
@@ -75,14 +96,29 @@ namespace MonitorApp.Views.Pages
             {
                 if (Math.Abs(_speed - value) < 0.0001) return;
                 _speed = value;
+
                 OnPropertyChanged(nameof(SpeedNumber));
                 OnPropertyChanged(nameof(SpeedValue));
-
-                UpdateArc(_speed / MaxSpeed);
             }
         }
 
+
         public string SpeedValue => SpeedNumber.ToString("000.0");
+
+        // =========================
+        // UI STATE
+        // =========================
+        private bool _isRunning;
+        public bool IsRunning
+        {
+            get => _isRunning;
+            set
+            {
+                if (_isRunning == value) return;
+                _isRunning = value;
+                OnPropertyChanged();
+            }
+        }
 
         public SpeedTest()
         {
@@ -90,17 +126,17 @@ namespace MonitorApp.Views.Pages
             DataContext = this;
 
             SpeedNumber = 0;
-            UpdateArc(0);
-
             SetMetrics(0, 0, 0);
             SetUiState(isTesting: false, finished: false);
+
+            Loaded += async (_, __) => await LoadHistoryAsync(10);
+            Unloaded += (_, __) => CancelRun();
         }
 
-        // =========================
-        // UI STATE
-        // =========================
         private void SetUiState(bool isTesting, bool finished)
         {
+            IsRunning = isTesting;
+
             if (BtnStartTest != null)
                 BtnStartTest.Visibility = (isTesting || finished) ? Visibility.Collapsed : Visibility.Visible;
 
@@ -108,104 +144,221 @@ namespace MonitorApp.Views.Pages
                 BtnRestart.Visibility = finished ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private void StartTest_Click(object sender, RoutedEventArgs e)
+
+        private async void StartTest_Click(object sender, RoutedEventArgs e)
         {
+            if (_isRunning) return;
+
             SetUiState(isTesting: true, finished: false);
 
-            _phase = 0;
-            _targetSpeed = 0;
-
+            // ===== Reset UI =====
             SpeedNumber = 0;
-            UpdateArc(0);
-
-            // reset card khi bắt đầu chạy
             SetMetrics(0, 0, 0);
 
-            _startTime = DateTime.Now;
+            StatusText = "Starting...";
+            QualityText = "Good";
 
-            _timer ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
-            _timer.Tick -= Timer_Tick;
-            _timer.Tick += Timer_Tick;
-            _timer.Start();
+            // ===== bật vòng chạy =====
+            if (RingProgress != null)
+                RingProgress.Visibility = Visibility.Visible;
+
+            CancelRun();
+            _runCts = new CancellationTokenSource();
+            var ct = _runCts.Token;
+
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    await foreach (var ev in _api.SpeedRunStreamAsync(ct))
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            ApplySpeedEvent_OnUI(ev);
+
+                            // có dữ liệu thật -> tắt vòng chạy
+                            var t = (ev.Type ?? "").ToLowerInvariant();
+                            if (t is "ping" or "download" or "upload" or "complete")
+                            {
+                                if (RingProgress != null)
+                                    RingProgress.Visibility = Visibility.Collapsed;
+                            }
+                        });
+
+                        if (string.Equals(ev.Type, "complete", StringComparison.OrdinalIgnoreCase))
+                            break;
+                    }
+                }, ct);
+
+                StatusText = "Completed";
+                SetUiState(isTesting: false, finished: true);
+
+                await LoadHistoryAsync(10);
+            }
+            catch (OperationCanceledException)
+            {
+                StatusText = "Canceled";
+                SetUiState(isTesting: false, finished: false);
+            }
+            catch (HttpRequestException ex)
+            {
+                StatusText = "Network error";
+                System.Diagnostics.Debug.WriteLine(ex);
+                SetUiState(isTesting: false, finished: false);
+            }
+            catch (Exception ex)
+            {
+                StatusText = "Error";
+                System.Diagnostics.Debug.WriteLine(ex);
+                SetUiState(isTesting: false, finished: false);
+                System.Diagnostics.Debug.WriteLine("SpeedTest ERROR: " + ex);
+                MessageBox.Show(ex.Message, "SpeedTest Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // đảm bảo luôn tắt vòng chạy
+                if (RingProgress != null)
+                    RingProgress.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void ResetTest_Click(object sender, RoutedEventArgs e)
         {
-            _timer?.Stop();
-
-            _phase = 0;
-            _targetSpeed = 0;
+            CancelRun();
 
             SpeedNumber = 0;
-            UpdateArc(0);
-
             SetMetrics(0, 0, 0);
+            StatusText = "Ready";
+            QualityText = "Good";
+
             SetUiState(isTesting: false, finished: false);
         }
 
-        private void Timer_Tick(object? sender, EventArgs e)
+        private void CancelRun()
         {
-            var elapsed = (DateTime.Now - _startTime).TotalMilliseconds;
-            var progress = Math.Min(elapsed / 1000.0, 1.0);
+            try { _runCts?.Cancel(); } catch { }
+            _runCts?.Dispose();
+            _runCts = null;
+        }
 
-            if (_phase == 0)
+        // =========================
+        // Apply stream events
+        // =========================
+        private void ApplySpeedEvent_OnUI(SpeedEvent ev)
+        {
+            if (ev?.Data == null) return;
+
+            var type = (ev.Type ?? "").ToLowerInvariant();
+
+            if (type == "status")
             {
-                // PHA 0: chạy giả 0 -> MaxSpeed
-                SpeedNumber = progress * MaxSpeed;
-
-                if (progress >= 1.0)
-                {
-                    _phase = 1;
-                    SpeedNumber = 0;
-                    _startTime = DateTime.Now;
-                }
+                StatusText = ev.Data.Message ?? "Running...";
+                return;
             }
-            else if (_phase == 1)
-            {
-                if (elapsed >= 100)
-                {
-                    _phase = 2;
-                    _startTime = DateTime.Now;
 
-                    // demo kết quả đo thật (sau thay bằng đo thật)
-                    _targetSpeed = _rng.NextDouble() * (350 - 50) + 50; // 50 -> 350
-                    _targetSpeed = Math.Max(0, Math.Min(MaxSpeed, _targetSpeed));
+            if (type == "ping")
+            {
+                var ping = ev.Data.PingMs;
+                if (ping.HasValue)
+                {
+                    SetMetrics(null, null, ping.Value);
+                    SpeedNumber = Math.Min(MaxSpeed, ping.Value);
                 }
+
+                if (!string.IsNullOrWhiteSpace(ev.Data.Quality))
+                    QualityText = ev.Data.Quality!;
+
+                StatusText = "Ping...";
+                return;
             }
-            else if (_phase == 2)
+
+            if (type == "download")
             {
-                // PHA 2: chạy 0 -> targetSpeed
-                SpeedNumber = progress * _targetSpeed;
-
-                if (progress >= 1.0)
+                var d = ev.Data.DownloadMbps;
+                if (d.HasValue)
                 {
-                    SpeedNumber = _targetSpeed;
-                    _timer.Stop();
-
-                    // demo metrics (sau thay bằng đo thật)
-                    double download = _targetSpeed;
-                    double upload = download * 0.40;
-                    int ping = _rng.Next(5, 40);
-
-                    // ✅ đồng bộ card
-                    SetMetrics(download, upload, ping);
-
-                    // ✅ ghi lịch sử
-                    History.Insert(0, new HistoryRow
-                    {
-                        Date = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
-                        Download = $"{download:0.0} Mbps",
-                        Upload = $"{upload:0.0} Mbps",
-                        Ping = $"{ping} ms"
-                    });
-
-                    SetUiState(isTesting: false, finished: true);
+                    SetMetrics(d.Value, null, null);
+                    SpeedNumber = Math.Min(MaxSpeed, d.Value);
                 }
+
+                if (!string.IsNullOrWhiteSpace(ev.Data.Quality))
+                    QualityText = ev.Data.Quality!;
+
+                StatusText = "Download...";
+                return;
+            }
+
+            if (type == "upload")
+            {
+                var u = ev.Data.UploadMbps;
+                if (u.HasValue)
+                {
+                    SetMetrics(null, u.Value, null);
+                    SpeedNumber = Math.Min(MaxSpeed, u.Value);
+                }
+
+                if (!string.IsNullOrWhiteSpace(ev.Data.Quality))
+                    QualityText = ev.Data.Quality!;
+
+                StatusText = "Upload...";
+                return;
+            }
+
+            if (type == "complete")
+            {
+                var d = ev.Data.DownloadMbps;
+                var u = ev.Data.UploadMbps;
+                var p = ev.Data.PingMs;
+
+                if (d.HasValue) _download = d.Value;
+                if (u.HasValue) _upload = u.Value;
+                if (p.HasValue) _ping = p.Value;
+
+                OnPropertyChanged(nameof(DownloadValue));
+                OnPropertyChanged(nameof(UploadValue));
+                OnPropertyChanged(nameof(PingValue));
+
+                if (!string.IsNullOrWhiteSpace(ev.Data.IpAddress)) IpAddress = ev.Data.IpAddress!;
+                if (!string.IsNullOrWhiteSpace(ev.Data.Provider)) Provider = ev.Data.Provider!;
+                if (!string.IsNullOrWhiteSpace(ev.Data.Location)) Location = ev.Data.Location!;
+
+                SpeedNumber = Math.Min(MaxSpeed, _download);
+                StatusText = "Test completed";
             }
         }
 
         // =========================
-        // ✅ EXPORT PDF (nút Download)
+        // Load History from backend
+        // =========================
+        private async Task LoadHistoryAsync(int limit)
+        {
+            try
+            {
+                var resp = await _api.GetSpeedHistoryAsync(limit);
+                History.Clear();
+
+                if (resp?.Success != true || resp.Data == null) return;
+
+                foreach (var item in resp.Data.OrderByDescending(x => x.Timestamp))
+                {
+                    History.Add(new HistoryRow
+                    {
+                        Date = item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"),
+                        Download = item.DownloadMbps,
+                        Upload = item.UploadMbps,
+                        Ping = item.PingMs
+                    });
+                }
+
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
+        }
+
+        // =========================
+        // EXPORT PDF
         // =========================
         private void ExportHistoryPdf_Click(object sender, RoutedEventArgs e)
         {
@@ -285,7 +438,6 @@ namespace MonitorApp.Views.Pages
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        // ✅ FIX method-group + ambiguous IContainer: dùng FULLY QUALIFIED
         private static QuestPDF.Infrastructure.IContainer CellHeader(QuestPDF.Infrastructure.IContainer c) =>
             c.PaddingVertical(6).PaddingHorizontal(8)
              .Background(QColors.Grey.Lighten3)
@@ -296,73 +448,20 @@ namespace MonitorApp.Views.Pages
             c.PaddingVertical(6).PaddingHorizontal(8)
              .Border(1).BorderColor(QColors.Grey.Lighten2);
 
-        // (tuỳ chọn) nếu XAML còn gọi SelectionChanged thì giữ hàm trống
+
+        // =========================
+        // DataGrid selection handlers (giữ trống nếu XAML gọi)
+        // =========================
         private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e) { }
+        private void DataGrid_SelectionChanged_1(object sender, SelectionChangedEventArgs e) { }
+        private void DataGrid_SelectionChanged_2(object sender, SelectionChangedEventArgs e) { }
+        private void DataGrid_SelectionChanged_3(object sender, SelectionChangedEventArgs e) { }
 
         // =========================
-        // ARC DRAW
+        // INotifyPropertyChanged
         // =========================
-        private void UpdateArc(double progress01)
-        {
-            progress01 = Math.Max(0, Math.Min(1, progress01));
-
-            const double cx = 210.0;
-            const double cy = 210.0;
-            const double r = 137.5;
-            const double startAngle = -60.0;
-
-            if (progress01 <= 0.0001)
-            {
-                ArcPath.Data = Geometry.Empty;
-                return;
-            }
-
-            double sweep = 360.0 * progress01;
-            double endAngle = startAngle + sweep;
-
-            Point start = PointOnCircle(cx, cy, r, startAngle);
-            Point end = PointOnCircle(cx, cy, r, endAngle);
-
-            bool isLargeArc = sweep > 180.0;
-
-            var fig = new PathFigure { StartPoint = start, IsClosed = false };
-            fig.Segments.Add(new ArcSegment
-            {
-                Point = end,
-                // ✅ FIX Size ambiguous: chỉ rõ System.Windows.Size
-                Size = new System.Windows.Size(r, r),
-                IsLargeArc = isLargeArc,
-                SweepDirection = SweepDirection.Clockwise
-            });
-
-            var geo = new PathGeometry();
-            geo.Figures.Add(fig);
-            ArcPath.Data = geo;
-        }
-
-        private static Point PointOnCircle(double cx, double cy, double r, double angleDeg)
-        {
-            double rad = angleDeg * Math.PI / 180.0;
-            return new Point(cx + r * Math.Cos(rad), cy + r * Math.Sin(rad));
-        }
-
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-        private void DataGrid_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void DataGrid_SelectionChanged_2(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void DataGrid_SelectionChanged_3(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
     }
 }

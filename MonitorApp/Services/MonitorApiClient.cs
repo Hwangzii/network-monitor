@@ -8,6 +8,10 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using MonitorApp.Models;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Text;
+
 
 namespace MonitorApp.Services
 {
@@ -168,5 +172,62 @@ namespace MonitorApp.Services
 
         public Task<WifiInfoDto?> GetWifiInfoAsync(CancellationToken ct = default)
             => SendAndDeserializeAsync<WifiInfoDto>("scanner/wifi", ct);
+
+
+        public async IAsyncEnumerable<SpeedEvent> SpeedRunStreamAsync(
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
+        {
+            using var req = BuildGet("speed/run");
+
+            using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+
+            // debug status
+            System.Diagnostics.Debug.WriteLine($"[speed/run] {(int)resp.StatusCode} {resp.ReasonPhrase}");
+
+            resp.EnsureSuccessStatusCode();
+
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
+            using var reader = new System.IO.StreamReader(stream);
+
+            while (!reader.EndOfStream && !ct.IsCancellationRequested)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                line = line.Trim();
+
+                // SSE: "data: {...}"
+                if (line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                    line = line.Substring(5).Trim();
+
+                // bỏ dòng không phải json
+                if (!line.StartsWith("{")) continue;
+
+                System.Diagnostics.Debug.WriteLine("[speed/run] " + line);
+
+                SpeedEvent? ev = null;
+                try
+                {
+                    ev = System.Text.Json.JsonSerializer.Deserialize<SpeedEvent>(line, _jsonOptions);
+                }
+                catch (System.Text.Json.JsonException jex)
+                {
+                    System.Diagnostics.Debug.WriteLine("[speed/run] JSON ERROR: " + jex.Message);
+                    continue;
+                }
+
+                if (ev != null)
+                    yield return ev;
+            }
+        }
+
+        public Task<SpeedHistoryResponse?> GetSpeedHistoryAsync(int limit = 10, CancellationToken ct = default)
+        {
+            if (limit <= 0) limit = 10;
+            return SendAndDeserializeAsync<SpeedHistoryResponse>($"speed/history?limit={limit}", ct);
+        }
+
     }
+
+
 }
