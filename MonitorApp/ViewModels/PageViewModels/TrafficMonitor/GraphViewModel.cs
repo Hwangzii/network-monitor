@@ -306,6 +306,81 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         // =========================
         // Y-scale helpers
         // =========================
+        // =========================
+        // Auto/Manual scale
+        // =========================
+        private bool _isAutoScale = true;
+        public bool IsAutoScale
+        {
+            get => _isAutoScale;
+            set
+            {
+                if (_isAutoScale == value) return;
+                _isAutoScale = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ScaleModeLabel));
+
+                // ép update ngay
+                UpdateAxisAndX_Smooth();
+            }
+        }
+
+        public string ScaleModeLabel => IsAutoScale ? "AUTO ON" : "AUTO OFF";
+
+        // Slider chạy theo log: 0..1 -> 1 Kbps .. 1e9 Kbps (1 Tbps)
+        private double _scaleLog = 0.0;
+        public double ScaleLog
+        {
+            get => _scaleLog;
+            set
+            {
+                _scaleLog = Math.Max(0, Math.Min(1, value));
+                OnPropertyChanged();
+
+                ManualMaxValueKbps = LogToKbps(_scaleLog);
+            }
+        }
+
+        private double _manualMaxValueKbps = 1000; // mặc định 1 Mbps
+        public double ManualMaxValueKbps
+        {
+            get => _manualMaxValueKbps;
+            private set
+            {
+                _manualMaxValueKbps = Math.Max(1, value);
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ManualMaxLabel));
+
+                if (!IsAutoScale)
+                    UpdateAxisAndX_Smooth();
+            }
+        }
+
+        public string ManualMaxLabel => FormatDataRateKbps(ManualMaxValueKbps);
+
+        // =========================
+        // Peak line (vạch giới hạn theo đỉnh thật)
+        // =========================
+        private double _peakValueKbps;
+        public double PeakValueKbps
+        {
+            get => _peakValueKbps;
+            private set
+            {
+                _peakValueKbps = Math.Max(0, value);
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(PeakLabel));
+            }
+        }
+        public string PeakLabel => FormatDataRateKbps(PeakValueKbps);
+
+        private static double LogToKbps(double t)
+        {
+            // t: 0..1 -> 10^0 .. 10^9  (1 Kbps .. 1e9 Kbps = 1 Tbps)
+            double exp = 0 + (9.0 * t);
+            return Math.Pow(10, exp);
+        }
+
         private static double NiceCeil(double value)
         {
             if (value <= 0) return 1;
@@ -325,13 +400,27 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         {
             if (maxVisible <= 0) maxVisible = 1;
 
-            double rawTarget = maxVisible / PeakFillRatio;
-            _targetMaxValue = NiceCeil(Math.Max(1, rawTarget));
+            // Peak = đỉnh thật (để vẽ vạch giới hạn)
+            PeakValueKbps = maxVisible;
+
+            double desiredMax;
+
+            if (IsAutoScale)
+            {
+                double rawTarget = maxVisible / PeakFillRatio;
+                desiredMax = NiceCeil(Math.Max(1, rawTarget));
+            }
+            else
+            {
+                desiredMax = Math.Max(1, ManualMaxValueKbps);
+            }
+
+            _targetMaxValue = desiredMax;
 
             if (DynamicMaxValue <= 0) DynamicMaxValue = _targetMaxValue;
-
             DynamicMaxValue = DynamicMaxValue + (_targetMaxValue - DynamicMaxValue) * SmoothAlpha;
         }
+
 
         // =========================
         // Axis + series build
@@ -736,8 +825,10 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             // decimal bit-rate: 1000 Kbps = 1 Mbps
             if (kbps < 1000) return $"{kbps:F1} Kbps";
             if (kbps < 1000 * 1000) return $"{kbps / 1000:F1} Mbps";
-            return $"{kbps / 1000 / 1000:F1} Gbps";
+            if (kbps < 1000 * 1000 * 1000) return $"{kbps / 1000 / 1000:F1} Gbps";
+            return $"{kbps / 1000 / 1000 / 1000:F1} Tbps";
         }
+
 
         private static string FormatDataSizeFromKilobit(double kilobit)
         {

@@ -111,5 +111,24 @@ namespace MonitorApp.Views.Pages.TrafficMonitor.TM_Center
         {
             (_viewModel ??= DataContext as GraphViewModel)?.ChangeRange(range);
         }
+
+        private void MaxDropBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // Toggle popup chắc chắn
+            if (ScalePopup != null)
+                ScalePopup.IsOpen = !ScalePopup.IsOpen;
+        }
+
+        private void CloseScalePopup_Click(object sender, RoutedEventArgs e)
+        {
+            if (ScalePopup != null)
+                ScalePopup.IsOpen = false;
+        }
+        private void AutoScale_CheckedChanged_ClosePopup(object sender, RoutedEventArgs e)
+        {
+            if (ScalePopup != null) ScalePopup.IsOpen = false;
+        }
+
+
     }
 }

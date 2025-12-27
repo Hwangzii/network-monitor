@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using MonitorApp.Models;
-using System.Windows.Media;
+using System.Windows.Data;
+using System.Windows.Input;
+using System.Windows.Threading;
+using MonitorApp.Helpers;
+
+
 using MonitorApp.Services;
 
 namespace MonitorApp.ViewModels.PageViewModels
@@ -23,16 +28,39 @@ namespace MonitorApp.ViewModels.PageViewModels
         public string LastSeen { get; set; }
         public string FirstSeen { get; set; }
         public string IconDeviceUrl { get; set; }
-
     }
 
     public class NetworkScannerViewModel : INotifyPropertyChanged
     {
+        // ===== Services / Timer =====
         private readonly MonitorApiClient _api = new();
+        private readonly DispatcherTimer _autoScanTimer;
 
-        public ObservableCollection<NetworkDevice> Devices { get; } =
-            new ObservableCollection<NetworkDevice>();
+        // ===== Collections / Views =====
+        public ObservableCollection<NetworkDevice> Devices { get; } = new();
+        public ICollectionView FilteredDevices { get; }
 
+        // ===== Commands =====
+        public ICommand ScanCommand { get; }
+
+        public NetworkScannerViewModel()
+        {
+            // view filter
+            FilteredDevices = CollectionViewSource.GetDefaultView(Devices);
+            FilteredDevices.Filter = FilterDevice;
+
+            // scan tay
+            ScanCommand = new RelayCommand(async _ => await ScanAsync());
+
+            // auto scan
+            _autoScanTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(30)
+            };
+            _autoScanTimer.Tick += async (_, __) => await ScanAsync();
+        }
+
+        // ===== Bindings =====
         private string _selectedDeviceName = "DESKTOP của đạt";
         public string SelectedDeviceName
         {
@@ -51,24 +79,53 @@ namespace MonitorApp.ViewModels.PageViewModels
         public string SearchText
         {
             get => _searchText;
-            set { _searchText = value; OnPropertyChanged(); }
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged();
+                FilteredDevices?.Refresh();
+            }
         }
 
         private bool _isAutoScanEnabled = true;
         public bool IsAutoScanEnabled
         {
             get => _isAutoScanEnabled;
-            set { _isAutoScanEnabled = value; OnPropertyChanged(); }
+            set
+            {
+                _isAutoScanEnabled = value;
+                OnPropertyChanged();
+
+                if (_isAutoScanEnabled) _autoScanTimer.Start();
+                else _autoScanTimer.Stop();
+            }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-        // gọi khi UserControl Loaded
+        // ===== Init =====
         public async Task InitializeAsync()
         {
-            await Task.WhenAll(LoadWifiAsync(), LoadDevicesAsync());
+            await ScanAsync();
+
+            if (IsAutoScanEnabled)
+                _autoScanTimer.Start();
+        }
+
+        // ===== Core actions =====
+        private async Task ScanAsync()
+        {
+            await LoadWifiAsync();
+            await LoadDevicesAsync();
+        }
+
+        private bool FilterDevice(object obj)
+        {
+            if (obj is not NetworkDevice d) return false;
+
+            var q = (_searchText ?? "").Trim();
+            if (string.IsNullOrEmpty(q)) return true;
+
+            return (d.Name ?? "").Contains(q, StringComparison.OrdinalIgnoreCase)
+                || (d.IpAddress ?? "").Contains(q, StringComparison.OrdinalIgnoreCase);
         }
 
         private async Task LoadWifiAsync()
@@ -77,10 +134,7 @@ namespace MonitorApp.ViewModels.PageViewModels
             {
                 var wifi = await _api.GetWifiInfoAsync();
                 if (wifi != null && wifi.IsConnected && !string.IsNullOrWhiteSpace(wifi.Ssid))
-                {
-                    // "bao" sẽ hiện ở chỗ DESKTOP của đạt
                     SelectedDeviceName = wifi.Ssid;
-                }
             }
             catch (Exception ex)
             {
@@ -88,15 +142,12 @@ namespace MonitorApp.ViewModels.PageViewModels
             }
         }
 
-
         public async Task LoadDevicesAsync()
         {
-
             try
             {
                 var apiDevices = await _api.GetScannerDevicesAsync();
                 if (apiDevices == null) return;
-                System.Diagnostics.Debug.WriteLine("ICON: " + (apiDevices.FirstOrDefault()?.IconDeviceUrl?.Substring(0, 30) ?? "null"));
 
                 var list = await Task.Run(() =>
                     apiDevices.Select(d => new NetworkDevice
@@ -112,10 +163,8 @@ namespace MonitorApp.ViewModels.PageViewModels
                         LastSeen = d.Last_Seen,
                         FirstSeen = d.First_Seen,
                         IconDeviceUrl = d.IconDeviceUrl
-
                     }).ToList()
                 );
-
 
                 Devices.Clear();
                 foreach (var item in list) Devices.Add(item);
@@ -123,6 +172,8 @@ namespace MonitorApp.ViewModels.PageViewModels
                 var first = Devices.FirstOrDefault();
                 if (first != null && !string.IsNullOrWhiteSpace(first.LastSeen))
                     LastSeenSummary = first.LastSeen;
+
+                FilteredDevices?.Refresh();
             }
             catch (Exception ex)
             {
@@ -133,10 +184,12 @@ namespace MonitorApp.ViewModels.PageViewModels
         private void AddRange<T>(ObservableCollection<T> collection, IEnumerable<T> items)
         {
             if (collection == null || items == null) return;
-
-            foreach (var item in items)
-                collection.Add(item);
+            foreach (var item in items) collection.Add(item);
         }
 
+        // ===== INotifyPropertyChanged =====
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }
