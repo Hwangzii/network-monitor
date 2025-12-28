@@ -40,12 +40,40 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
         private double _pxPerSec;
 
+        // Selection raw X (absolute within viewport)
+        private double _selStartXAbs;
+        private double _selEndXAbs;
+
         // =========================
         // INotifyPropertyChanged
         // =========================
         public event PropertyChangedEventHandler? PropertyChanged;
+
         protected void OnPropertyChanged([CallerMemberName] string name = "")
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        // =========================
+        // ctor / lifecycle
+        // =========================
+        public GraphViewModel()
+        {
+            TrafficRangeBus.RangeChanged += r =>
+            {
+                Application.Current.Dispatcher.Invoke(() => ChangeRange(r));
+            };
+
+            SelectedRange = NormalizeRange(TrafficRangeBus.CurrentRange);
+
+            _dataTimer = new DispatcherTimer();
+            _dataTimer.Tick += async (_, __) => await LoadChartAsync(SelectedRange);
+            ApplyRefreshInterval(SelectedRange);
+
+            _axisTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+            _axisTimer.Tick += (_, __) => UpdateAxisAndX_Smooth();
+            _axisTimer.Start();
+
+            _ = LoadChartAsync(SelectedRange);
+        }
 
         // =========================
         // Bindable Properties (Layout)
@@ -62,6 +90,35 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         {
             get => _chartWidth;
             private set { _chartWidth = value; OnPropertyChanged(); }
+        }
+
+        // =========================
+        // Bindable Properties (Series / Axis)
+        // =========================
+        public ObservableCollection<double> DownloadData { get; } = new(); // kb/s
+        public ObservableCollection<double> UploadData { get; } = new();   // kb/s
+        public ObservableCollection<double> XPoints { get; } = new();
+        public ObservableCollection<TimeTick> TimeTicks { get; } = new();
+
+        private double _downloadSpeed;
+        public double DownloadSpeed
+        {
+            get => _downloadSpeed;
+            private set { _downloadSpeed = value; OnPropertyChanged(); }
+        }
+
+        private double _uploadSpeed;
+        public double UploadSpeed
+        {
+            get => _uploadSpeed;
+            private set { _uploadSpeed = value; OnPropertyChanged(); }
+        }
+
+        private string _selectedRange = "5m";
+        public string SelectedRange
+        {
+            get => _selectedRange;
+            private set { _selectedRange = value; OnPropertyChanged(); }
         }
 
         // =========================
@@ -114,36 +171,76 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         public string MaxLabel => FormatDataRateKbps(DynamicMaxValue);
 
         // =========================
-        // Series / Axis data
+        // Auto/Manual scale (Slider)
         // =========================
-        public ObservableCollection<double> DownloadData { get; } = new(); // kb/s
-        public ObservableCollection<double> UploadData { get; } = new();   // kb/s
-        public ObservableCollection<double> XPoints { get; } = new();
-        public ObservableCollection<TimeTick> TimeTicks { get; } = new();
-
-        private double _downloadSpeed;
-        public double DownloadSpeed
+        private bool _isAutoScale = true;
+        public bool IsAutoScale
         {
-            get => _downloadSpeed;
-            private set { _downloadSpeed = value; OnPropertyChanged(); }
+            get => _isAutoScale;
+            set
+            {
+                if (_isAutoScale == value) return;
+                _isAutoScale = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ScaleModeLabel));
+
+                // ép update ngay
+                UpdateAxisAndX_Smooth();
+            }
         }
 
-        private double _uploadSpeed;
-        public double UploadSpeed
+        public string ScaleModeLabel => IsAutoScale ? "AUTO ON" : "AUTO OFF";
+
+        // Slider chạy theo log: 0..1 -> 1 Kbps .. 1e9 Kbps (1 Tbps)
+        private double _scaleLog = 0.0;
+        public double ScaleLog
         {
-            get => _uploadSpeed;
-            private set { _uploadSpeed = value; OnPropertyChanged(); }
+            get => _scaleLog;
+            set
+            {
+                _scaleLog = Math.Max(0, Math.Min(1, value));
+                OnPropertyChanged();
+
+                ManualMaxValueKbps = LogToKbps(_scaleLog);
+            }
         }
 
-        private string _selectedRange = "5m";
-        public string SelectedRange
+        private double _manualMaxValueKbps = 1000; // mặc định 1 Mbps
+        public double ManualMaxValueKbps
         {
-            get => _selectedRange;
-            private set { _selectedRange = value; OnPropertyChanged(); }
+            get => _manualMaxValueKbps;
+            private set
+            {
+                _manualMaxValueKbps = Math.Max(1, value);
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ManualMaxLabel));
+
+                if (!IsAutoScale)
+                    UpdateAxisAndX_Smooth();
+            }
         }
+
+        public string ManualMaxLabel => FormatDataRateKbps(ManualMaxValueKbps);
 
         // =========================
-        // Selection state
+        // Peak line (vạch giới hạn theo đỉnh thật)
+        // =========================
+        private double _peakValueKbps;
+        public double PeakValueKbps
+        {
+            get => _peakValueKbps;
+            private set
+            {
+                _peakValueKbps = Math.Max(0, value);
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(PeakLabel));
+            }
+        }
+
+        public string PeakLabel => FormatDataRateKbps(PeakValueKbps);
+
+        // =========================
+        // Bindable Properties (Selection)
         // =========================
         private bool _isSelecting;
         public bool IsSelecting
@@ -180,32 +277,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         {
             get => _selectionSummary;
             set { _selectionSummary = value; OnPropertyChanged(); }
-        }
-
-        private double _selStartXAbs;
-        private double _selEndXAbs;
-
-        // =========================
-        // ctor
-        // =========================
-        public GraphViewModel()
-        {
-            TrafficRangeBus.RangeChanged += r =>
-            {
-                Application.Current.Dispatcher.Invoke(() => ChangeRange(r));
-            };
-
-            SelectedRange = NormalizeRange(TrafficRangeBus.CurrentRange);
-
-            _dataTimer = new DispatcherTimer();
-            _dataTimer.Tick += async (_, __) => await LoadChartAsync(SelectedRange);
-            ApplyRefreshInterval(SelectedRange);
-
-            _axisTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
-            _axisTimer.Tick += (_, __) => UpdateAxisAndX_Smooth();
-            _axisTimer.Start();
-
-            _ = LoadChartAsync(SelectedRange);
         }
 
         // =========================
@@ -272,7 +343,7 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         }
 
         // =========================
-        // Load data
+        // Load data / refresh
         // =========================
         private async Task LoadChartAsync(string range)
         {
@@ -306,74 +377,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         // =========================
         // Y-scale helpers
         // =========================
-        // =========================
-        // Auto/Manual scale
-        // =========================
-        private bool _isAutoScale = true;
-        public bool IsAutoScale
-        {
-            get => _isAutoScale;
-            set
-            {
-                if (_isAutoScale == value) return;
-                _isAutoScale = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(ScaleModeLabel));
-
-                // ép update ngay
-                UpdateAxisAndX_Smooth();
-            }
-        }
-
-        public string ScaleModeLabel => IsAutoScale ? "AUTO ON" : "AUTO OFF";
-
-        // Slider chạy theo log: 0..1 -> 1 Kbps .. 1e9 Kbps (1 Tbps)
-        private double _scaleLog = 0.0;
-        public double ScaleLog
-        {
-            get => _scaleLog;
-            set
-            {
-                _scaleLog = Math.Max(0, Math.Min(1, value));
-                OnPropertyChanged();
-
-                ManualMaxValueKbps = LogToKbps(_scaleLog);
-            }
-        }
-
-        private double _manualMaxValueKbps = 1000; // mặc định 1 Mbps
-        public double ManualMaxValueKbps
-        {
-            get => _manualMaxValueKbps;
-            private set
-            {
-                _manualMaxValueKbps = Math.Max(1, value);
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(ManualMaxLabel));
-
-                if (!IsAutoScale)
-                    UpdateAxisAndX_Smooth();
-            }
-        }
-
-        public string ManualMaxLabel => FormatDataRateKbps(ManualMaxValueKbps);
-
-        // =========================
-        // Peak line (vạch giới hạn theo đỉnh thật)
-        // =========================
-        private double _peakValueKbps;
-        public double PeakValueKbps
-        {
-            get => _peakValueKbps;
-            private set
-            {
-                _peakValueKbps = Math.Max(0, value);
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(PeakLabel));
-            }
-        }
-        public string PeakLabel => FormatDataRateKbps(PeakValueKbps);
-
         private static double LogToKbps(double t)
         {
             // t: 0..1 -> 10^0 .. 10^9  (1 Kbps .. 1e9 Kbps = 1 Tbps)
@@ -421,35 +424,9 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             DynamicMaxValue = DynamicMaxValue + (_targetMaxValue - DynamicMaxValue) * SmoothAlpha;
         }
 
-
         // =========================
         // Axis + series build
         // =========================
-        private void UpdateSelectionVisualFromTime()
-        {
-            if (_selStartUtc == null || _selEndUtc == null)
-            {
-                SelectionWidth = 0;
-                return;
-            }
-
-            double x1 = TimeUtcToXAbs(_selStartUtc.Value);
-            double x2 = TimeUtcToXAbs(_selEndUtc.Value);
-
-            double left = Math.Min(x1, x2);
-            double right = Math.Max(x1, x2);
-
-            SelectionLeft = left;
-            SelectionWidth = Math.Max(0, right - left);
-
-            // nếu hoàn toàn ngoài viewport thì ẩn (tuỳ bạn)
-            if (SelectionWidth <= 0.5)
-            {
-                // vẫn giữ HasSelection=true để summary còn, nhưng không vẽ
-                // nếu muốn ẩn hẳn thì: HasSelection=false;
-            }
-        }
-
         private void UpdateAxisAndX_Smooth()
         {
             if (ViewportWidth <= 0) return;
@@ -513,7 +490,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 UpdateSelectionVisualFromTime();
             }
 
-
             OnPropertyChanged(nameof(DownloadData));
             OnPropertyChanged(nameof(UploadData));
             OnPropertyChanged(nameof(XPoints));
@@ -567,6 +543,31 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
         }
 
         // =========================
+        // Time/X mapping helpers
+        // =========================
+        private double TimeUtcToXAbs(DateTime utc)
+        {
+            if (_pxPerSec <= 0) return 0;
+            double x = (utc - _windowStartUtc).TotalSeconds * _pxPerSec;
+            if (x < 0) x = 0;
+            if (x > ViewportWidth) x = ViewportWidth;
+            return x;
+        }
+
+        private DateTime XAbsToTimeUtc(double xAbs)
+        {
+            if (_pxPerSec <= 0) return _nowUtc;
+            return _windowStartUtc + TimeSpan.FromSeconds(xAbs / _pxPerSec);
+        }
+
+        private double ClampXAbs(double xAbs)
+        {
+            if (xAbs < 0) return 0;
+            if (xAbs > ViewportWidth) return ViewportWidth;
+            return xAbs;
+        }
+
+        // =========================
         // Hover (crosshair)
         // =========================
         public bool UpdateHover(double mouseXAbs, double chartHeight, double scrollOffset)
@@ -608,16 +609,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
             return true;
         }
-
-        private double TimeUtcToXAbs(DateTime utc)
-        {
-            if (_pxPerSec <= 0) return 0;
-            double x = (utc - _windowStartUtc).TotalSeconds * _pxPerSec;
-            if (x < 0) x = 0;
-            if (x > ViewportWidth) x = ViewportWidth;
-            return x;
-        }
-
 
         public void ClearHover() => IsHovering = false;
 
@@ -713,7 +704,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             ComputeSelectionTotals();
         }
 
-
         public void ClearSelection()
         {
             IsSelecting = false;
@@ -721,14 +711,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             SelectionWidth = 0;
             SelectionSummary = "";
             _selStartUtc = _selEndUtc = null;
-        }
-
-
-        private double ClampXAbs(double xAbs)
-        {
-            if (xAbs < 0) return 0;
-            if (xAbs > ViewportWidth) return ViewportWidth;
-            return xAbs;
         }
 
         private void UpdateSelectionVisual()
@@ -740,10 +722,29 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             SelectionWidth = Math.Max(0, rightAbs - leftAbs);
         }
 
-        private DateTime XAbsToTimeUtc(double xAbs)
+        private void UpdateSelectionVisualFromTime()
         {
-            if (_pxPerSec <= 0) return _nowUtc;
-            return _windowStartUtc + TimeSpan.FromSeconds(xAbs / _pxPerSec);
+            if (_selStartUtc == null || _selEndUtc == null)
+            {
+                SelectionWidth = 0;
+                return;
+            }
+
+            double x1 = TimeUtcToXAbs(_selStartUtc.Value);
+            double x2 = TimeUtcToXAbs(_selEndUtc.Value);
+
+            double left = Math.Min(x1, x2);
+            double right = Math.Max(x1, x2);
+
+            SelectionLeft = left;
+            SelectionWidth = Math.Max(0, right - left);
+
+            // nếu hoàn toàn ngoài viewport thì ẩn (tuỳ bạn)
+            if (SelectionWidth <= 0.5)
+            {
+                // vẫn giữ HasSelection=true để summary còn, nhưng không vẽ
+                // nếu muốn ẩn hẳn thì: HasSelection=false;
+            }
         }
 
         private double GetMaxGapSeconds()
@@ -828,7 +829,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             if (kbps < 1000 * 1000 * 1000) return $"{kbps / 1000 / 1000:F1} Gbps";
             return $"{kbps / 1000 / 1000 / 1000:F1} Tbps";
         }
-
 
         private static string FormatDataSizeFromKilobit(double kilobit)
         {

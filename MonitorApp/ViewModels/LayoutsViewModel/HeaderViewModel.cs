@@ -5,7 +5,6 @@ namespace MonitorApp.ViewModels.LayoutsViewModel
 {
     public class HeaderViewModel
     {
-        // Event instance (nếu sau này muốn dùng MVVM thuần)
         public event Action<string>? PageChanged;
 
         // Event static để MainContent đăng ký dễ dàng

@@ -33,7 +33,7 @@
         <Border Grid.Row="0" Style="{StaticResource ChartBorderStyle}">
             <Grid>
 
-                <!-- ===== CHART SCROLLER (DƯỚI) ===== -->
+                <!-- ===== CHART SCROLLER  ===== -->
                 <ScrollViewer x:Name="ChartScroller"
                               Panel.ZIndex="0"
                               HorizontalScrollBarVisibility="Hidden"
@@ -167,7 +167,6 @@
                                 Width="520">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <!-- ✅ Tick là tự đóng popup -->
                                     <CheckBox IsChecked="{Binding IsAutoScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                               Checked="AutoScale_CheckedChanged_ClosePopup"
                                               Unchecked="AutoScale_CheckedChanged_ClosePopup"
@@ -218,7 +217,7 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <!-- top label (chỉ để giống mẫu) -->
+                            <!-- top label -->
                             <TextBlock Grid.Row="0"
                                        Text="1 TB"
                                        FontSize="10"

@@ -15,8 +15,8 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private readonly DispatcherTimer timer;    // timeline (mượt)
-        private readonly DispatcherTimer apiTimer; // gọi API
+        private readonly DispatcherTimer timer;    
+        private readonly DispatcherTimer apiTimer; 
         private readonly MonitorApiClient apiClient = new();
 
         // ====== TIMELINE (same as Graph) ======

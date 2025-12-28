@@ -332,14 +332,14 @@
 
                             <!-- Vòng chạy (màu xanh đậm) -->
                             <Ellipse x:Name="RingProgress"
-             Width="275" Height="275"
-             Stroke="{StaticResource Primary}"
-             StrokeThickness="16"
-             StrokeStartLineCap="Round"
-             StrokeEndLineCap="Round"
-             Fill="Transparent"
-             RenderTransformOrigin="0.5,0.5"
-             Visibility="Collapsed">
+                                     Width="275" Height="275"
+                                     Stroke="{StaticResource Primary}"
+                                     StrokeThickness="16"
+                                     StrokeStartLineCap="Round"
+                                     StrokeEndLineCap="Round"
+                                     Fill="Transparent"
+                                     RenderTransformOrigin="0.5,0.5"
+                                     Visibility="Collapsed">
                                 <!-- trick: tạo 1 dash dài + khoảng trống, rồi quay bằng DashOffset -->
                                 <Ellipse.StrokeDashArray>
                                     <!-- 80 là độ dài “đoạn xanh”, 1000 là khoảng trống (đủ lớn để chỉ thấy 1 đoạn) -->
@@ -377,11 +377,11 @@
                             <!-- Center text -->
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,10,0,0">
                                 <TextBlock Text="{Binding SpeedValue}" FontWeight="SemiBold" FontSize="48"
-                   Foreground="{StaticResource TextMain}" HorizontalAlignment="Center"/>
+                                           Foreground="{StaticResource TextMain}" HorizontalAlignment="Center"/>
                                 <TextBlock Text="mbps" FontSize="12" Foreground="{StaticResource TextSub}"
-                   Margin="0,-6,0,0" HorizontalAlignment="Center"/>
+                                           Margin="0,-6,0,0" HorizontalAlignment="Center"/>
                                 <TextBlock Text="{Binding QualityText}" FontSize="12" Foreground="#F59E0B" FontWeight="SemiBold"
-                   Margin="0,2,0,0" HorizontalAlignment="Center"/>
+                                           Margin="0,2,0,0" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Grid>
 

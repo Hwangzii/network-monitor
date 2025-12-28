@@ -60,7 +60,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Download (trái) -->
+                    <!-- Download  -->
                     <Grid Grid.Column="0"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Right"
@@ -108,9 +108,7 @@
                             <RowDefinition Height="100" />
                         </Grid.RowDefinitions>
 
-
-
-                        <!-- 1. NỀN XÁM: nửa vòng -->
+                        <!-- 1. NỀN XÁM -->
                         <Path Stroke="{StaticResource ColorBg}"
                               StrokeThickness="12"
                               StrokeStartLineCap="Round"
@@ -126,7 +124,7 @@
                             </Path.Data>
                         </Path>
 
-                        <!-- 2. UPLOAD: full nửa vòng HỒNG -->
+                        <!-- 2. UPLOAD -->
                         <Path Stroke="{StaticResource ColorUp}"
                               StrokeThickness="12"
                               StrokeStartLineCap="Round"
@@ -142,7 +140,7 @@
                             </Path.Data>
                         </Path>
 
-                        <!-- 3. DOWNLOAD: cung VÀNG theo % Download -->
+                        <!-- 3. DOWNLOAD: theo % Download -->
                         <Path Stroke="{StaticResource ColorDown}"
                               StrokeThickness="12"
                               StrokeStartLineCap="Round"
@@ -160,8 +158,6 @@
                                 </PathGeometry>
                             </Path.Data>
                         </Path>
-
-                        <!-- icon chuông ở giữa vòng -->
                         <Grid VerticalAlignment="Stretch"
                               HorizontalAlignment="Center"
                               >
@@ -185,7 +181,7 @@
                                    Margin="20,70,0,0" />
                     </Grid>
 
-                    <!-- Upload (phải) -->
+                    <!-- Upload  -->
                     <Grid Grid.Column="2"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Left"
@@ -195,8 +191,6 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Grid Grid.Column="0">
-                            <!-- icon mũi tên -->
-
                             <iconPacks:PackIconFeatherIcons Kind="ArrowUp"
                                                         Width="24"
                                                         Height="24"
@@ -328,11 +322,11 @@
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
-                    Background="{StaticResource ColorDown}"
-                    CornerRadius="4,0,0,4"/>
+                                    Background="{StaticResource ColorDown}"
+                                    CornerRadius="4,0,0,4"/>
                             <Border Grid.Column="1"
-                    Background="{StaticResource ColorUp}"
-                    CornerRadius="0,4,4,0"/>
+                                    Background="{StaticResource ColorUp}"
+                                    CornerRadius="0,4,4,0"/>
                         </Grid>
                     </Border>
 
@@ -340,19 +334,19 @@
 
             </Grid>
         </Border>
-        <!-- ==================== TIMELINE (same as Graph) ==================== -->
+        <!-- TIMELINE  -->
         <Border Grid.Row="1"
-        Height="30"
-        Style="{StaticResource TimelineBorderStyle}"
-        Margin="0"
-        HorizontalAlignment="Stretch">
+                Height="30"
+                Style="{StaticResource TimelineBorderStyle}"
+                Margin="0"
+                HorizontalAlignment="Stretch">
 
             <ScrollViewer HorizontalScrollBarVisibility="Hidden"
-                  VerticalScrollBarVisibility="Hidden"
-                  ClipToBounds="True">
+                          VerticalScrollBarVisibility="Hidden"
+                          ClipToBounds="True">
                 <Canvas Width="{Binding ViewportWidth}"
-                Height="30"
-                Background="Transparent">
+                        Height="30"
+                        Background="Transparent">
 
                     <ItemsControl ItemsSource="{Binding TimeTicks}">
                         <ItemsControl.ItemsPanel>
@@ -385,12 +379,8 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-
                 </Canvas>
             </ScrollViewer>
-
         </Border>
-
-
     </Grid>
 </UserControl>

@@ -55,11 +55,6 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
 
                 var usageTask = _api.GetTrafficUsageSummaryAsync(_cts.Token);
 
-                // 2 task này bạn chưa dùng trong trang Usage thì có thể bỏ,
-                // để tránh chậm và timeout.
-                // var chartTask = _api.GetTrafficChartAsync("5m", _cts.Token);
-                // var sumTask   = _api.GetTrafficSummaryAsync(_cts.Token);
-
                 var usage = await usageTask;
 
                 if (usage == null)
@@ -155,7 +150,7 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
                 {
                     Type = t.Type ?? "",
                     Size = t.Usage ?? "",
-                    Progress = Math.Max(0, Math.Min(100, t.Percentage)) // ✅ đúng
+                    Progress = Math.Max(0, Math.Min(100, t.Percentage))
                 });
             }
         }
@@ -172,9 +167,9 @@ namespace MonitorApp.ViewModels.PageViewModels.TrafficMonitor
             {
                 CountriesData.Add(new UsageCountryItem
                 {
-                    Country = c.Country ?? "",                      // ✅ đúng DTO hiện tại
+                    Country = c.Country ?? "",                      
                     Size = c.Usage ?? "",
-                    Flag = ImageHelper.FromUrl(c.CountryFlagUrl),   // ✅ đúng DTO hiện tại
+                    Flag = ImageHelper.FromUrl(c.CountryFlagUrl),   
                     Progress = (c.UsageBytes * 100.0) / max
                 });
             }

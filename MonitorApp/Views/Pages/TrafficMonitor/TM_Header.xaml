@@ -37,39 +37,9 @@
             <StackPanel Orientation="Horizontal">
                 <Viewbox Width="24" Height="24"
                          Margin="0,0,5,0">
-                    <Canvas Width="24" Height="24">
-
-                        <!-- Đường 1 -->
-                        <Path
-                            Data="M4 6H20"
-                            Stroke="#666666"
-                            StrokeThickness="2"
-                            StrokeStartLineCap="Round"
-                            StrokeEndLineCap="Round"
-                            StrokeLineJoin="Round"
-                            Fill="Transparent" />
-
-                        <!-- Đường 2 -->
-                        <Path
-                            Data="M6 12H18"
-                            Stroke="#666666"
-                            StrokeThickness="2"
-                            StrokeStartLineCap="Round"
-                            StrokeEndLineCap="Round"
-                            StrokeLineJoin="Round"
-                            Fill="Transparent" />       
-
-                        <!-- Đường 3 -->
-                        <Path
-                            Data="M9 18H15"
-                            Stroke="#666666"
-                            StrokeThickness="2"
-                            StrokeStartLineCap="Round"
-                            StrokeEndLineCap="Round"
-                            StrokeLineJoin="Round"
-                            Fill="Transparent" />
-
-                    </Canvas>
+                    <Image Source="pack://application:,,,/MonitorApp;component/Resources/Icons/image-pdf.png"
+                           Stretch="Uniform" 
+                           Height="100" Width="113" />
                 </Viewbox>
 
                 <TextBlock Text="Ex PDF"
@@ -81,7 +51,7 @@
             </StackPanel>
         </Button>
 
-        <!-- CENTER: viên thuốc 2 nửa (Wave / Grid) -->
+        <!-- CENTER: (Wave / Grid) -->
         <Border Grid.Column="1"
             HorizontalAlignment="Center"
             Width="190"
@@ -106,8 +76,7 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <!-- NỬA TRÁI: WAVE (mặc định chọn, nền xanh) -->
-                <!-- WAVE BUTTON (LEFT) -->
+                <!-- NỬA TRÁI: WAVE  -->
                 <ToggleButton Grid.Column="0"
                               Grid.RowSpan="2"
                               BorderThickness="0"
@@ -123,18 +92,14 @@
                             </Border>
 
                             <ControlTemplate.Triggers>
-                                <!-- SELECTED -->
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="RootBorder" Property="Background" Value="#60A5FA"/>
                                     <Setter Property="Foreground" Value="White"/>
-                                    <!-- Icon xanh -->
                                 </Trigger>
 
-                                <!-- NOT SELECTED -->
                                 <Trigger Property="IsChecked" Value="False">
                                     <Setter TargetName="RootBorder" Property="Background" Value="White"/>
                                     <Setter Property="Foreground" Value="#6B7280"/>
-                                    <!-- Icon xám -->
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -155,7 +120,6 @@
                 </ToggleButton>
 
                 <!-- NỬA PHẢI: GRID -->
-                <!-- GRID BUTTON (RIGHT) -->
                 <ToggleButton Grid.Column="1"
                               Grid.RowSpan="2"
                               BorderThickness="0"
@@ -175,14 +139,12 @@
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="RootBorder" Property="Background" Value="#60A5FA"/>
                                     <Setter Property="Foreground" Value="White"/>
-                                    <!-- icon xanh -->
                                 </Trigger>
 
                                 <!-- NOT SELECTED -->
                                 <Trigger Property="IsChecked" Value="False">
                                     <Setter TargetName="RootBorder" Property="Background" Value="White"/>
                                     <Setter Property="Foreground" Value="#6B7280"/>
-                                    <!-- icon xám -->
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -190,8 +152,6 @@
 
                     <Viewbox Width="26" Height="26">
                         <Canvas Width="26" Height="26">
-
-                            <!-- Frame -->
                             <Path
                                 Data="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"
                                 Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
@@ -201,7 +161,6 @@
                                 StrokeLineJoin="Round"
                                 Fill="Transparent"/>
 
-                            <!-- Divider -->
                             <Path
                                 Data="M12 4L12 20"
                                 Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"

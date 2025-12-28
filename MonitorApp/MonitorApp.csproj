@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Icons\image-pdf.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Page Remove="Resources\Styles.xaml" />
     <Page Remove="Resources\Templates.xaml" />
   </ItemGroup>
@@ -41,6 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\Icons\image-pdf.png" />
     <Resource Include="Resources\Styles.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>

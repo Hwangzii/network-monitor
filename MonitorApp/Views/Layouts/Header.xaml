@@ -14,7 +14,6 @@
 
     <UserControl.Resources>
         <ResourceDictionary>
-            <!-- Styles chung của app -->
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/MonitorApp;component/Resources/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -24,14 +23,11 @@
     <Grid Background="White">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
-            <!-- Logo -->
             <ColumnDefinition Width="*" />
-            <!-- Tabs -->
             <ColumnDefinition Width="Auto" />
-            <!-- Avatar + Upgrade -->
         </Grid.ColumnDefinitions>
 
-        <!-- LEFT: GlassWire FREE -->
+        <!-- LEFT: group -->
         <StackPanel Grid.Column="0"
                     Orientation="Vertical"
                     VerticalAlignment="Center"
@@ -43,8 +39,6 @@
                            FontWeight="SemiBold"
                            Foreground="#333333"
                            VerticalAlignment="Center" />
-
-                <!-- dropdown mũi tên nhỏ -->
                 <iconPacks:PackIconFeatherIcons Kind="ChevronDown"
                                                 Width="15"
                                                 Height="15"
@@ -64,7 +58,7 @@
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
 
-            <!-- Traffic Monitor (đang chọn) -->
+            <!-- Traffic Monitor-->
             <RadioButton Style="{StaticResource NavButtonStyle}"
                          Content="Traffic&#x0a;Monitor"
                          GroupName="MainTabs"
@@ -76,10 +70,8 @@
                              Margin="0,0,0,0">
                         <Grid Width="24" Height="24"
                               Margin="0,0,5,0">
-                            <!-- Path 1 từ SVG -->
                             <Path Data="M15.22 9.375a1 1 0 0 1 1.393 -.165l.094 .083l4 4a1 1 0 0 1 .284 .576l.009 .131v5a1 1 0 0 1 -.883 .993l-.117 .007h-16.022l-.11 -.009l-.11 -.02l-.107 -.034l-.105 -.046l-.1 -.059l-.094 -.07l-.06 -.055l-.072 -.082l-.064 -.089l-.054 -.096l-.016 -.035l-.04 -.103l-.027 -.106l-.015 -.108l-.004 -.11l.009 -.11l.019 -.105c.01 -.04 .022 -.077 .035 -.112l.046 -.105l.059 -.1l4 -6a1 1 0 0 1 1.165 -.39l.114 .05l3.277 1.638l3.495 -4.369z"
                                   Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
-                            <!-- Path 2 từ SVG -->
                             <Path Data="M15.232 3.36a1 1 0 0 1 1.382 -.15l.093 .083l4 4a1 1 0 0 1 -1.32 1.497l-.094 -.083l-3.226 -3.225l-4.299 5.158a1 1 0 0 1 -1.1 .303l-.115 -.049l-3.254 -1.626l-2.499 3.332a1 1 0 0 1 -1.295 .269l-.105 -.069a1 1 0 0 1 -.269 -1.295l.069 -.105l3 -4a1 1 0 0 1 1.137 -.341l.11 .047l3.291 1.645l4.494 -5.391z"
                                   Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
                         </Grid>
@@ -87,7 +79,7 @@
                 </RadioButton.Tag>
             </RadioButton>
 
-            <!-- SpeedTest + badge 9+ -->
+            <!-- SpeedTest  -->
             <RadioButton Style="{StaticResource NavButtonStyle}"
                          Content="Speed&#x0a;Test"
                          GroupName="MainTabs"
@@ -98,7 +90,6 @@
                         <Viewbox Width="35" Height="24">
                             <Grid Width="24" Height="24"
                                   Margin="0,0,5,0">
-                                <!-- map-pin (filled) -->
                                 <Path Data="M13 2l.018 .001l.016 .001l.083 .005l.011 .002h.011l.038 .009l.052 .008l.016 .006l.011 .001l.029 .011l.052 .014l.019 .009l.015 .004l.028 .014l.04 .017l.021 .012l.022 .01l.023 .015l.031 .017l.034 .024l.018 .011l.013 .012l.024 .017l.038 .034l.022 .017l.008 .01l.014 .012l.036 .041l.026 .027l.006 .009c.12 .147 .196 .322 .218 .513l.001 .012l.002 .041l.004 .064v6h5a1 1 0 0 1 .868 1.497l-.06 .091l-8 11c-.568 .783 -1.808 .38 -1.808 -.588v-6h-5a1 1 0 0 1 -.868 -1.497l.06 -.091l8 -11l.01 -.013l.018 -.024l.033 -.038l.018 -.022l.009 -.008l.013 -.014l.04 -.036l.028 -.026l.008 -.006a1 1 0 0 1 .402 -.199l.011 -.001l.027 -.005l.074 -.013l.011 -.001l.041 -.002z"
                                         Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
                             </Grid>
@@ -107,7 +98,7 @@
                 </RadioButton.Tag>
             </RadioButton>
 
-            <!-- GlassWire Protect -->
+            <!-- FireƯall Protect -->
             <RadioButton Style="{StaticResource NavButtonStyle}"
                          Content="Protect&#x0a;Firewall"
                          GroupName="MainTabs"
@@ -117,9 +108,8 @@
                     <Viewbox Width="35" Height="24">
                         <Grid Width="24" Height="24"
                               Margin="0,0,5,0">
-                            <!-- shield-check (filled) -->
                             <Path Data="M11.998 2l.118 .007l.059 .008l.061 .013l.111 .034a.993 .993 0 0 1 .217 .112l.104 .082l.255 .218a11 11 0 0 0 7.189 2.537l.342 -.01a1 1 0 0 1 1.005 .717a13 13 0 0 1 -9.208 16.25a1 1 0 0 1 -.502 0a13 13 0 0 1 -9.209 -16.25a1 1 0 0 1 1.005 -.717a11 11 0 0 0 7.531 -2.527l.263 -.225l.096 -.075a.993 .993 0 0 1 .217 -.112l.112 -.034a.97 .97 0 0 1 .119 -.021l.115 -.007zm3.71 7.293a1 1 0 0 0 -1.415 0l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.32 1.497l2 2l.094 .083a1 1 0 0 0 1.32 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z"
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                                  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
                         </Grid>
                     </Viewbox>
                 </RadioButton.Tag>
@@ -135,8 +125,6 @@
                     <Viewbox Width="35" Height="24">
                         <Grid Width="24" Height="24"
                               Margin="0,0,5,0">
-                            <!-- share (outline, stroke) -->
-                            <!-- 3 circle nodes -->
                             <Path Data="M6 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"
                                   Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                   StrokeThickness="2"
@@ -158,7 +146,6 @@
                                   StrokeEndLineCap="Round"
                                   StrokeLineJoin="Round"
                                   Fill="Transparent"/>
-                            <!-- 2 đường nối -->
                             <Path Data="M8.7 10.7l6.6 -3.4"
                                   Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                   StrokeThickness="2"
@@ -178,13 +165,11 @@
 
         </StackPanel>
 
-        <!-- RIGHT: Avatar + Get All Premium Features + UPGRADE -->
+        <!-- RIGHT-->
         <StackPanel Grid.Column="2"
                     Orientation="Horizontal"
                     VerticalAlignment="Center"
                     Margin="0,0,18,0">
-
-            <!-- Text 2 dòng -->
             <TextBlock Text="Get All Premium&#x0a;Features"
                        FontSize="11"
                        Foreground="#9E9E9E"
