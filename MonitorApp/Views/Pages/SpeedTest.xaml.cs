@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using QColors = QuestPDF.Helpers.Colors;
 
 using MonitorApp.Models;
@@ -84,9 +85,8 @@ namespace MonitorApp.Views.Pages
             public double Ping { get; set; }
         }
 
-
         // =========================
-        // SPEED VALUE + ARC
+        // SPEED VALUE
         // =========================
         private double _speed;
         public double SpeedNumber
@@ -101,7 +101,6 @@ namespace MonitorApp.Views.Pages
                 OnPropertyChanged(nameof(SpeedValue));
             }
         }
-
 
         public string SpeedValue => SpeedNumber.ToString("000.0");
 
@@ -120,10 +119,192 @@ namespace MonitorApp.Views.Pages
             }
         }
 
+        private bool _isFinished;
+        public bool IsFinished
+        {
+            get => _isFinished;
+            set
+            {
+                if (_isFinished == value) return;
+                _isFinished = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // =========================
+        // RING SWEEP (0->360 mượt)
+        // =========================
+        private readonly DispatcherTimer _ringTimer = new DispatcherTimer();
+        private DateTime _ringStart;
+        private const double RingCycleSeconds = 1.2; // chậm hơn => tăng số này
+
+        private double _ringProgress01; // 0..1
+        public double RingProgress01
+        {
+            get => _ringProgress01;
+            set
+            {
+                value = Math.Max(0, Math.Min(1, value));
+                if (Math.Abs(_ringProgress01 - value) < 0.000001) return;
+                _ringProgress01 = value;
+                DrawRingArc(_ringProgress01);
+            }
+        }
+
+        private void StartRing()
+        {
+            RingProgress01 = 0;
+
+            if (RingSweep != null) RingSweep.Visibility = Visibility.Visible;
+            if (RingHead != null) RingHead.Visibility = Visibility.Visible;
+
+            _ringStart = DateTime.Now;
+            _ringTimer.Start();
+        }
+
+        private void StopRing(bool showFull)
+        {
+            _ringTimer.Stop();
+
+            if (showFull)
+            {
+                RingProgress01 = 1.0;
+                if (RingSweep != null) RingSweep.Visibility = Visibility.Visible;
+
+                // khi full thì head ẩn (hoặc để Visible nếu bạn thích)
+                if (RingHead != null) RingHead.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                if (RingSweep != null) RingSweep.Visibility = Visibility.Collapsed;
+                if (RingHead != null) RingHead.Visibility = Visibility.Collapsed;
+            }
+        }
+
+
+        private void DrawRingArc(double p01)
+        {
+            if (RingSweep == null) return;
+
+            const double size = 275.0;
+            const double stroke = 16.0;
+            double r = (size - stroke) / 2.0;
+
+            double cx = size / 2.0;
+            double cy = size / 2.0;
+
+            const double startAngle = -90.0; // 12h
+            double sweep = 360.0 * p01;
+
+            // --- fill arc ---
+            if (sweep <= 0.001)
+            {
+                RingSweep.Data = Geometry.Empty;
+                if (RingHead != null) RingHead.Data = Geometry.Empty;
+                return;
+            }
+
+            double endAngle = startAngle + sweep;
+
+            Point start = PointOnCircle(cx, cy, r, startAngle);
+            Point end = PointOnCircle(cx, cy, r, endAngle);
+
+            bool large = sweep > 180.0;
+
+            var fig = new PathFigure { StartPoint = start, IsClosed = false };
+            fig.Segments.Add(new ArcSegment
+            {
+                Point = end,
+                Size = new System.Windows.Size(r, r),   // FIX ambiguous Size
+                IsLargeArc = large,
+                SweepDirection = SweepDirection.Clockwise
+            });
+
+            var geo = new PathGeometry();
+            geo.Figures.Add(fig);
+            RingSweep.Data = geo;
+
+            // --- head arc (radar tip) ---
+            if (RingHead != null)
+            {
+                // độ dài “đầu radar” (độ). tăng lên nếu muốn đầu dài hơn
+                const double headSweepDeg = 36.0;
+
+                // khi sweep nhỏ hơn headSweep, head sẽ bám theo đoạn đã có
+                double headStart = Math.Max(startAngle, endAngle - headSweepDeg);
+                double headEnd = endAngle;
+
+                Point hs = PointOnCircle(cx, cy, r, headStart);
+                Point he = PointOnCircle(cx, cy, r, headEnd);
+
+                bool headLarge = (headEnd - headStart) > 180.0;
+
+                var hFig = new PathFigure { StartPoint = hs, IsClosed = false };
+                hFig.Segments.Add(new ArcSegment
+                {
+                    Point = he,
+                    Size = new System.Windows.Size(r, r),
+                    IsLargeArc = headLarge,
+                    SweepDirection = SweepDirection.Clockwise
+                });
+
+                var hGeo = new PathGeometry();
+                hGeo.Figures.Add(hFig);
+                RingHead.Data = hGeo;
+            }
+        }
+
+        private static Point PointOnCircle(double cx, double cy, double r, double angleDeg)
+        {
+            double rad = angleDeg * Math.PI / 180.0;
+            return new Point(cx + r * Math.Cos(rad), cy + r * Math.Sin(rad));
+        }
+
+        // =========================
+        // Fake speed while waiting
+        // =========================
+        private readonly DispatcherTimer _fakeSpeedTimer = new DispatcherTimer();
+        private readonly Random _rng = new Random();
+        private bool _hasRealData;
+
+        private void StartFakeSpeed()
+        {
+            _hasRealData = false;
+            _fakeSpeedTimer.Start();
+        }
+
+        private void StopFakeSpeed()
+        {
+            _hasRealData = true;
+            _fakeSpeedTimer.Stop();
+        }
+
         public SpeedTest()
         {
             InitializeComponent();
             DataContext = this;
+
+            // Ring 60fps
+            _ringTimer.Interval = TimeSpan.FromMilliseconds(16);
+            _ringTimer.Tick += (_, __) =>
+            {
+                if (!IsRunning) return;
+
+                var t = (DateTime.Now - _ringStart).TotalSeconds;
+                var p = (t % RingCycleSeconds) / RingCycleSeconds;
+                RingProgress01 = p;
+            };
+
+            // Fake speed ~16fps
+            _fakeSpeedTimer.Interval = TimeSpan.FromMilliseconds(60);
+            _fakeSpeedTimer.Tick += (_, __) =>
+            {
+                if (!IsRunning || _hasRealData) return;
+
+                var baseMax = Math.Min(250.0, MaxSpeed);
+                var v = 20.0 + _rng.NextDouble() * (baseMax - 20.0);
+                SpeedNumber = v;
+            };
 
             SpeedNumber = 0;
             SetMetrics(0, 0, 0);
@@ -136,6 +317,7 @@ namespace MonitorApp.Views.Pages
         private void SetUiState(bool isTesting, bool finished)
         {
             IsRunning = isTesting;
+            IsFinished = finished;
 
             if (BtnStartTest != null)
                 BtnStartTest.Visibility = (isTesting || finished) ? Visibility.Collapsed : Visibility.Visible;
@@ -144,23 +326,21 @@ namespace MonitorApp.Views.Pages
                 BtnRestart.Visibility = finished ? Visibility.Visible : Visibility.Collapsed;
         }
 
-
         private async void StartTest_Click(object sender, RoutedEventArgs e)
         {
-            if (_isRunning) return;
+            if (IsRunning) return;
 
             SetUiState(isTesting: true, finished: false);
 
-            // ===== Reset UI =====
+            // Reset UI
             SpeedNumber = 0;
             SetMetrics(0, 0, 0);
-
             StatusText = "Starting...";
             QualityText = "Good";
 
-            // ===== bật vòng chạy =====
-            if (RingProgress != null)
-                RingProgress.Visibility = Visibility.Visible;
+            // Start visuals
+            StartRing();
+            StartFakeSpeed();
 
             CancelRun();
             _runCts = new CancellationTokenSource();
@@ -176,13 +356,9 @@ namespace MonitorApp.Views.Pages
                         {
                             ApplySpeedEvent_OnUI(ev);
 
-                            // có dữ liệu thật -> tắt vòng chạy
                             var t = (ev.Type ?? "").ToLowerInvariant();
                             if (t is "ping" or "download" or "upload" or "complete")
-                            {
-                                if (RingProgress != null)
-                                    RingProgress.Visibility = Visibility.Collapsed;
-                            }
+                                StopFakeSpeed();
                         });
 
                         if (string.Equals(ev.Type, "complete", StringComparison.OrdinalIgnoreCase))
@@ -193,32 +369,38 @@ namespace MonitorApp.Views.Pages
                 StatusText = "Completed";
                 SetUiState(isTesting: false, finished: true);
 
+                // full vòng khi xong
+                StopRing(showFull: true);
+
                 await LoadHistoryAsync(10);
             }
             catch (OperationCanceledException)
             {
                 StatusText = "Canceled";
                 SetUiState(isTesting: false, finished: false);
+                StopRing(showFull: false);
             }
             catch (HttpRequestException ex)
             {
                 StatusText = "Network error";
                 System.Diagnostics.Debug.WriteLine(ex);
                 SetUiState(isTesting: false, finished: false);
+                StopRing(showFull: false);
             }
             catch (Exception ex)
             {
                 StatusText = "Error";
                 System.Diagnostics.Debug.WriteLine(ex);
                 SetUiState(isTesting: false, finished: false);
+                StopRing(showFull: false);
+
                 System.Diagnostics.Debug.WriteLine("SpeedTest ERROR: " + ex);
                 MessageBox.Show(ex.Message, "SpeedTest Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
-                // đảm bảo luôn tắt vòng chạy
-                if (RingProgress != null)
-                    RingProgress.Visibility = Visibility.Collapsed;
+                _fakeSpeedTimer.Stop();
+                _ringTimer.Stop();
             }
         }
 
@@ -226,7 +408,14 @@ namespace MonitorApp.Views.Pages
         {
             CancelRun();
 
+            _fakeSpeedTimer.Stop();
+            _ringTimer.Stop();
+            _hasRealData = false;
+
             SpeedNumber = 0;
+            RingProgress01 = 0;
+            if (RingSweep != null) RingSweep.Visibility = Visibility.Collapsed;
+
             SetMetrics(0, 0, 0);
             StatusText = "Ready";
             QualityText = "Good";
@@ -306,6 +495,8 @@ namespace MonitorApp.Views.Pages
 
             if (type == "complete")
             {
+                SetUiState(isTesting: false, finished: true);
+
                 var d = ev.Data.DownloadMbps;
                 var u = ev.Data.UploadMbps;
                 var p = ev.Data.PingMs;
@@ -328,7 +519,7 @@ namespace MonitorApp.Views.Pages
         }
 
         // =========================
-        // Load History from backend
+        // Load History
         // =========================
         private async Task LoadHistoryAsync(int limit)
         {
@@ -349,7 +540,6 @@ namespace MonitorApp.Views.Pages
                         Ping = item.PingMs
                     });
                 }
-
             }
             catch (Exception ex)
             {
@@ -401,10 +591,10 @@ namespace MonitorApp.Views.Pages
                     {
                         table.ColumnsDefinition(cols =>
                         {
-                            cols.RelativeColumn(4); // Date
-                            cols.RelativeColumn(3); // Download
-                            cols.RelativeColumn(3); // Upload
-                            cols.RelativeColumn(2); // Ping
+                            cols.RelativeColumn(4);
+                            cols.RelativeColumn(3);
+                            cols.RelativeColumn(3);
+                            cols.RelativeColumn(2);
                         });
 
                         table.Header(header =>
@@ -434,8 +624,31 @@ namespace MonitorApp.Views.Pages
                 });
             }).GeneratePdf(dlg.FileName);
 
-            MessageBox.Show("Xuất PDF thành công!", "Export PDF",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+
+            // Hỏi mở file
+            var result = MessageBox.Show(
+                "File đã được lưu. Bạn có muốn mở không?",
+                "Export PDF",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    // mở bằng app mặc định của Windows
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = dlg.FileName,
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Không thể mở file PDF.\n" + ex.Message, "Export PDF",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private static QuestPDF.Infrastructure.IContainer CellHeader(QuestPDF.Infrastructure.IContainer c) =>
@@ -448,9 +661,8 @@ namespace MonitorApp.Views.Pages
             c.PaddingVertical(6).PaddingHorizontal(8)
              .Border(1).BorderColor(QColors.Grey.Lighten2);
 
-
         // =========================
-        // DataGrid selection handlers (giữ trống nếu XAML gọi)
+        // DataGrid selection handlers
         // =========================
         private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e) { }
         private void DataGrid_SelectionChanged_1(object sender, SelectionChangedEventArgs e) { }
