@@ -15,6 +15,9 @@ public class TrafficUsageController : ControllerBase
     private readonly TrafficUsageService _usageService;
     private readonly TrafficDbContext _dbContext;
 
+    // Icon mặc định (duplicate từ service để controller dùng khi xử lý dữ liệu cũ)
+    private const string DEFAULT_APP_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEaSURBVFhH7ZTbCoJAEIaFCCKCCKJnLTpQVBdB14HQ00T0CqUP4AN41puJAVe92F3HRZegHfgQFvH7/1nQMmPmZ+Z8uYJOCm01vJe64PF8cZ+Ftho89DxPC8IAeZ73QpZlJWmattsAfsBavsk0yRsD3Ox7ST3A4uTC/OjC7ODCdO/AZOfAeOvAaPOB4foDg1UVwLZtIUmSqG2AIq9vgNcc5coBKHIWgNec0RhAdAUUOSJrjsRxrLYBihxBMa85QzkARY7ImjOkAURXQJEjKOY1Z0RRpLYBihyRNUe5cgCKHEEprzmjMYDoCqjImiNhGKptgApvA3V57wFkzbUGEMmDIGgfAKH84ShypQBdyn3fFwfQSaE1Y+bvx7K+efsbU5+Ow3MAAAAASUVORK5CYII=";
+
     public TrafficUsageController(TrafficUsageService usageService, TrafficDbContext dbContext)
     {
         _usageService = usageService;
@@ -81,19 +84,24 @@ public class TrafficUsageController : ControllerBase
                 }
             }
 
-            // Gộp Hosts
+            // Gộp Hosts - XỬ LÝ APP OWNER ICON CHO DỮ LIỆU CŨ
             if (data.Hosts != null)
             {
                 foreach (var host in data.Hosts)
                 {
+                    // Đảm bảo icon không bao giờ null (dữ liệu cũ có thể null)
+                    host.AppOwnerIcon ??= DEFAULT_APP_ICON;
+
                     if (!hostsAgg.TryGetValue(host.Hostname, out var hDto)) 
                     {
-                        hDto = host; 
-                        hostsAgg[host.Hostname] = hDto;
+                        hostsAgg[host.Hostname] = host;
                     }
                     else 
                     {
                         hDto.UsageBytes += host.UsageBytes;
+                        // Ưu tiên icon "tốt hơn" (khác default) nếu có
+                        if (hDto.AppOwnerIcon == DEFAULT_APP_ICON && host.AppOwnerIcon != DEFAULT_APP_ICON)
+                            hDto.AppOwnerIcon = host.AppOwnerIcon;
                     }
                 }
             }

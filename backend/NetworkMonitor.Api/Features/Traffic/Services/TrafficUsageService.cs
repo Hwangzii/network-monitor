@@ -18,8 +18,11 @@ public class TrafficUsageService
     private readonly INetworkTrafficMonitor _trafficMonitor;
     private readonly DatabaseReader? _geoReader;
     
+    // Icon mặc định (Base64) dùng khi không trích xuất được icon từ Process
+    private const string DEFAULT_APP_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEaSURBVFhH7ZTbCoJAEIaFCCKCCKJnLTpQVBdB14HQ00T0CqUP4AN41puJAVe92F3HRZegHfgQFvH7/1nQMmPmZ+Z8uYJOCm01vJe64PF8cZ+Ftho89DxPC8IAeZ73QpZlJWmattsAfsBavsk0yRsD3Ox7ST3A4uTC/OjC7ODCdO/AZOfAeOvAaPOB4foDg1UVwLZtIUmSqG2AIq9vgNcc5coBKHIWgNec0RhAdAUUOSJrjsRxrLYBihxBMa85QzkARY7ImjOkAURXQJEjKOY1Z0RRpLYBihyRNUe5cgCKHEEprzmjMYDoCqjImiNhGKptgApvA3V57wFkzbUGEMmDIGgfAKH84ShypQBdyn3fFwfQSaE1Y+bvx7K+efsbU5+Ow3MAAAAASUVORK5CYII=";
+
     // CACHE BUFFERS
-    private readonly ConcurrentDictionary<int, (string Name, string? Icon)> _processCache = new();
+    private readonly ConcurrentDictionary<int, (string Name, string Icon)> _processCache = new();
     private readonly ConcurrentDictionary<string, string> _hostnameCache = new();
 
     public TrafficUsageService(INetworkTrafficMonitor trafficMonitor, IWebHostEnvironment env)
@@ -34,34 +37,53 @@ public class TrafficUsageService
         }
     }
 
-    // Lấy thông tin Process có Cache (Tránh Unknown Process khi PID kết thúc sớm)
-    private (string Name, string? Icon) GetProcessInfo(int pid)
+    /// <summary>
+    /// Lấy thông tin Process có Cache. 
+    /// Đảm bảo luôn trả về Name và Icon (không bao giờ null).
+    /// </summary>
+    private (string Name, string Icon) GetProcessInfo(int pid)
     {
-        if (_processCache.TryGetValue(pid, out var cached)) return cached;
+        // Kiểm tra trong cache trước
+        if (_processCache.TryGetValue(pid, out var cached)) 
+            return cached;
 
         try
         {
             using var p = Process.GetProcessById(pid);
             var name = p.ProcessName;
-            var path = p.MainModule?.FileName;
+            var path = string.Empty;
+
+            try { path = p.MainModule?.FileName; } catch { /* Quyền truy cập bị từ chối */ }
+
             string? iconBase64 = null;
 
             if (!string.IsNullOrEmpty(path) && File.Exists(path))
             {
-                using var icon = Icon.ExtractAssociatedIcon(path);
-                using var bmp = icon!.ToBitmap();
-                using var ms = new MemoryStream();
-                bmp.Save(ms, ImageFormat.Png);
-                iconBase64 = "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
+                try
+                {
+                    using var icon = Icon.ExtractAssociatedIcon(path);
+                    if (icon != null)
+                    {
+                        using var bmp = icon.ToBitmap();
+                        using var ms = new MemoryStream();
+                        bmp.Save(ms, ImageFormat.Png);
+                        iconBase64 = "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
+                    }
+                }
+                catch { /* Không thể lấy icon từ file này */ }
             }
 
-            var info = (name, iconBase64);
+            // Nếu trích xuất thất bại, dùng icon mặc định
+            var finalIcon = iconBase64 ?? DEFAULT_APP_ICON;
+            var info = (name, finalIcon);
+            
             _processCache.TryAdd(pid, info);
             return info;
         }
         catch 
         { 
-            return ("Terminated Process", null); 
+            // Trả về thông tin mặc định cho các Process đã đóng hoặc không tìm thấy
+            return ("Terminated Process", DEFAULT_APP_ICON);
         }
     }
 
@@ -69,7 +91,6 @@ public class TrafficUsageService
     {
         if (_hostnameCache.TryGetValue(ip, out var cached)) return cached;
 
-        // Trả về IP trước, thực hiện Resolve bất đồng bộ để không treo API
         Task.Run(async () =>
         {
             try
@@ -88,9 +109,7 @@ public class TrafficUsageService
         var dto = new TrafficUsageSummaryDto();
         var activePids = _trafficMonitor.GetActivePids().ToList();
         
-        // Dictionary để gộp dữ liệu quốc gia
         var countryAgg = new Dictionary<string, (string Name, long Bytes)>();
-
         var apps = new Dictionary<int, AppUsageDto>();
         var hosts = new Dictionary<string, HostUsageDto>();
         var trafficTypes = new Dictionary<string, long>();
@@ -108,7 +127,7 @@ public class TrafficUsageService
             var appDto = new AppUsageDto
             {
                 Name = procName,
-                AppIcon = procIcon,
+                AppIcon = procIcon, // Luôn có giá trị Base64
                 UsageBytes = pidBytes,
                 Usage = FormatBytesPerSecond(pidBytes)
             };
@@ -121,14 +140,12 @@ public class TrafficUsageService
 
                 var (cName, cCode) = GetCountry(h.RemoteIp);
                 
-                // XỬ LÝ THEO YÊU CẦU: Nếu là local network thì chuyển thành VN
                 if (cCode == "local") 
                 {
                     cCode = "vn";
                     cName = "Vietnam";
                 }
 
-                // Gộp dữ liệu quốc gia cho danh sách Countries (bỏ qua "un" - Unknown)
                 if (cCode != "un")
                 {
                     if (!countryAgg.ContainsKey(cCode))
@@ -137,11 +154,9 @@ public class TrafficUsageService
                         countryAgg[cCode] = (cName, countryAgg[cCode].Bytes + h.Bytes);
                 }
                 
-                // Traffic Types
                 string protocol = GetProtocolName(h.RemotePort);
                 trafficTypes[protocol] = trafficTypes.GetValueOrDefault(protocol) + h.Bytes;
 
-                // Hosts
                 if (!hosts.TryGetValue(h.RemoteIp, out var hDto))
                 {
                     hDto = new HostUsageDto
@@ -149,10 +164,13 @@ public class TrafficUsageService
                         Hostname = ResolveHostname(h.RemoteIp),
                         CountryName = cName,
                         CountryCode = cCode,
-                        CountryFlagUrl = $"https://flagcdn.com/w20/{cCode}.png"
+                        CountryFlagUrl = $"https://flagcdn.com/w20/{cCode}.png",
+                        // === THÊM DÒNG NÀY: Gán icon của process sở hữu kết nối ===
+                        AppOwnerIcon = procIcon
                     };
                     hosts[h.RemoteIp] = hDto;
                 }
+                // Luôn cộng dồn bytes (kể cả khi host đã tồn tại)
                 hDto.UsageBytes += h.Bytes;
             }
             apps[pid] = appDto;
@@ -170,7 +188,6 @@ public class TrafficUsageService
             Percentage = totalAllBytes > 0 ? Math.Round(kv.Value * 100.0 / totalAllBytes, 1) : 0
         }).OrderByDescending(x => x.Percentage).ToList();
 
-        // Đổ dữ liệu gộp vào danh sách Countries của DTO
         dto.Countries = countryAgg.Select(kv => new CountryUsageDto
         {
             CountryCode = kv.Key,
@@ -185,6 +202,7 @@ public class TrafficUsageService
 
     private string FormatBytesPerSecond(long bps) => bps <= 0 ? "0 B/s" : bps < 1024 ? $"{bps} B/s" : bps < 1048576 ? $"{bps / 1024.0:0.##} KB/s" : $"{bps / 1048576.0:0.##} MB/s";
     private string GetProtocolName(int port) => port switch { 80 => "HTTP", 443 => "HTTPS", 53 => "DNS", 3389 => "RDP", _ => "TCP/UDP" };
+    
     private (string Name, string Code) GetCountry(string ip)
     {
         if (string.IsNullOrEmpty(ip) || ip == "127.0.0.1" || ip.StartsWith("192.168.")) 
@@ -194,7 +212,6 @@ public class TrafficUsageService
         {
             try
             {
-                // Tra cứu quốc gia từ file GeoLite2-Country.mmdb
                 var response = _geoReader.Country(ip);
                 return (response.Country.Name ?? "Unknown", response.Country.IsoCode?.ToLower() ?? "un");
             }
