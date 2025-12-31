@@ -46,7 +46,7 @@ namespace MonitorApp.Views.Pages
         private string _statusText = "Ready";
         public string StatusText { get => _statusText; set { _statusText = value; OnPropertyChanged(); } }
 
-        private string _qualityText = "Good";
+        private string _qualityText = "";
         public string QualityText { get => _qualityText; set { _qualityText = value; OnPropertyChanged(); } }
 
         // =========================
@@ -102,7 +102,7 @@ namespace MonitorApp.Views.Pages
             }
         }
 
-        public string SpeedValue => SpeedNumber.ToString("000.0");
+        public string SpeedValue => SpeedNumber.ToString("0.0");
 
         // =========================
         // UI STATE
