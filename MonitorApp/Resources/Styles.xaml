@@ -881,16 +881,33 @@
 
     <!-- ============= DATA GRID HEADER ============= -->
 
-    <Style x:Key="TableColumnHeaderStyle"
-           TargetType="DataGridColumnHeader">
+    <Style x:Key="TableColumnHeaderStyle" TargetType="DataGridColumnHeader">
         <Setter Property="Background" Value="{StaticResource ColorHeaderBg}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="BorderBrush" Value="{StaticResource ColorBorderTable}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#777"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
-        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeader">
+                    <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        SnapsToDevicePixels="True">
+                        <ContentPresenter
+                        Margin="{TemplateBinding Padding}"
+                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                        RecognizesAccessKey="True"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
+
 
     <!-- ============= DATA GRID ROW (FIX LỖI) ============= -->
     <!-- KHÔNG dùng Setter cho AlternationIndex nữa,

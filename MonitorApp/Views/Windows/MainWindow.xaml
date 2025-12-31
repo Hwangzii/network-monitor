@@ -1,9 +1,11 @@
-﻿<Window x:Class="MonitorApp.Views.Windows.MainWindow"
+﻿ <!--file: monitorapp/views/windows/mainwindow.xaml-->
+<Window x:Class="MonitorApp.Views.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:layouts="clr-namespace:MonitorApp.Views.Layouts"
         xmlns:vm="clr-namespace:MonitorApp.ViewModels"
         Title="Network Monitor" 
+        Icon="/Resources/Icons/logoapp.ico"
         MinHeight="750" MinWidth="1300"
         Background="White"
         WindowStartupLocation="CenterScreen">

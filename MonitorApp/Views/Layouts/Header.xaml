@@ -39,11 +39,6 @@
                            FontWeight="SemiBold"
                            Foreground="#333333"
                            VerticalAlignment="Center" />
-                <iconPacks:PackIconFeatherIcons Kind="ChevronDown"
-                                                Width="15"
-                                                Height="15"
-                                                Foreground="#666666"
-                                                Margin="4,4,0,0" />
             </StackPanel>
 
             <TextBlock Text="22CN1"

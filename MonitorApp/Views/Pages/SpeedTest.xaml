@@ -202,10 +202,10 @@
                         <StackPanel HorizontalAlignment="Center">
                             <Image Source="pack://application:,,,/MonitorApp;component/Resources/Icons/image-pdf.png"
                                    Stretch="Uniform" Height="64" Width="113" Margin="10"/>
-                            <TextBlock Text="PDFly - PDF Editor &amp; Reader"
+                            <TextBlock Text="PDF report"
                                        FontSize="12" FontWeight="SemiBold" TextAlignment="Center"
                                        Foreground="{StaticResource TextMain}"/>
-                            <TextBlock Text="Edit, convert, sign, protect your PDFs with ease"
+                            <TextBlock Text="Export bandwidth test history as a PDF file"
                                        FontSize="10.5" Foreground="#94A3B8" TextAlignment="Center"
                                        Margin="0,6,0,12"/>
                             <Button Content="Download" Width="140" Height="34"

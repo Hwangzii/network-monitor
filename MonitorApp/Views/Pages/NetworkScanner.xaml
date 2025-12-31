@@ -178,7 +178,7 @@
                       VirtualizingPanel.VirtualizationMode="Recycling"
                       ScrollViewer.CanContentScroll="True">
 
-                <!-- *** QUAN TRỌNG: mọi column phải nằm trong DataGrid.Columns *** -->
+                <!--  nằm trong DataGrid.Columns *** -->
                 <DataGrid.Columns>
 
                     <DataGridTemplateColumn Header="Type" Width="80">

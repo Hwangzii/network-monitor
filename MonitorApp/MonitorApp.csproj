@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <None Remove="Resources\Icons\image-pdf.png" />
+    <None Remove="Resources\Icons\logoapp.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +47,7 @@
 
   <ItemGroup>
     <Resource Include="Resources\Icons\image-pdf.png" />
+    <Resource Include="Resources\Icons\logoapp.ico" />
     <Resource Include="Resources\Styles.xaml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
