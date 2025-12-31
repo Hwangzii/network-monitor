@@ -37,7 +37,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Firewall Toggle -->
+                <!-- Firewall Toggle --><!--
                 <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Top">
                     <TextBlock Text="Firewall" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4" FontWeight="Normal"/>
                     <Border Style="{StaticResource GW_ToggleContainerStyle}" Width="54" Height="24" Padding="2">
@@ -47,7 +47,7 @@
                     </Border>
                 </StackPanel>
 
-                <!-- Firewall Profile -->
+                --><!-- Firewall Profile --><!--
                 <StackPanel Grid.Column="1" Orientation="Vertical" Margin="60,0,0,0" VerticalAlignment="Top">
                     <TextBlock Text="Firewall Profile" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4" FontWeight="Normal"/>
                     <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="16" Padding="12,6" Height="24" Width="200">
@@ -55,7 +55,7 @@
                     </Border>
                 </StackPanel>
 
-                <!-- Firewall Mode -->
+                --><!-- Firewall Mode --><!--
                 <StackPanel Grid.Column="2" Orientation="Vertical" Margin="60,0,0,0" VerticalAlignment="Top">
                     <TextBlock Text="Firewall Mode" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4" FontWeight="Normal"/>
                     <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="16" Padding="12,6" Height="24" Width="180">
@@ -71,7 +71,7 @@
                             <TextBlock Grid.Column="2" Text="▼" Foreground="#9CA3AF" FontSize="9" VerticalAlignment="Center" Margin="6,0,0,0"/>
                         </Grid>
                     </Border>
-                </StackPanel>
+                </StackPanel>-->
 
             </Grid>
         </Border>

@@ -69,25 +69,31 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Grid Grid.Column="0">
+                        <Grid Grid.Column="0"
+                              Margin="0,0,20,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="auto" />
                                 <RowDefinition Height="auto" />
                             </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="{Binding DownloadTotalText}"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="#2B3440"
-                                    />
+                            <TextBlock Grid.Row="0"
+                                       Text="{Binding DownloadTotalText}"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="#2B3440"
+                                       HorizontalAlignment="Right"
+                                       TextAlignment="Right"/>  
 
-                            <StackPanel Grid.Row="1" Orientation="Horizontal"
-                                    HorizontalAlignment="Right"
-                                    Margin="0,2,20,0">
+                            <StackPanel Grid.Row="1"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,2,0,0">
+
                                 <TextBlock Text="{Binding DownloadSpeedText}"
-                                       Foreground="{StaticResource TextMuted}"
-                                       />
+                                           Foreground="{StaticResource TextMuted}"
+                                           TextAlignment="Right"/>
                             </StackPanel>
-                            
+
+
                         </Grid>
 
                         <Grid Grid.Column="1">
@@ -161,13 +167,23 @@
                         <Grid VerticalAlignment="Stretch"
                               HorizontalAlignment="Center"
                               >
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <iconPacks:PackIconFeatherIcons Kind="Bell"
-                                                                Width="24"
-                                                                Height="24"
-                                                                Foreground="#9AA3AE"
-                                                                Margin="20,20,0,0" />
+                            <StackPanel Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+
+                                <Viewbox Width="24"
+                                         Height="24"
+                                         Margin="20,20,0,0">
+                                    <Path Stroke="#9AA3AE"
+                                          StrokeThickness="2"
+                                          StrokeLineJoin="Round"
+                                          Fill="Transparent"
+                                          Data="M5.636 19.364
+                                                A9 9 0 1 1 18.364 19.364
+                                                M16 9 L12 13"/> 
+                                </Viewbox>
+
                             </StackPanel>
+
                         </Grid>
 
                         <!-- Tổng đã dùng -->

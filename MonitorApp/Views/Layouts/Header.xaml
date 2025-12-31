@@ -165,17 +165,40 @@
 
         </StackPanel>
 
-        <!-- RIGHT-->
-        <StackPanel Grid.Column="2"
-                    Orientation="Horizontal"
-                    VerticalAlignment="Center"
-                    Margin="0,0,18,0">
-            <TextBlock Text="Get All Premium&#x0a;Features"
-                       FontSize="11"
-                       Foreground="#9E9E9E"
-                       TextAlignment="Right"
-                       VerticalAlignment="Center"
-                       Margin="0,0,8,0" />
-        </StackPanel>
+        <!-- RIGHT -->
+        <Border Grid.Column="2"
+        Background="#F0FFF8"
+        CornerRadius="8"
+        Margin="10,20,10,20">
+            <StackPanel Orientation="Horizontal"
+                VerticalAlignment="Center">
+
+                <Viewbox Width="14" Height="14"
+                         Margin="10,5,5,5"
+                         VerticalAlignment="Center">
+                    <Path Stroke="#22C55E"
+                          StrokeThickness="2.0"
+                          StrokeLineJoin="Round"
+                          Fill="Transparent"
+                          Data="M11.46 20.846 
+                                C7.2 19.4 4.5 16.4 3.5 12
+                                A12 12 0 0 1 3.5 6
+                                A12 12 0 0 0 12 3
+                                A12 12 0 0 0 20.5 6
+                                A12 12 0 0 1 20.41 13.06
+                                M15 19 L17 21 L21 17"/> 
+                </Viewbox>
+
+
+                <TextBlock Text="All Information &#x0a;Is Fully Secured"
+                   FontSize="8"
+                   Foreground="#9E9E9E"
+                   TextAlignment="Right"
+                   Margin="5,5,10,5"
+                   VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+
     </Grid>
 </UserControl>
